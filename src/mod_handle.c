@@ -45,6 +45,7 @@ mod_load_all()
 	
 	modidx = 0;
 	node = xml_root(configdoc);
+	printf("Loading modules:\n");
 	for (node = node->xml_children; node; node = node->next)
 	{
 		if (!xml_isnode(node, "module"))
@@ -146,7 +147,7 @@ mod_load(char *mod, xmlNodePtr node)
 	}
 	
 	version = dlsym(modules[idx].dlhand, "version");
-	printf("Module \"%s\" (alias \"%s\", version %s) loaded and initialized\n",
+	printf("  %s (alias %s) version %s OK\n",
 		modules[idx].name, modules[idx].alias,
 		(version && *version) ? *version : "unknown");
 
