@@ -60,6 +60,10 @@
 		<port>8889</port>
 	</module>
 	
+	<module name="http" active="yes">
+		<port>9192</port>
+	</module>
+	
 	<module name="jpeg_comp" active="yes">
 		<!-- quality: default compression quality, 1-100 -->
 		<quality>40</quality>

@@ -12,4 +12,6 @@ libresize.la
 resize.lo
 libsocket.la
 socket.lo
+libhttp.la
+http.lo
 

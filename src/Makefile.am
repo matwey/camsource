@@ -1,6 +1,6 @@
 bin_PROGRAMS = camsource
 pkglib_LTLIBRARIES = libwc_serv.la libjpeg_comp.la libflip.la \
-	libresize.la libsocket.la
+	libresize.la libsocket.la libhttp.la
 
 pkginclude_HEADERS = camdev.h configfile.h filter.h flip.h grab.h \
 	image.h jpeg.h main.h mod_handle.h module.h resize.h \
@@ -19,4 +19,6 @@ libflip_la_SOURCES = flip.c
 libresize_la_SOURCES = resize.c
 
 libsocket_la_SOURCES = socket.c
+
+libhttp_la_SOURCES = http.c
 
