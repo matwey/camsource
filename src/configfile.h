@@ -3,11 +3,10 @@
 
 #include <libxml/parser.h>
 
-#include "rwlock.h"
 #include "mod_handle.h"
 
+/* Created once on startup, then never modified and readonly */
 extern xmlDocPtr configdoc;
-extern struct rwlock configdoc_lock;
 extern char *ourconfig;
 
 int config_init(void);

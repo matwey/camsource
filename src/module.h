@@ -3,12 +3,22 @@
 #ifndef _MODULE_H_
 #define _MODULE_H_
 
+#include <pthread.h>
+#include <libxml/parser.h>
+
+#include "mod_handle.h"
+
 /*
  * There are three kinds of modules:
  * .) MODULE_THREAD is a worker module which runs in its own thread.
  *    A thread module has a thread() function which will be run
- *    in its own thread. It also has the thread-id variable, which
- *    is filled in by camsource with the thread's id.
+ *    in its own thread. The thread() function will get a pointer
+ *    to the module context structure (casted to void*), containing
+ *    the xml config structure, the thread id and the custom pointer
+ *    (see below in the part about init()). Note that you should not
+ *    use any global vars in thread modules, as the same module may
+ *    be activated multuple times, and hence thread() may run several
+ *    times simultaneously.
  * .) MODULE_FILTER is an image filter module. It provides a filter()
  *    function that takes an image as input and outputs another one.
  *    Filtering happens in-place. A pointer to the xml config
@@ -25,19 +35,27 @@
  *    strings, each giving the name of another module which will
  *    be autoloaded before the current module is activated.
  * .) An optional init() function. If present, it will be called
- *    when the module is loaded. Returning anything other than 0
- *    means that the module init has failed, and the module will
- *    be unloaded.
+ *    when the module is loaded. As argument, it gets a pointer
+ *    to a module context structure. It contains a pointer to
+ *    its xml config (which may be NULL, if the module was loaded
+ *    as dependency and there's no mention of it in the config)
+ *    and the thread id var (filled in later when the thread
+ *    is started). The init() function can put a pointer
+ *    to a custom (dynamically allocated) structure into the "user"
+ *    struct member. Note that the thread-id and custom pointer
+ *    only make sense for a thread module. Returning anything but 0
+ *    from init() means module init has failed. You may also omit
+ *    init() altogether.
  */
+
 
 extern char *name;
 extern char *deps[];
-int init(void);
+int init(struct module_ctx *);
+
 
 #ifdef MODULE_THREAD
 
-#include <pthread.h>
-extern pthread_t tid;
 void *thread(void *);
 
 #endif	/* MODULE_THREAD */
@@ -46,8 +64,7 @@ void *thread(void *);
 
 #ifdef MODULE_FILTER
 
-#include <libxml/parser.h>
-#include "grab.h"
+struct image;
 int filter(struct image *, xmlNodePtr);
 
 #endif	/* MODULE_FILTER */
@@ -56,7 +73,7 @@ int filter(struct image *, xmlNodePtr);
 
 
 
-#if !defined(MODULE_THREAD) && !defined(MODULE_FILTER) && !defined(MODULE_GENERIC)
+#if !defined(MODULE_THREAD) && !defined(MODULE_FILTER) && !defined(MODULE_GENERIC) && !defined(MODULE_NONE)
 # error "Must define the module type prior to including module.h"
 #endif	/* !def && !def && !def */
 

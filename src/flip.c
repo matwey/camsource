@@ -10,7 +10,6 @@
 #include "xmlhelp.h"
 
 char *name = "flip";
-char *deps[] = { NULL };
 
 int
 filter(struct image *img, xmlNodePtr node)

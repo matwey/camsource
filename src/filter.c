@@ -7,7 +7,6 @@
 #include "filter.h"
 #include "image.h"
 #include "mod_handle.h"
-#include "rwlock.h"
 #include "xmlhelp.h"
 
 void
@@ -27,9 +26,7 @@ filter_apply(struct image *img, xmlNodePtr node)
 			printf("<filter> without name\n");
 			continue;
 		}
-		rwlock_rlock(&modules_lock);
-		mod = mod_find(filtername);
-		rwlock_runlock(&modules_lock);
+		mod = mod_find(filtername, xml_attrval(node, "alias"));
 		if (mod)
 		{
 			filter = dlsym(mod->dlhand, "filter");

@@ -35,14 +35,9 @@ grab_thread(void *arg)
 	unsigned int bpf;
 	unsigned char *imgbuf;
 	struct image newimg;
-	xmlDocPtr doc;
 	xmlNodePtr node;
 	
-	rwlock_rlock(&configdoc_lock);
-	doc = xmlCopyDoc(configdoc, 1);
-	rwlock_runlock(&configdoc_lock);
-	
-	node = xmlDocGetRootElement(doc);
+	node = xmlDocGetRootElement(configdoc);
 	for (node = node->children; node; node = node->next)
 	{
 		if (xml_isnode(node, "camdev"))
@@ -53,7 +48,6 @@ grab_thread(void *arg)
 	}
 	ret = camdev_open(&camdev, NULL);
 camdevopened:
-	xmlFreeDoc(doc);
 	if (ret == -1)
 		exit(1);
 	
@@ -88,16 +82,10 @@ camdevopened:
 void
 grab_glob_filters(struct image *img)
 {
-	xmlDocPtr doc;
 	xmlNodePtr node;
 
-	rwlock_rlock(&configdoc_lock);
-	doc = xmlCopyDoc(configdoc, 1);
-	rwlock_runlock(&configdoc_lock);
-	
-	node = xmlDocGetRootElement(doc);
+	node = xmlDocGetRootElement(configdoc);
 	filter_apply(img, node);
-	xmlFreeDoc(doc);
 }
 
 void

@@ -23,11 +23,11 @@
 
 	<!--
 		Available modules. A module will only be loaded
-		if its "load" attribute is set to "yes", or if
+		if its "active" attribute is set to "yes", or if
 		it's a dependency of another module. In any case,
 		any module config given here is used.
 	-->
-	<module name="wc_serv" load="yes">
+	<module name="wc_serv" active="yes">
 		<port>8888</port>
 
 		<!--
@@ -42,9 +42,27 @@
 		</filter>
 	</module>
 	
-	<module name="jpeg_comp" load="yes"/>
-	<module name="flip" load="yes"/>
-	<module name="resize" load="yes"/>
+	<!--
+		A second incarnation of the "wc_serv" module. It is
+		possible to run the same worker module multiple times,
+		each incarnation in its own thread. Each instance
+		must have a unique name (the "alias" attribute). If
+		no alias name is given, the actual module name is
+		used as alias name. The actual module will always
+		be loaded exactly once, if at least one of the aliased
+		modules have "active" set to "yes". A module that is
+		not active won't be run. A running worker module
+		will receive a context pointer to the correct config
+		to use, so it's possible to use the same module with
+		different parameters/filters.
+	-->
+	<module name="wc_serv" alias="noresizewc" active="yes">
+		<port>8889</port>
+	</module>
+	
+	<module name="jpeg_comp" active="yes"/>
+	<module name="flip" active="yes"/>
+	<module name="resize" active="yes"/>
 	
 	<!--
 		Global filters to use. Any filter given here

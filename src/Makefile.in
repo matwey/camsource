@@ -81,7 +81,7 @@ install_sh = @install_sh@
 bin_PROGRAMS = camsource
 lib_LTLIBRARIES = libwc_serv.la libjpeg_comp.la libflip.la libresize.la
 
-camsource_SOURCES = rwlock.c main.c grab.c camdev.c unpalette.c configfile.c \
+camsource_SOURCES = main.c grab.c camdev.c unpalette.c configfile.c \
 	mod_handle.c image.c filter.c xmlhelp.c
 
 
@@ -117,10 +117,9 @@ libwc_serv_la_OBJECTS = $(am_libwc_serv_la_OBJECTS)
 bin_PROGRAMS = camsource$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
-am_camsource_OBJECTS = rwlock.$(OBJEXT) main.$(OBJEXT) grab.$(OBJEXT) \
-	camdev.$(OBJEXT) unpalette.$(OBJEXT) configfile.$(OBJEXT) \
-	mod_handle.$(OBJEXT) image.$(OBJEXT) filter.$(OBJEXT) \
-	xmlhelp.$(OBJEXT)
+am_camsource_OBJECTS = main.$(OBJEXT) grab.$(OBJEXT) camdev.$(OBJEXT) \
+	unpalette.$(OBJEXT) configfile.$(OBJEXT) mod_handle.$(OBJEXT) \
+	image.$(OBJEXT) filter.$(OBJEXT) xmlhelp.$(OBJEXT)
 camsource_OBJECTS = $(am_camsource_OBJECTS)
 camsource_LDADD = $(LDADD)
 camsource_DEPENDENCIES =
@@ -137,8 +136,8 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/grab.Po $(DEPDIR)/image.Po \
 @AMDEP_TRUE@	$(DEPDIR)/jpeg.Plo $(DEPDIR)/main.Po \
 @AMDEP_TRUE@	$(DEPDIR)/mod_handle.Po $(DEPDIR)/resize.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/rwlock.Po $(DEPDIR)/unpalette.Po \
-@AMDEP_TRUE@	$(DEPDIR)/wc_serv.Plo $(DEPDIR)/xmlhelp.Po
+@AMDEP_TRUE@	$(DEPDIR)/unpalette.Po $(DEPDIR)/wc_serv.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/xmlhelp.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
@@ -244,7 +243,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/mod_handle.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/resize.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/rwlock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/unpalette.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/wc_serv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/xmlhelp.Po@am__quote@

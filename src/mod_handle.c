@@ -1,37 +1,31 @@
 #include <stdio.h>
 #include <dlfcn.h>
+#include <pthread.h>
+#include <string.h>
 #include <libxml/parser.h>
 
 #include "config.h"
 
 #include "mod_handle.h"
-#include "rwlock.h"
 #include "configfile.h"
 #include "xmlhelp.h"
 
 struct module modules[MAX_MODULES];
-struct rwlock modules_lock;
 
 void
 mod_init()
 {
-	rwlock_init(&modules_lock);
 }
 
 void
 mod_load_all()
 {
-	xmlDocPtr doc;
 	xmlNodePtr node;
 	int modidx;
 	char *modname, *loadyn;
 	
-	rwlock_rlock(&configdoc_lock);
-	doc = xmlCopyDoc(configdoc, 1);
-	rwlock_runlock(&configdoc_lock);
-	
 	modidx = 0;
-	node = xmlDocGetRootElement(doc);
+	node = xmlDocGetRootElement(configdoc);
 	for (node = node->children; node; node = node->next)
 	{
 		if (!xml_isnode(node, "module"))
@@ -42,122 +36,92 @@ mod_load_all()
 			printf("<module> tag without valid name property\n");
 			continue;
 		}
-		loadyn = xml_attrval(node, "load");
+		loadyn = xml_attrval(node, "active");
 		if (!loadyn
 			|| (strcmp(loadyn, "yes")
 				&& strcmp(loadyn, "1")
 				&& strcmp(loadyn, "on")))
 			continue;
 		
-		rwlock_wlock(&modules_lock);
-		mod_load(modname);
-		rwlock_wunlock(&modules_lock);
+		mod_load(modname, node);
 	}
-	
-	xmlFreeDoc(doc);
 }
 
-/* caller must hold modules_lock rw */
 int
-mod_load(const char *mod)
+mod_load(char *mod, xmlNodePtr node)
 {
-	char modname[256];
-	int i;
+	int ret;
+	int i, idx;
+	char *alias;
+	void *dlh;
 	
 	/* check if mod is already loaded */
+	alias = mod_get_aliasname(node, mod);
+
+	idx = -1;
+	dlh = NULL;
 	for (i = 0; i < MAX_MODULES; i++)
 	{
-		if (!modules[i].dlhand)
-			continue;
-		if (!strcmp(modules[i].name, mod))
-			return 0;
-	}
-	
-	snprintf(modname, sizeof(modname) - 1, "lib%s.so", mod);
-	if (!mod_try_load(mod, modname))
-		return 0;
-
-	snprintf(modname, sizeof(modname) - 1, ".libs/lib%s.so", mod);
-	if (!mod_try_load(mod, modname))
-		return 0;
-
-	snprintf(modname, sizeof(modname) - 1, "src/.libs/lib%s.so", mod);
-	if (!mod_try_load(mod, modname))
-		return 0;
-	
-	printf("Failed to load module %s\n", mod);
-	printf("Last dlopen error: %s\n", dlerror());
-	
-	return -1;
-}
-
-/* caller must hold modules_lock rw */
-int
-mod_try_load(const char *mod, const char *file)
-{
-	void *dlh;
-	int modidx;
-	char **name;
-	char **deps;
-	int (*init)(void);
-	int ret;
-	
-	/* We have to use lazy symbol resolving, otherwise we couldn't
-	 * load dependency libs */
-	dlh = dlopen(file, RTLD_LAZY | RTLD_GLOBAL);
-	if (!dlh)
-		return -1;
-	
-	for (modidx = 0; modidx < MAX_MODULES; modidx++)
-	{
-		if (modules[modidx].dlhand)
-			continue;
-		goto found;
-	}
-	printf("Max num of modules exceeded when trying to load module %s.\n", mod);
-	dlclose(dlh);
-	return -1;
-	
-found:
-	name = dlsym(dlh, "name");
-	deps = dlsym(dlh, "deps");
-	init = dlsym(dlh, "init");
-	if (!name || !deps)
-	{
-		printf("Necessary module symbol (\"name\" or \"deps\") not found in module %s.\n", mod);
-		dlclose(dlh);
-		return -1;
-	}
-	if (strcmp(*name, mod))
-	{
-		printf("Module name doesn't match filename (%s != %s), not loaded\n", mod, *name);
-		dlclose(dlh);
-		return -1;
-	}
-	modules[modidx].dlhand = dlh;
-	modules[modidx].name = *name;
-
-	for (; *deps; deps++)
-	{
-		if (mod_load(*deps))
+		if (!modules[i].name)
 		{
-			printf("Module %s depends on module %s, which failed to load. %s not loaded.\n", *name, *deps, *name);
-			modules[modidx].dlhand = NULL;
-			dlclose(dlh);
-			return -1;
+			/* save index of first free slot */
+			if (idx == -1)
+				idx = i;
+			continue;
+		}
+		if (!strcmp(modules[i].name, mod))
+		{
+			/* the lib is dlopened already */
+			if (!strcmp(alias, modules[i].alias))
+				return 0;
+			/* but we're looking for an alias */
+			dlh = modules[i].dlhand;
 		}
 	}
 	
-	if (init)
+	if (idx == -1)
 	{
-		ret = init();
+		printf("Max number of modules exceeded when trying to load %s/%s\n", mod, alias);
+		return -1;
+	}
+	
+	if (!dlh)
+	{
+		dlh = mod_try_dlopen(mod);
+		if (!dlh)
+		{
+			printf("Failed to load module %s\n", mod);
+			printf("Last dlopen error: %s\n", dlerror());
+			return -1;
+		}
+		
+		ret = mod_validate(dlh, mod);
 		if (ret)
 		{
-			printf("Module %s failed to initialize, not loaded.\n", *name);
-			modules[modidx].dlhand = NULL;
 			dlclose(dlh);
 			return -1;
 		}
+	}
+
+	modules[idx].dlhand = dlh;
+	modules[idx].name = strdup(mod);
+	modules[idx].alias = strdup(alias);
+	modules[idx].ctx.node = node;
+
+	ret = mod_load_deps(&modules[idx]);
+	if (ret)
+	{
+		printf("Failed to load dependencies for module %s\n", mod);
+		mod_close(&modules[idx]);
+		return -1;
+	}
+	
+	ret = mod_init_mod(&modules[idx]);
+	if (ret)
+	{
+		printf("Failed to initialize module %s (code %i)\n", mod, ret);
+		mod_close(&modules[idx]);
+		return -1;
 	}
 
 	return 0;
@@ -168,42 +132,140 @@ mod_start_all()
 {
 	int i;
 	void *(*thread)(void *);
-	pthread_t *tid;
 	pthread_attr_t attr;
-	
-	rwlock_rlock(&modules_lock);
 	
 	for (i = 0; i < MAX_MODULES; i++)
 	{
-		if (!modules[i].dlhand)
+		if (!modules[i].name)
 			continue;
 		thread = dlsym(modules[i].dlhand, "thread");
-		tid = dlsym(modules[i].dlhand, "tid");
-		if (!thread || !tid)
+		if (!thread)
 			continue;
 		
 		pthread_attr_init(&attr);
 		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-		pthread_create(tid, &attr, thread, NULL);
+		pthread_create(&modules[i].ctx.tid, &attr, thread, &modules[i].ctx);
 		pthread_attr_destroy(&attr);
 	}
-
-	rwlock_runlock(&modules_lock);
 }
 
 struct module *
-mod_find(const char *mod)
+mod_find(char *mod, char *alias)
 {
 	int i;
 	
 	for (i = 0; i < MAX_MODULES; i++)
 	{
-		if (!modules[i].dlhand)
+		if (!modules[i].name)
 			continue;
 		if (!strcmp(modules[i].name, mod))
-			return &modules[i];
+		{
+			if (!alias || !strcmp(alias, modules[i].alias))
+				return &modules[i];
+		}
 	}
 	
 	return NULL;
+}
+
+char *
+mod_get_aliasname(xmlNodePtr node, char *mod)
+{
+	char *ret;
+	
+	if (!node)
+		return mod;
+	ret = xml_attrval(node, "alias");
+	if (ret)
+		return ret;
+	return mod;
+}
+
+void *
+mod_try_dlopen(char *mod)
+{
+	int i;
+	char modname[1024];
+	char *modpatterns[] =
+	{
+		"lib%s.so",
+		".libs/lib%s.so",
+		"src/.libs/lib%s.so",
+		NULL
+	};
+	void *dlh;
+	
+	for (i = 0; modpatterns[i]; i++)
+	{
+		snprintf(modname, sizeof(modname) - 1, modpatterns[i], mod);
+		/* We have to use lazy symbol resolving, otherwise we couldn't
+		 * load dependency libs */
+		dlh = dlopen(modname, RTLD_LAZY | RTLD_GLOBAL);
+		if (!dlh)
+			continue;
+		return dlh;
+	}
+	return NULL;
+}
+
+int
+mod_validate(void *dlh, char *mod)
+{
+	char **name;
+	
+	name = dlsym(dlh, "name");
+	if (!name)
+	{
+		printf("Module %s doesn't contain \"name\" symbol\n", mod);
+		return -1;
+	}
+	if (strcmp(*name, mod))
+	{
+		printf("Module name doesn't match filename (%s != %s), not loaded\n", mod, *name);
+		return -1;
+	}
+	return 0;
+}
+
+int
+mod_load_deps(struct module *mod)
+{
+	char **deps;
+	
+	deps = dlsym(mod->dlhand, "deps");
+	if (!deps)
+		return 0;
+
+	for (; *deps; deps++)
+	{
+		if (mod_load(*deps, NULL))
+			return -1;
+	}
+	
+	return 0;
+}
+
+void
+mod_close(struct module *mod)
+{
+	if (mod->dlhand)
+		dlclose(mod->dlhand);
+	free(mod->name);
+	free(mod->alias);
+	memset(mod, 0, sizeof(*mod));
+}
+
+int
+mod_init_mod(struct module *mod)
+{
+	int (*init)(struct module_ctx *);
+	int ret;
+	
+	init = dlsym(mod->dlhand, "init");
+	if (!init)
+		return 0;
+	
+	ret = init(&mod->ctx);
+	return ret;
 }
 

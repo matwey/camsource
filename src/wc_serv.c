@@ -16,7 +16,6 @@
 #include "grab.h"
 #include "image.h"
 #include "configfile.h"
-#include "rwlock.h"
 #include "jpeg.h"
 #include "filter.h"
 #include "xmlhelp.h"
@@ -27,24 +26,21 @@ char *deps[] =
 	"jpeg_comp",
 	NULL
 };
-pthread_t tid;
-
-struct wc_config wc_config;
-int listen_fd;
 
 int
-init()
+init(struct module_ctx *ctx)
 {
 	int ret;
+	struct wc_ctx wc_ctx;
 	
-	wc_config.port = 8888;
-	listen_fd = -1;
-	
-	ret = load_config();
+	ret = load_config(&wc_ctx, ctx->node);
 	if (ret)
 		return ret;
+	
+	ctx->custom = malloc(sizeof(wc_ctx));
+	memcpy(ctx->custom, &wc_ctx, sizeof(wc_ctx));
 		
-	ret = open_socket();
+	ret = open_socket((struct wc_ctx *) ctx->custom);
 	if (ret)
 	{
 		printf("Failed to open listen socket: %s\n", strerror(errno));
@@ -57,16 +53,18 @@ init()
 void *
 thread(void *arg)
 {
+	struct wc_ctx *ctx;
 	struct peer *peer;
 	int i;
 	pthread_t tid;
 	pthread_attr_t attr;
 	
+	ctx = ((struct module_ctx *) arg)->custom;
 	for (;;)
 	{
 		peer = malloc(sizeof(*peer));
 		i = sizeof(peer->sin);
-		peer->fd = accept(listen_fd, (struct sockaddr *) &peer->sin, &i);
+		peer->fd = accept(ctx->listen_fd, (struct sockaddr *) &peer->sin, &i);
 		if (peer->fd < 0)
 		{
 			printf("accept() error: %s\n", strerror(errno));
@@ -75,6 +73,9 @@ thread(void *arg)
 			continue;
 		}
 		/* TODO: keep a list of accepted connections? */
+		
+		peer->ctx = arg;
+		
 		pthread_attr_init(&attr);
 		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 		pthread_create(&tid, &attr, handle_conn, peer);
@@ -83,46 +84,31 @@ thread(void *arg)
 }
 
 int
-load_config()
+load_config(struct wc_ctx *ctx, xmlNodePtr node)
 {
-	struct wc_config newconfig;
-	xmlDocPtr doc;
-	xmlNodePtr node;
-	
-	memcpy(&newconfig, &wc_config, sizeof(newconfig));
-	
-	rwlock_rlock(&configdoc_lock);
-	doc = xmlCopyDoc(configdoc, 1);
-	rwlock_runlock(&configdoc_lock);
-	
-	node = config_find_mod_section(doc, name);
+	ctx->port = 8888;
+	ctx->listen_fd = -1;
+
 	if (!node)
-	{
-		printf("Config section not found\n");
-		xmlFreeDoc(doc);
-		return -1;
-	}
+		return 0;
 	
 	for (node = node->children; node; node = node->next)
 	{
 		if (xml_isnode(node, "port"))
-			newconfig.port = xml_atoi(node, newconfig.port);
+			ctx->port = xml_atoi(node, ctx->port);
 	}
 	
-	xmlFreeDoc(doc);
-
-	if (newconfig.port <= 0 || newconfig.port > 0xffff)
+	if (ctx->port <= 0 || ctx->port > 0xffff)
 	{
-		printf("Invalid port: %i\n", newconfig.port);
+		printf("Invalid port: %i\n", ctx->port);
 		return -1;
 	}
 
-	memcpy(&wc_config, &newconfig, sizeof(wc_config));
 	return 0;
 }
 
 int
-open_socket()
+open_socket(struct wc_ctx *ctx)
 {
 	int fd;
 	struct sockaddr_in sin;
@@ -137,7 +123,7 @@ open_socket()
 	
 	memset(&sin, 0, sizeof(sin));
 	sin.sin_family = AF_INET;
-	sin.sin_port = htons(wc_config.port);
+	sin.sin_port = htons(ctx->port);
 	ret = bind(fd, (struct sockaddr *) &sin, sizeof(sin));
 	if (ret)
 	{
@@ -150,7 +136,8 @@ open_socket()
 		close(fd);
 		return -1;
 	}
-	listen_fd = fd;
+	
+	ctx->listen_fd = fd;
 	return 0;
 }
 
@@ -164,8 +151,6 @@ handle_conn(void *arg)
 	struct image curimg;
 	struct jpegbuf jpegimg;
 	int first;
-	xmlDocPtr doc;
-	xmlNodePtr node;
 	unsigned int last_idx;
 	
 	memcpy(&peer, arg, sizeof(peer));
@@ -200,14 +185,8 @@ handle_conn(void *arg)
 	
 		grab_get_image(&curimg, &last_idx);
 		
-		rwlock_rlock(&configdoc_lock);
-		doc = xmlCopyDoc(configdoc, 1);
-		rwlock_runlock(&configdoc_lock);
-		
-		node = config_find_mod_section(doc, name);
-		if (node)
-			filter_apply(&curimg, node);
-		xmlFreeDoc(doc);
+		if (peer.ctx->node)
+			filter_apply(&curimg, peer.ctx->node);
 	
 		jpeg_compress(&jpegimg, &curimg);
 	

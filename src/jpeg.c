@@ -19,8 +19,6 @@ struct jpeg_ctx
 };
 
 char *name = "jpeg_comp";
-char *deps[] = { NULL };
-pthread_t tid;
 
 void
 j_id(struct jpeg_compress_struct *cinfo)

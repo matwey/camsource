@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "configfile.h"
-#include "rwlock.h"
 #include "xmlhelp.h"
 
 char *globalconfigs[] =
@@ -22,14 +21,11 @@ char localconfig[256];
 char *ourconfig;
 
 xmlDocPtr configdoc;
-struct rwlock configdoc_lock;
 
 int
 config_init()
 {
 	char *s, **ss;
-	
-	rwlock_init(&configdoc_lock);
 	
 	s = getenv("HOME");
 	if (s)
@@ -59,24 +55,20 @@ found:
 int
 config_load()
 {
-	xmlDocPtr doc;
 	xmlNodePtr node;
 	
-	doc = xmlParseFile(ourconfig);
-	if (!doc)
+	configdoc = xmlParseFile(ourconfig);
+	if (!configdoc)
 		return -1;
 		
-	node = xmlDocGetRootElement(doc);
+	node = xmlDocGetRootElement(configdoc);
 	if (!xml_isnode(node, "camsourceconfig"))
 	{
 		printf("Root node isn't 'camsourceconfig'\n");
-		xmlFreeDoc(doc);
+		xmlFreeDoc(configdoc);
+		configdoc = NULL;
 		return -1;
 	}
-	
-	rwlock_wlock(&configdoc_lock);
-	configdoc = doc;
-	rwlock_wunlock(&configdoc_lock);
 	
 	return 0;
 }
