@@ -25,5 +25,8 @@ void image_move(struct image *dest, const struct image *src);
 /* Frees buffer */
 void image_destroy(struct image *);
 
+/* Calculate image brightness co-efficient */
+float image_brightness(struct image *);
+
 #endif
 

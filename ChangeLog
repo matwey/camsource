@@ -1,5 +1,11 @@
 $Id$
 
+Apr 20 2003
+	- Applied (modified) patch sent by Nigel Roberts
+	  implementing the <autobrightness> feature. Credits
+	  also go to Stefan Meyer for the original code from
+	  wwwcam.
+
 Mar 9 2003
 	- Http requests can now take a query string, which will
 	  be ignored when looking for a matching config vpath.

@@ -67,6 +67,15 @@
 		<!-- <colour>32767</colour> -->
 		<!-- <contrast>32767</contrast> -->
 		<!-- <whiteness>32767</whiteness> -->
+
+		<!--
+			The "autobrightness" setting controls a special algorithm
+			within camsource to dynamically adjust the camera's
+			brightness level. The value specifies the desired average
+			brightness of the output images, in the range 0 through
+			about 85. Values around 35 seem to produce good results.
+		-->
+		<!-- <autobrightness>35</autobrightness> -->
 		
 		<!--
 			You can define a command to be run when something or

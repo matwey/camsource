@@ -70,6 +70,7 @@ struct grabthread {
 	xmlNodePtr node;
 	int (*opendev)(xmlNodePtr, struct grab_camdev *);
 	unsigned char *(*input)(struct grab_camdev *);
+	void (*postprocess)(struct grab_camdev *, struct image *);
 	char *cmd;
 	int cmdtimeout;
 	int cmdfired;
@@ -135,6 +136,7 @@ grab_threads_init()
 		newthread->node = node;
 		newthread->opendev = opendev;
 		newthread->input = input;
+		newthread->postprocess = dlsym(mod->dlhand, "postprocess");
 		newthread->cmd = cmd;
 		newthread->cmdtimeout = cmdtimeout;
 
@@ -275,6 +277,8 @@ grab_thread(void *arg)
 		
 		image_new(&newimg, thread->gcamdev.x, thread->gcamdev.y);
 		thread->gcamdev.pal->routine(&newimg, rawimg);
+		if (thread->postprocess)
+			thread->postprocess(&thread->gcamdev, &newimg);
 		
 		grab_glob_filters(&newimg);
 		filter_apply(&newimg, thread->node);

@@ -15,6 +15,7 @@
 #include "xmlhelp.h"
 #include "grab.h"
 #include "unpalette.h"
+#include "image.h"
 
 #define MODNAME "input_v4l"
 
@@ -43,6 +44,7 @@ struct v4l_camdev
 	unsigned char *imgbuf;
 	unsigned int bpf;
 	struct video_mbuf mbuf;
+	int autobrightness;
 };
 
 
@@ -59,14 +61,14 @@ opendev(xmlNodePtr node, struct grab_camdev *gcamdev)
 	int channel;
 	int norm;
 	struct video_channel vidchan;
-	int brightness, hue, colour, contrast, whiteness;
+	int brightness, hue, colour, contrast, whiteness, autobrightness;
 	struct palette *pal;
 	
 	memset(&newcamdev, 0, sizeof(newcamdev));
 	
 	path = "/dev/video0";
 	x = y = fps = 0;
-	brightness = hue = colour = contrast = whiteness = channel = norm = -1;
+	brightness = hue = colour = contrast = whiteness = channel = norm = autobrightness = -1;
 	
 	if (node)
 	{
@@ -92,6 +94,8 @@ opendev(xmlNodePtr node, struct grab_camdev *gcamdev)
 				contrast = xml_atoi(node, -1);
 			else if (xml_isnode(node, "whiteness"))
 				whiteness = xml_atoi(node, -1);
+			else if (xml_isnode(node, "autobrightness"))
+				autobrightness = xml_atoi(node, 0);
 			else if (xml_isnode(node, "norm"))
 			{
 				char *s = xml_getcontent_def(node, "");
@@ -143,6 +147,8 @@ closenerr:
 	
 	memset(&vidwin, 0, sizeof(vidwin));
 	
+	newcamdev.autobrightness = autobrightness;
+
 	x = camdev_size_set(x, newcamdev.vidcap.minwidth, newcamdev.vidcap.maxwidth, "width");
 	y = camdev_size_set(y, newcamdev.vidcap.minheight, newcamdev.vidcap.maxheight, "height");
 	if (x <= 0 || y <= 0)
@@ -343,3 +349,45 @@ camdev_size_set(int val, int min, int max, char *s)
 	return val;
 }
 
+void
+postprocess(struct grab_camdev *gcamdev, struct image *img)
+{
+	float brightness, change;
+	struct v4l_camdev *camdev;
+
+	camdev = gcamdev->custom;
+
+	if (camdev->autobrightness <= 0)
+		return;
+
+	brightness = image_brightness(img);
+	printf("Current Image Brightness = %2.1f\n", brightness);	
+
+	if (!(brightness < camdev->autobrightness -1 || brightness > camdev->autobrightness +1))
+		return;
+
+	if (ioctl(camdev->fd, VIDIOCGPICT, &camdev->vidpic) == -1) {
+		perror ("ioctl (VIDIOCGPICT)");
+		return;
+	}
+
+	change = camdev->autobrightness - brightness;
+	if (camdev->vidpic.brightness < 50) camdev->vidpic.brightness = 50;
+	change = camdev->vidpic.brightness * (change/100) * 3;
+	printf("Calculated change = %i\n", (int)change);
+	if (camdev->vidpic.brightness + change < 50) {
+		printf("Setting to MIN (50)\n");
+		camdev->vidpic.brightness = 50;
+	} 
+	else if (camdev->vidpic.brightness + change > 65535) {
+		printf("Setting to MAX (65535)\n");
+		camdev->vidpic.brightness = 65535;
+	} 
+	else {
+		camdev->vidpic.brightness += (int)change; 
+		printf("Setting camera brightness to %i\n", camdev->vidpic.brightness);
+	}
+	if (ioctl(camdev->fd, VIDIOCSPICT, &camdev->vidpic) == -1) {
+		perror ("ioctl (VIDIOCSPICT)");
+	}
+}

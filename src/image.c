@@ -46,3 +46,16 @@ image_move(struct image *dst, const struct image *src)
 	memcpy(dst, src, sizeof(*dst));
 }
 
+float
+image_brightness(struct image *img)
+{
+	int i, v;
+	float sum = 0;
+	unsigned char *p = img->buf;
+	for (i=0; i<img->x*img->y; i++) {
+		sum += *p;
+		p++;
+	}
+	sum /= (img->x * img->y * 3);
+	return sum;
+}
