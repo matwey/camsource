@@ -80,7 +80,7 @@ thread(void *mod_ctx)
 		if (ret)
 		{
 			free(http_peer);
-			printf("Accept() error: %s\n", strerror(errno));
+			log_log(MODNAME, "accept() error: %s\n", strerror(errno));
 			sleep(1);
 			continue;
 		}
@@ -106,7 +106,7 @@ http_load_conf(struct http_ctx *ctx, xmlNodePtr node)
 	
 	if (ctx->port <= 0 || ctx->port > 0xffff)
 	{
-		printf("Invalid port %u\n", ctx->port);
+		log_log(MODNAME, "Invalid port %u\n", ctx->port);
 		return -1;
 	}
 	

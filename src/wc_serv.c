@@ -51,7 +51,7 @@ init(struct module_ctx *ctx)
 	ret = socket_listen(wc_ctx->port, 0);
 	if (ret == -1)
 	{
-		printf("Failed to open listen socket: %s\n", strerror(errno));
+		log_log(MODNAME, "Failed to open listen socket: %s\n", strerror(errno));
 		return -1;
 	}
 	wc_ctx->listen_fd = ret;
@@ -74,7 +74,7 @@ thread(void *arg)
 		ret = socket_accept_thread(ctx->listen_fd, &peer->peer, wc_handle_conn, peer);
 		if (ret == -1)
 		{
-			printf("accept() error: %s\n", strerror(errno));
+			log_log(MODNAME, "accept() error: %s\n", strerror(errno));
 			free(peer);
 			sleep(1);
 			continue;
@@ -101,7 +101,7 @@ wc_load_config(struct wc_ctx *ctx, xmlNodePtr node)
 	
 	if (ctx->port <= 0 || ctx->port > 0xffff)
 	{
-		printf("Invalid port: %i\n", ctx->port);
+		log_log(MODNAME, "Invalid port: %i\n", ctx->port);
 		return -1;
 	}
 

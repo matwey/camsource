@@ -17,10 +17,13 @@
 #include "image.h"
 #include "jpeg.h"
 #include "filter.h"
+#include "log.h"
+
+#define MODNAME "filewrite"
 
 static int fw_load_conf(struct fw_ctx *, xmlNodePtr);
 
-char *name = "filewrite";
+char *name = MODNAME;
 char *deps[] =
 {
 	"jpeg_comp",
@@ -69,7 +72,7 @@ thread(void *arg)
 		fd = open(buf, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (fd < 0)
 		{
-			printf("Open of %s failed: %s\n", buf, strerror(errno));
+			log_log(MODNAME, "Open of %s failed: %s\n", buf, strerror(errno));
 			goto freesleeploop;
 		}
 		
@@ -79,7 +82,8 @@ thread(void *arg)
 		ret = write(fd, jbuf.buf, jbuf.bufsize);
 		if (ret != jbuf.bufsize)
 		{
-			printf("Write to %s failed: %s\n", (ret == -1) ? strerror(errno) : "short write", strerror(errno));
+			log_log(MODNAME, "Write to %s failed: %s\n",
+				buf, (ret == -1) ? strerror(errno) : "short write");
 			close(fd);
 			unlink(buf);
 			goto freesleeploop;
@@ -89,7 +93,8 @@ thread(void *arg)
 		ret = rename(buf, fctx->path);
 		if (ret != 0)
 		{
-			printf("Rename of %s to %s failed: %s\n", buf, fctx->path, strerror(errno));
+			log_log(MODNAME "Rename of %s to %s failed: %s\n",
+				buf, fctx->path, strerror(errno));
 			unlink(buf);
 			goto freesleeploop;
 		}
@@ -136,14 +141,14 @@ fw_load_conf(struct fw_ctx *fctx, xmlNodePtr node)
 					mult = 86400;
 				else
 				{
-					printf("Invalid \"unit\" attribute value \"%s\"\n", s);
+					log_log(MODNAME, "Invalid \"unit\" attribute value \"%s\"\n", s);
 					return -1;
 				}
 			}
 			val = xml_atoi(node, -1);
 			if (val <= 0)
 			{
-				printf("Invalid interval (%s) specified\n", xml_getcontent(node));
+				log_log(MODNAME, "Invalid interval (%s) specified\n", xml_getcontent(node));
 				return -1;
 			}
 			fctx->interval = val * mult;
@@ -154,7 +159,7 @@ fw_load_conf(struct fw_ctx *fctx, xmlNodePtr node)
 	
 	if (!fctx->path || fctx->interval <= 0)
 	{
-		printf("Either path or interval not specified\n");
+		log_log(MODNAME, "Either path or interval not specified\n");
 		return -1;
 	}
 	
@@ -163,7 +168,7 @@ fw_load_conf(struct fw_ctx *fctx, xmlNodePtr node)
 		s = getenv("HOME");
 		if (!s)
 		{
-			printf("Invalid path spec: HOME not set\n");
+			log_log(MODNAME, "Invalid path spec: HOME not set\n");
 			return -1;
 		}
 		s2 = malloc(strlen(s) + strlen(fctx->path));

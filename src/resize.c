@@ -8,10 +8,13 @@
 #include "resize.h"
 #include "image.h"
 #include "xmlhelp.h"
+#include "log.h"
+
+#define MODNAME "resize"
 
 static int resize_get_dim(struct image *, xmlNodePtr);
 
-char *name = "resize";
+char *name = MODNAME;
 
 int
 filter(struct image *img, xmlNodePtr node)
@@ -26,7 +29,7 @@ filter(struct image *img, xmlNodePtr node)
 	ret = resize_get_dim(&work, node);
 	if (ret)
 	{
-		printf("Invalid resize parameters\n");
+		log_log(MODNAME, "Invalid/missing resize parameters\n");
 		return -1;
 	}
 	
