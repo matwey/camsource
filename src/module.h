@@ -27,7 +27,11 @@
  * .) MODULE_GENERIC is a module which doesn't do anything by itself,
  *    but provides special functionality for other modules. It is
  *    usually listed as dependency in other modules.
- * You must define one of the above 
+ * You must define at least one of the above before including this
+ * file (module.h). The brave can even define multiple of them,
+ * for example a module that has both its own thread and provides
+ * a filter.
+ *
  * Things common to all kinds of modules:
  * .) The module "name". It must match the filename, e.g. a module
  *    called "libhello.so" would have a name of "hello".
