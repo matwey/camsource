@@ -110,3 +110,12 @@ xml_root(xmlDocPtr doc)
 	return NULL;
 }
 
+struct xml_privdata *
+xml_privdata(xmlNodePtr node)
+{
+	if (!node->_private) {
+		node->_private = malloc(sizeof(struct xml_privdata));
+		memset(node->_private, 0, sizeof(struct xml_privdata));
+	}
+	return node->_private;
+}

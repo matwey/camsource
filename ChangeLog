@@ -1,6 +1,8 @@
 $Id$
 
 Jan 16 2003
+	- Reworked _private handling a bit. Avoid repeated parsing
+	  or large xml trees.
 	- Simplyfied per-instance filter storage to make use of
 	  libxml's _private struct member.
 

@@ -3,6 +3,11 @@
 
 #include <libxml/parser.h>
 
+struct xml_privdata {
+	void *filterinststorage;
+	xmlNodePtr filterlist;
+};
+
 /* Is the given node an <element> of the given type? */
 int xml_isnode(xmlNodePtr, const char *);
 /* Return the <node>text content</node> of the given node. Return NULL on error */
@@ -19,6 +24,9 @@ char *xml_attrval(xmlNodePtr, char *);
 
 /* Returns the root node of a doc, provided for compatibility */
 xmlNodePtr xml_root(xmlDocPtr);
+
+/* Allocates an xml_privdata struct into given node if not already present */
+struct xml_privdata *xml_privdata(xmlNodePtr);
 
 #endif
 

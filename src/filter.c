@@ -12,6 +12,8 @@
 #include "xmlhelp.h"
 #include "grab.h"
 
+static void preparsefilters(xmlNodePtr);
+
 int
 filter_apply(struct image *img, xmlNodePtr node)
 {
@@ -19,23 +21,22 @@ filter_apply(struct image *img, xmlNodePtr node)
 	char *filtername;
 	int (*filter)(struct image *, xmlNodePtr, void **);
 	int ret;
+	struct xml_privdata *privdata;
 	
-	for (node = node->xml_children; node; node = node->next)
+	preparsefilters(node);
+	
+	privdata = node->_private;
+	
+	for (node = privdata->filterlist; node; node = node->next)
 	{
-		if (!xml_isnode(node, "filter"))
-			continue;
 		filtername = xml_attrval(node, "name");
-		if (!filtername)
-		{
-			printf("<filter> without name\n");
-			continue;
-		}
 		mod = mod_find(filtername, xml_attrval(node, "alias"));
 		if (mod)
 		{
 			filter = dlsym(mod->dlhand, "filter");
 			if (filter) {
-				ret = filter(img, node, &node->_private);
+				privdata = xml_privdata(node);
+				ret = filter(img, node, &privdata->filterinststorage);
 				if (ret > 0)
 					return ret;
 			}
@@ -90,5 +91,33 @@ donefind:
 		image_destroy(img);
 		
 		usleep(ret);
+	}
+}
+
+static
+void
+preparsefilters(xmlNodePtr node)
+{
+	struct xml_privdata *privdata;
+	xmlNodePtr newnode;
+	
+	privdata = xml_privdata(node);
+	if (privdata->filterlist)
+		return;
+	
+	for (node = node->xml_children; node; node = node->next)
+	{
+		if (!xml_isnode(node, "filter"))
+			continue;
+		if (!xml_attrval(node, "name"))
+		{
+			printf("<filter> without name\n");
+			continue;
+		}
+		newnode = xmlCopyNode(node, 1);
+		if (privdata->filterlist)
+			xmlAddSibling(privdata->filterlist, newnode);
+		else
+			privdata->filterlist = newnode;
 	}
 }
