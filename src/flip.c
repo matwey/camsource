@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <libxml/parser.h>
 
 #include "config.h"
 
@@ -11,7 +12,7 @@ char *name = "flip";
 char *deps[] = { NULL };
 
 int
-filter(struct image *img)
+filter(struct image *img, xmlNodePtr node)
 {
 	struct image work;
 	unsigned int x, y;

@@ -74,7 +74,7 @@ grab_glob_filters(struct image *img)
 	xmlNodePtr node;
 	char *prop;
 	struct module *mod;
-	int (*filter)(struct image *);
+	int (*filter)(struct image *, xmlNodePtr);
 
 	rwlock_rlock(&configdoc_lock);
 	doc = xmlCopyDoc(configdoc, 1);
@@ -103,7 +103,7 @@ grab_glob_filters(struct image *img)
 		{
 			filter = dlsym(mod->dlhand, "filter");
 			if (filter)
-				filter(img);
+				filter(img, node);
 			else
 				printf("Module %s has no \"filter\" routine\n", prop);
 		}

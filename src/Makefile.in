@@ -79,7 +79,7 @@ am__quote = @am__quote@
 install_sh = @install_sh@
 
 bin_PROGRAMS = camsource
-lib_LTLIBRARIES = libwc_serv.la libjpeg_comp.la libflip.la
+lib_LTLIBRARIES = libwc_serv.la libjpeg_comp.la libflip.la libresize.la
 
 camsource_SOURCES = rwlock.c main.c grab.c camdev.c unpalette.c configfile.c \
 	mod_handle.c image.c
@@ -91,6 +91,8 @@ libjpeg_comp_la_SOURCES = jpeg.c
 libjpeg_comp_la_LDFLAGS = -ljpeg
 
 libflip_la_SOURCES = flip.c
+
+libresize_la_SOURCES = resize.c
 subdir = src
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
@@ -104,6 +106,10 @@ libflip_la_OBJECTS = $(am_libflip_la_OBJECTS)
 libjpeg_comp_la_LIBADD =
 am_libjpeg_comp_la_OBJECTS = jpeg.lo
 libjpeg_comp_la_OBJECTS = $(am_libjpeg_comp_la_OBJECTS)
+libresize_la_LDFLAGS =
+libresize_la_LIBADD =
+am_libresize_la_OBJECTS = resize.lo
+libresize_la_OBJECTS = $(am_libresize_la_OBJECTS)
 libwc_serv_la_LDFLAGS =
 libwc_serv_la_LIBADD =
 am_libwc_serv_la_OBJECTS = wc_serv.lo
@@ -129,8 +135,8 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/flip.Plo $(DEPDIR)/grab.Po \
 @AMDEP_TRUE@	$(DEPDIR)/image.Po $(DEPDIR)/jpeg.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/main.Po $(DEPDIR)/mod_handle.Po \
-@AMDEP_TRUE@	$(DEPDIR)/rwlock.Po $(DEPDIR)/unpalette.Po \
-@AMDEP_TRUE@	$(DEPDIR)/wc_serv.Plo
+@AMDEP_TRUE@	$(DEPDIR)/resize.Plo $(DEPDIR)/rwlock.Po \
+@AMDEP_TRUE@	$(DEPDIR)/unpalette.Po $(DEPDIR)/wc_serv.Plo
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
@@ -140,9 +146,10 @@ LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
 DIST_SOURCES = $(libflip_la_SOURCES) $(libjpeg_comp_la_SOURCES) \
-	$(libwc_serv_la_SOURCES) $(camsource_SOURCES)
+	$(libresize_la_SOURCES) $(libwc_serv_la_SOURCES) \
+	$(camsource_SOURCES)
 DIST_COMMON = Makefile.am Makefile.in
-SOURCES = $(libflip_la_SOURCES) $(libjpeg_comp_la_SOURCES) $(libwc_serv_la_SOURCES) $(camsource_SOURCES)
+SOURCES = $(libflip_la_SOURCES) $(libjpeg_comp_la_SOURCES) $(libresize_la_SOURCES) $(libwc_serv_la_SOURCES) $(camsource_SOURCES)
 
 all: all-am
 
@@ -187,6 +194,8 @@ libflip.la: $(libflip_la_OBJECTS) $(libflip_la_DEPENDENCIES)
 	$(LINK) -rpath $(libdir) $(libflip_la_LDFLAGS) $(libflip_la_OBJECTS) $(libflip_la_LIBADD) $(LIBS)
 libjpeg_comp.la: $(libjpeg_comp_la_OBJECTS) $(libjpeg_comp_la_DEPENDENCIES) 
 	$(LINK) -rpath $(libdir) $(libjpeg_comp_la_LDFLAGS) $(libjpeg_comp_la_OBJECTS) $(libjpeg_comp_la_LIBADD) $(LIBS)
+libresize.la: $(libresize_la_OBJECTS) $(libresize_la_DEPENDENCIES) 
+	$(LINK) -rpath $(libdir) $(libresize_la_LDFLAGS) $(libresize_la_OBJECTS) $(libresize_la_LIBADD) $(LIBS)
 libwc_serv.la: $(libwc_serv_la_OBJECTS) $(libwc_serv_la_DEPENDENCIES) 
 	$(LINK) -rpath $(libdir) $(libwc_serv_la_LDFLAGS) $(libwc_serv_la_OBJECTS) $(libwc_serv_la_LIBADD) $(LIBS)
 install-binPROGRAMS: $(bin_PROGRAMS)
@@ -231,6 +240,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/jpeg.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/mod_handle.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/resize.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/rwlock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/unpalette.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/wc_serv.Plo@am__quote@

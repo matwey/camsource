@@ -14,11 +14,9 @@
 		<port>8888</port>
 	</module>
 	
-	<module name="jpeg_comp" load="yes">
-	</module>
-	
-	<module name="flip" load="yes">
-	</module>
+	<module name="jpeg_comp" load="yes"/>
+	<module name="flip" load="yes"/>
+	<module name="resize" load="yes"/>
 	
 	<!--
 		Global filters to use. Any filter given here
@@ -30,6 +28,11 @@
 		it to the image several times.
 	-->
 	<filter name="flip"/>
+	
+	<filter name="resize">
+		<width>320</width>
+		<height>240</height>
+	</filter>
 
 </camsourceconfig>
 

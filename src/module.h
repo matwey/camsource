@@ -11,7 +11,9 @@
  *    is filled in by camsource with the thread's id.
  * .) MODULE_FILTER is an image filter module. It provides a filter()
  *    function that takes an image as input and outputs another one.
- *    Filtering happens in-place.
+ *    Filtering happens in-place. A pointer to the xml config
+ *    tree is passed to the filter function (so that node->name ==
+ *    "filter").
  * .) MODULE_GENERIC is a module which doesn't do anything by itself,
  *    but provides special functionality for other modules. It is
  *    usually listed as dependency in other modules.
@@ -32,6 +34,7 @@
 # include <pthread.h>
 #endif
 #ifdef MODULE_FILTER
+# include <libxml/parser.h>
 # include "grab.h"
 #endif
 
@@ -49,7 +52,7 @@ void *thread(void *);
 #endif
 
 #ifdef MODULE_FILTER
-int filter(struct image *);	/* Returns 0 on success */
+int filter(struct image *, xmlNodePtr);	/* Returns 0 on success */
 #endif
 
 #if !defined(MODULE_THREAD) && !defined(MODULE_FILTER) && !defined(MODULE_GENERIC)
