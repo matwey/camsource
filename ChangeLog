@@ -1,3 +1,6 @@
+Sep 20 2002
+	- Pumped devel version number to 0.2.1
+
 --- 0.2.0 ---
 
 Sep 19 2002
@@ -13,7 +16,7 @@ Sep 18 2002
 	- Added config_homedir() for "~/" expansion
 	- Added grabbed image aging and struct grab_ctx handling to prevent
 	  that an outdated image gets output accidently
-   - Improved logging facilities
+	- Improved logging facilities
 	- Converted lots of functions to static to prevent global symbol /
 	  namespace clashes
 
