@@ -147,6 +147,12 @@
 			<path>/large</path>
 			<filter name="text"/>
 		</vpath>
+
+		<vpath>
+			<path>/largequal</path>
+			<filter name="text"/>
+			<jpegqual>80</jpegqual>
+		</vpath>
 		
 		<vpath>
 			<path>/multipart</path>

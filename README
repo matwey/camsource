@@ -62,6 +62,11 @@ http://host:8889/
   other urls above instead. You can find webcam_server and the java
   applet at <http://donn.dyndns.org/portalofnnod/webcam_server.html>.
 
+http://host:9192/largequal
+  This is the unresized grabbed frame with a high jpeg compression
+  quality (80). It is about twice the size of the default "/large"
+  image. Use for your personal viewing pleasure or something.
+
 
 
 Details (What is Camsource anyway?)
