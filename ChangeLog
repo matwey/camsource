@@ -1,5 +1,8 @@
 $Id$
 
+Aug 15 2003
+	- Eliminated mem leak in input_jpg plugin.
+
 May 25 2003
 	- Implemented increasing sequence numbers in filenames for
 	  filewrite.so and ftup.so. See the "sprintf" attribute

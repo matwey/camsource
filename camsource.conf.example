@@ -293,8 +293,8 @@
 		setting.
 		If you want to specify a custom jpeg compression quality
 		with a <jpegqual> tag, you must specify it within
-		the <vpath> definitions. There is no global config
-		tag for this.
+		the <vpath> definitions. There is no jpegqual config
+		tag that has effect for all defined vpaths here.
 		Each vpath definition should contain one or more <path>
 		tags, each of which can be used to access this image
 		variant (those paths can be thought of as aliases).
@@ -343,6 +343,12 @@
 		<vpath>
 			<path>/multipart-large</path>
 			<fps>1</fps>
+			<filter name="text"/>
+		</vpath>
+		
+		<vpath>
+			<path>/multipart-fast</path>
+			<fps>15</fps>
 			<filter name="text"/>
 		</vpath>
 		

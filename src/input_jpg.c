@@ -152,6 +152,7 @@ input(struct grab_camdev *gcamdev)
 	gcamdev->x = img.x;
 	gcamdev->y = img.y;
 
+	free(buf);
 	return img.buf;
 
 outerr2:
