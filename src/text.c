@@ -10,6 +10,7 @@
 #include "image.h"
 #include "xmlhelp.h"
 #include "log.h"
+#include "mod_handle.h"
 
 #include "font_6x11.h"
 
@@ -27,9 +28,23 @@ static int text_conf(struct text_ctx *, xmlNodePtr);
 static int text_color(unsigned char *, unsigned char *);
 static int text_hexdig(unsigned char);
 
+static struct text_ctx text_gctx;
+
 #define MODNAME "text"
 
 char *name = MODNAME;
+
+int
+init(struct module_ctx *mctx)
+{
+	int ret;
+	
+	memset(text_gctx.color, 0xff, sizeof(text_gctx.color));
+	ret = text_conf(&text_gctx, mctx->node);
+	if (ret)
+		return -1;
+	return 0;
+}
 
 int
 filter(struct image *img, xmlNodePtr node)
@@ -43,8 +58,9 @@ filter(struct image *img, xmlNodePtr node)
 	struct tm tm;
 	time_t now;
 	
+	memcpy(&ctx, &text_gctx, sizeof(ctx));
 	idx = text_conf(&ctx, node);
-	if (idx)
+	if (idx || !ctx.text)
 		return -1;
 
 	time(&now);
@@ -105,8 +121,8 @@ text_conf(struct text_ctx *ctx, xmlNodePtr node)
 	int ret;
 	unsigned char *text;
 	
-	memset(ctx, 0, sizeof(*ctx));
-	memset(ctx->color, 0xff, sizeof(ctx->color));
+	if (!node)
+		return 0;
 	
 	for (node = node->children; node; node = node->next)
 	{
@@ -156,11 +172,6 @@ invbg:
 				text++;
 			}
 		}
-	}
-	if (!ctx->text)
-	{
-		log_log(MODNAME, "No <text> tag defined\n");
-		return -1;
 	}
 	
 	return 0;

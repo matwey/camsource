@@ -55,6 +55,18 @@
 			<width>320</width>
 			<height>240</height>
 		</filter>
+		
+		<!--
+			Another filter. But where is its config? The
+			"text" module supports having and using a global
+			config, specified in its <module> section. Any
+			config options that are missing in the <filter>
+			definition will be used from that global config,
+			and those options that are specified here will
+			override the global ones. See below for an
+			example for this overriding.
+		-->
+		<filter name="text"/>
 	</module>
 	
 	<!--
@@ -73,6 +85,19 @@
 	-->
 	<module name="wc_serv" alias="noresizewc" active="yes">
 		<port>8889</port>
+		
+		<!--
+			Here's the example for option overriding in the
+			text module. This filter will work the same as
+			the above text filter, only that the text will
+			be located in the top right corner. (Which doesn't
+			make much sense, but hey, it's just an exmaple.)
+			For a full description of all config options to
+			the text module, see below in its <module> section.
+		-->
+		<filter name="text">
+			<pos>tr</pos>
+		</filter>
 	</module>
 	
 	<!--
@@ -110,18 +135,14 @@
 				<width>320</width>
 				<height>240</height>
 			</filter>
-			
-			<filter name="text">
-				<text>%b %d %Y %H:%M:%S</text>
-				<color>ffffff</color>
-				<bgcolor>trans</bgcolor>
-				<pos>bl</pos>
-			</filter>
+
+			<filter name="text"/>
 		</vpath>
 
 		<vpath>
 			<path>/big</path>
 			<path>/large</path>
+			<filter name="text"/>
 		</vpath>
 		
 		<vpath>
@@ -131,11 +152,14 @@
 				<width>320</width>
 				<height>240</height>
 			</filter>
+
+			<filter name="text"/>
 		</vpath>
 
 		<vpath>
 			<path>/multipart-large</path>
 			<fps>1</fps>
+			<filter name="text"/>
 		</vpath>
 	</module>
 	
@@ -186,6 +210,7 @@
 		<jpegqual>75</jpegqual>
 		<!-- For a description of the <jpegqual> tag, see
 			the jpeg_comp module entry -->
+		<filter name="text"/>
 	</module>
 	
 	<module name="ftpup" active="no">
@@ -227,7 +252,9 @@
 		<passive>no</passive>
 		<safemode>yes</safemode>
 		<interval unit="sec">30</interval>
+
 		<jpegqual>75</jpegqual>
+		<filter name="text"/>
 	</module>
 
 	<module name="jpeg_comp" active="yes">
@@ -245,7 +272,32 @@
 	
 	<module name="flip" active="yes"/>
 	<module name="resize" active="yes"/>
-	<module name="text" active="yes"/>
+	
+	<module name="text" active="yes">
+		<!--
+			Options to this filter module:
+			- text: Text to display. Duh. Mandatory option.
+			  The text here is passed into the strftime()
+			  function, so the usual % substitutions are
+			  performed. Check the strftime man page for
+			  details.
+			- color: Text color, in html format. The leading
+			  # sign is optional. No symbolic color names
+			  are accepted. Defaults to white (ffffff).
+			- bgcolor: Same as color, only for the background
+			  color. It can have the special value "trans"
+			  to specify no background drawing (transparent),
+			  which is also the default.
+			- pos: In which corner of the image to put the
+			  text. It can be "tr" for top right corner,
+			  "bl" for bottom left or any combination
+			  thereof. Defaults to "bl".
+		-->
+		<text>%b %d %Y %H:%M:%S</text>
+		<color>ffffff</color>
+		<bgcolor>trans</bgcolor>
+		<pos>bl</pos>
+	</module>
 	
 	<!--
 		Global filters to use. Any filter given here

@@ -1,6 +1,8 @@
 $Id$
 
 Sep 20 2002
+	- Added text module to all worker modules in conf file, plus docs
+	- Finished work on libtext with lots of fancy stuff for now
 	- Started work in text overlay module
 	- Made all (?) socket stuff time out properly and added better
 	  error/condition reporting
