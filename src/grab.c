@@ -18,16 +18,13 @@
 #include "filter.h"
 
 struct grabimage current_img;
-pthread_cond_t current_img_cond;
-pthread_mutex_t current_img_cond_mutex;
-struct rwlock current_img_lock;
 
 void
 grab_thread_init()
 {
-	pthread_cond_init(&current_img_cond, NULL);
-	rwlock_init(&current_img_lock);
-	pthread_mutex_init(&current_img_cond_mutex, NULL);
+	pthread_cond_init(&current_img.cond, NULL);
+	rwlock_init(&current_img.lock);
+	pthread_mutex_init(&current_img.cond_mutex, NULL);
 }
 
 void *
@@ -58,13 +55,13 @@ grab_thread(void *arg)
 		
 		grab_glob_filters(&newimg);
 		
-		rwlock_wlock(&current_img_lock);
+		rwlock_wlock(&current_img.lock);
 		image_move(&current_img.img, &newimg);
 		current_img.idx++;
-		rwlock_wunlock(&current_img_lock);
-		pthread_mutex_lock(&current_img_cond_mutex);
-		pthread_cond_broadcast(&current_img_cond);
-		pthread_mutex_unlock(&current_img_cond_mutex);
+		rwlock_wunlock(&current_img.lock);
+		pthread_mutex_lock(&current_img.cond_mutex);
+		pthread_cond_broadcast(&current_img.cond);
+		pthread_mutex_unlock(&current_img.cond_mutex);
 	}
 
 	return 0;
