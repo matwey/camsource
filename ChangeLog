@@ -1,5 +1,7 @@
 Sep 17 2002
-	Created config option to select input channel
+	- Created config option to select input channel
+	- Sanity check grabbing width/height values
 
 Sep 16 2002
-	Released version 0.1.0
+	- Released version 0.1.0
+

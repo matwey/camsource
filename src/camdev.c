@@ -5,6 +5,7 @@
 #include <linux/videodev.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 #include <libxml/parser.h>
 
 #include "config.h"
@@ -56,12 +57,14 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 	if (ret != 0)
 	{
 		printf("ioctl \"get video cap\" failed: %s\n", strerror(errno));
+closenerr:
+		close(newcamdev.fd);
 		return -1;
 	}
 	if (!(newcamdev.vidcap.type & VID_TYPE_CAPTURE))
 	{
 		printf("Video device doesn't support grabbing to memory\n");
-		return -1;
+		goto closenerr;
 	}
 	
 	if (channel >= 0)
@@ -77,11 +80,25 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 	if (!x)
 		vidwin.width = newcamdev.vidcap.maxwidth;
 	else
+	{
+		if (x < newcamdev.vidcap.minwidth || x > newcamdev.vidcap.maxwidth)
+		{
+			printf("Invalid grabbing width (%i) according to driver report\n", x);
+			goto closenerr;
+		}
 		vidwin.width = x;
+	}
 	if (!y)
 		vidwin.height = newcamdev.vidcap.maxheight;
 	else
+	{
+		if (y < newcamdev.vidcap.minheight || y > newcamdev.vidcap.maxheight)
+		{
+			printf("Invalid grabbing height (%i) according to driver report\n", y);
+			goto closenerr;
+		}
 		vidwin.height = y;
+	}
 	
 	vidwin.flags |= (fps & 0x3f) << 16;
 	
@@ -90,13 +107,13 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 	{
 		printf("ioctl \"set grab window\" failed: %s\n", strerror(errno));
 		printf("Check your <camdev> config section for width/height and fps settings\n");
-		return -1;
+		goto closenerr;
 	}
 	ret = ioctl(newcamdev.fd, VIDIOCGWIN, &vidwin);
 	if (ret != 0)
 	{
 		printf("ioctl \"get grab window\" failed: %s\n", strerror(errno));
-		return -1;
+		goto closenerr;
 	}
 	ioctl(newcamdev.fd, VIDIOCSWIN, &vidwin);
 	newcamdev.x = vidwin.width;
@@ -106,7 +123,7 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 	if (ret != 0)
 	{
 		printf("ioctl \"get pict props\" failed: %s\n", strerror(errno));
-		return -1;
+		goto closenerr;
 	}
 	for (newcamdev.pal = palettes; newcamdev.pal->val >= 0; newcamdev.pal++)
 	{
@@ -118,7 +135,7 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 			goto palfound;	/* break */
 	}
 	printf("No common supported palette found\n");
-	return -1;
+	goto closenerr;
 	
 palfound:
 	memcpy(camdev, &newcamdev, sizeof(*camdev));
