@@ -102,7 +102,7 @@
 	
 	<!--
 		The http module. It lets you create virtual paths to
-		serve verious variants of the current image. The main
+		serve various variants of the current image. The main
 		section includes global config options (such as the
 		port to listen on), and can also include filter definitions.
 		Those global filters will be applied to every image
@@ -314,7 +314,7 @@
 		<pos>bl</pos>
 	</module>
 	
-	<!-- This filter swaps the read and blue channels -->
+	<!-- This filter swaps the red and blue channels -->
 	<module name="rgbbgr" active="no"/>
 	
 	<!--
