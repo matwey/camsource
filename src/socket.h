@@ -19,8 +19,9 @@ struct peer
 int socket_listen(unsigned short, unsigned long);
 
 /* Accepts one new connection on given listening socket and fills the peer
- * struct with info. Returns -1 on error. */
-int socket_accept(int, struct peer *);
+ * struct with info. Will wait specified timeout msecs (0 = don't wait,
+ * negative = wait infinitely). Returns -1 on error or -2 on timeout. */
+int socket_accept(int, struct peer *, int);
 
 /* Creates a new socket and connects it to the specified host/port. The
  * peer struct will be filled with info. On error, a negative value is

@@ -391,10 +391,10 @@ ftpup_create_data_conn(struct ftpup_ctx *fctx)
 	
 	if (!fctx->passive)
 	{
-		ret = socket_accept(fctx->actpasv.act.listen_fd, &fctx->datapeer);
+		ret = socket_accept(fctx->actpasv.act.listen_fd, &fctx->datapeer, 10000);
 		if (ret)
 		{
-			log_log(MODNAME, "Accept() error: %s\n", strerror(errno));
+			log_log(MODNAME, "Accept() error or timeout: %s\n", strerror(errno));
 			close(fctx->actpasv.act.listen_fd);
 			return -1;
 		}

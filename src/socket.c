@@ -9,6 +9,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <sys/poll.h>
 
 #include "config.h"
 
@@ -53,10 +54,25 @@ socket_listen(unsigned short port, unsigned long ip)
 }
 
 int
-socket_accept(int fd, struct peer *peer)
+socket_accept(int fd, struct peer *peer, int timeout)
 {
 	int newfd, socklen;
 	struct sockaddr_in sin;
+	int ret;
+	struct pollfd pfd;
+	
+	if (fd < 0)
+		return -1;
+	
+	memset(&pfd, 0, sizeof(pfd));
+	pfd.fd = fd;
+	pfd.events = POLLIN;
+	
+	ret = poll(&pfd, 1, timeout);
+	if (ret < 0)
+		return -1;
+	if (ret == 0)
+		return -2;
 	
 	socklen = sizeof(peer->sin);
 	newfd = accept(fd, (struct sockaddr *) &sin, &socklen);
@@ -75,7 +91,7 @@ socket_accept_thread(int fd, struct peer *peer, void *(*func)(void *), void *arg
 	pthread_attr_t attr;
 	pthread_t tid;
 	
-	newfd = socket_accept(fd, peer);
+	newfd = socket_accept(fd, peer, -1);
 	if (newfd == -1)
 		return -1;
 
