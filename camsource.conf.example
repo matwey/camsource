@@ -233,10 +233,23 @@
 			<grabdev>second</grabdev>
 			<path>/othercam</path>
 			<!-- This example also shows how to deactivate
-			     one vpath: -->
+			     one vpath -->
 			<disable>yes</disable>
 		</vpath>
-		-->
+		
+		<vpath>
+			<!--
+				You can make the http module serve raw
+				image data instead of jpegs with the
+				<raw> tag. If enabled, the returned data
+				will be X*Y*3 bytes of rgb data. The http
+				headers will include the size of the image
+				(X and Y).
+			-->
+			<path>/raw</path>
+			<raw>yes</raw>
+			<disable>yes</disable>
+		</vpath>
 	</module>
 	
 	<!--

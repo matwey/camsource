@@ -286,7 +286,7 @@ grab_get_image(struct image *img, struct grab_ctx *ctx, const char *name)
 	if (!thread) {
 		printf("Warning: trying to grab from non-existant device '%s'\n", name);
 		/* dont crash */
-		image_new(img, 320, 240);
+		image_new(img, 1, 1);
 		return;
 	}
 	

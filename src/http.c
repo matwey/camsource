@@ -21,11 +21,16 @@
 
 #define MODNAME "http"
 
+struct vpathcfg {
+	int fps;
+	int raw:1;
+};
+
 static int http_load_conf(struct http_ctx *, xmlNodePtr);
 static void *http_conn(void *);
 static int http_path_ismatch(xmlNodePtr, char *);
 static void http_err(struct peer *, char *);
-static int http_get_fps(xmlNodePtr);
+static void http_fill_vpathcfg(xmlNodePtr, struct vpathcfg *);
 
 char *name = MODNAME;
 char *version = VERSION;
@@ -130,8 +135,11 @@ http_conn(void *peer_p)
 	struct image img;
 	struct grab_ctx idx;
 	struct jpegbuf jpegbuf;
-	int fps, count;
+	int count;
 	char *error;
+	struct vpathcfg vpathcfg;
+	char *contenttype;
+	char addheaders[256];
 	
 	memcpy(&http_peer, peer_p, sizeof(http_peer));
 	free(peer_p);
@@ -141,142 +149,166 @@ http_conn(void *peer_p)
 	
 	count = 0;
 	
-	ret = socket_readline(&http_peer.peer, buf, sizeof(buf), 20000);
-	if (ret)
-	{
-readlineerr:
-		switch (ret)
+	do {
+		ret = socket_readline(&http_peer.peer, buf, sizeof(buf), 20000);
+		if (ret)
 		{
-		case -1:
-			log_log(MODNAME, "Read error on connection from %s:%i (%s)\n",
-				socket_ip(&http_peer.peer), socket_port(&http_peer.peer), strerror(errno));
-			break;
-		case -2:
-			log_log(MODNAME, "Timeout on connection from %s:%i\n",
-				socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
-			break;
-		case -3:
-			log_log(MODNAME, "EOF on connection from %s:%i before full HTTP request was received\n",
-				socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
-			break;
+readlineerr:
+			switch (ret)
+			{
+			case -1:
+				log_log(MODNAME, "Read error on connection from %s:%i (%s)\n",
+					socket_ip(&http_peer.peer), socket_port(&http_peer.peer), strerror(errno));
+				break;
+			case -2:
+				log_log(MODNAME, "Timeout on connection from %s:%i\n",
+					socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
+				break;
+			case -3:
+				if (count)
+					break;
+				log_log(MODNAME, "EOF on connection from %s:%i before full HTTP request was received\n",
+					socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
+				break;
+			}
+			goto closenout;
 		}
-		goto closenout;
-	}
-	
-	if (strncmp("GET ", buf, 4))
-	{
-		log_log(MODNAME, "Invalid HTTP request (not GET) from %s:%i\n",
-			socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
-		goto closenout;
-	}
-	
-	url = buf + 4;
-	
-	p = strchr(url, ' ');
-	if (!p)
-		httpver = NULL;
-	else
-	{
-		*p++ = '\0';
-		if (strncmp("HTTP/", p, 5))
+		
+		if (strncmp("GET ", buf, 4))
+		{
+			log_log(MODNAME, "Invalid HTTP request (not GET) from %s:%i\n",
+				socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
+			goto closenout;
+		}
+		
+		url = buf + 4;
+		
+		p = strchr(url, ' ');
+		if (!p)
 			httpver = NULL;
 		else
 		{
-			httpver = p + 5;
-			if (!*httpver)
+			*p++ = '\0';
+			if (strncmp("HTTP/", p, 5))
 				httpver = NULL;
+			else
+			{
+				httpver = p + 5;
+				if (!*httpver)
+					httpver = NULL;
+			}
 		}
-	}
-	
-	if (!*url || !httpver)
-	{
-		log_log(MODNAME, "Invalid HTTP request or version from %s:%i\n",
-			socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
-		goto closenout;
-	}
-	
-	log_log(MODNAME, "Request for %s from %s:%i\n",
-		url, socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
-
-	error = NULL;
-	for (subnode = http_peer.mod_ctx->node->xml_children; subnode; subnode = subnode->next)
-	{
-		if (!xml_isnode(subnode, "vpath"))
-			continue;
-		if (!http_path_ismatch(subnode, url))
-			continue;
-		goto match;
-	}
-	error = "404 Not found";
-	
-match:
-	for (;;)
-	{
-		ret = socket_readline(&http_peer.peer, buf, sizeof(buf), 20000);
-		if (ret)
-			goto readlineerr;
-		if (!*buf)
-			break;
-	}
-	
-	if (error) {
-		http_err(&http_peer.peer, error);
-		goto closenout;
-	}
-	
-	fps = http_get_fps(subnode);
-	if (fps > 0)
-	{
-		snprintf(buf, sizeof(buf) - 1,
-			"HTTP/1.0 200 OK\r\n"
-			"Server: " PACKAGE_STRING "\r\n"
-			"Pragma: no-cache\r\n"
-			"Cache-Control: no-cache\r\n"
-			"Content-Type: multipart/x-mixed-replace;boundary=Juigt9G7bb7sfdgsdZGIDFsjhn\r\n"
-			"\r\n"
-			"--Juigt9G7bb7sfdgsdZGIDFsjhn\r\n");
-		socket_write(&http_peer.peer, buf, strlen(buf), 20000);
-	}
-	
-	memset(&idx, 0, sizeof(idx));
-	do
-	{
-		filter_get_image(&img, &idx, http_peer.mod_ctx->node, subnode, NULL);
-		jpeg_compress(&jpegbuf, &img, subnode);
 		
-		if (!fps)
+		if (!*url || !httpver)
+		{
+			log_log(MODNAME, "Invalid HTTP request or version from %s:%i\n",
+				socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
+			goto closenout;
+		}
+		
+		log_log(MODNAME, "Request for %s from %s:%i\n",
+			url, socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
+	
+		error = NULL;
+		for (subnode = http_peer.mod_ctx->node->xml_children; subnode; subnode = subnode->next)
+		{
+			if (!xml_isnode(subnode, "vpath"))
+				continue;
+			if (!http_path_ismatch(subnode, url))
+				continue;
+			goto match;
+		}
+		error = "404 Not found";
+		
+match:
+		for (;;)
+		{
+			ret = socket_readline(&http_peer.peer, buf, sizeof(buf), 20000);
+			if (ret)
+				goto readlineerr;
+			if (!*buf)
+				break;
+		}
+		
+		if (error) {
+			http_err(&http_peer.peer, error);
+			goto closenout;
+		}
+		
+		http_fill_vpathcfg(subnode, &vpathcfg);
+		if (vpathcfg.fps > 0)
+		{
 			snprintf(buf, sizeof(buf) - 1,
 				"HTTP/1.0 200 OK\r\n"
 				"Server: " PACKAGE_STRING "\r\n"
-				"Content-Length: %i\r\n"
-				"Connection: close\r\n"
+				"Connection: close\r\n"		/* <-- does that make sense? */
 				"Pragma: no-cache\r\n"
 				"Cache-Control: no-cache\r\n"
-				"Content-Type: image/jpeg\r\n"
-				"\r\n",
-				jpegbuf.bufsize);
-		else
-			snprintf(buf, sizeof(buf) - 1,
-				"Content-Length: %i\r\n"
-				"Content-Type: image/jpeg\r\n"
-				"\r\n",
-				jpegbuf.bufsize);
-		ret = socket_write(&http_peer.peer, buf, strlen(buf), 20000);
-		if (ret > 0)
-			ret = socket_write(&http_peer.peer, jpegbuf.buf, jpegbuf.bufsize, 20000);
-
-		count++;
-
-		if (fps && ret > 0)
-		{
-			ret = socket_write(&http_peer.peer, "\r\n--Juigt9G7bb7sfdgsdZGIDFsjhn\r\n", 32, 20000);
-			usleep(1000000 / fps);
+				"Content-Type: multipart/x-mixed-replace;boundary=Juigt9G7bb7sfdgsdZGIDFsjhn\r\n"
+				"\r\n"
+				"--Juigt9G7bb7sfdgsdZGIDFsjhn\r\n");
+			socket_write(&http_peer.peer, buf, strlen(buf), 20000);
 		}
 		
-		image_destroy(&img);
-		free(jpegbuf.buf);
+		memset(&idx, 0, sizeof(idx));
+		do
+		{
+			filter_get_image(&img, &idx, http_peer.mod_ctx->node, subnode, NULL);
+			if (!vpathcfg.raw) {
+				jpeg_compress(&jpegbuf, &img, subnode);
+				contenttype = "image/jpeg";
+				addheaders[0] = '\0';
+			}
+			else {
+				jpegbuf.buf = img.buf;
+				jpegbuf.bufsize = img.bufsize;
+				contenttype = "application/octet-stream";
+				snprintf(addheaders, sizeof(addheaders) - 1,
+					"X-Image-Width: %i\r\n"
+					"X-Image-Height: %i\r\n",
+					img.x, img.y);
+			}
+			
+			if (!vpathcfg.fps)
+				snprintf(buf, sizeof(buf) - 1,
+					"HTTP/1.0 200 OK\r\n"
+					"Server: " PACKAGE_STRING "\r\n"
+					"Content-Length: %i\r\n"
+					"Connection: Keep-alive\r\n"
+					"Pragma: no-cache\r\n"
+					"Cache-Control: no-cache\r\n"
+					"Content-Type: %s\r\n"
+					"%s"
+					"\r\n",
+					jpegbuf.bufsize, contenttype,
+					addheaders);
+			else
+				snprintf(buf, sizeof(buf) - 1,
+					"Content-Length: %i\r\n"
+					"Content-Type: %s\r\n"
+					"%s"
+					"\r\n",
+					jpegbuf.bufsize, contenttype,
+					addheaders);
+			ret = socket_write(&http_peer.peer, buf, strlen(buf), 20000);
+			if (ret > 0)
+				ret = socket_write(&http_peer.peer, jpegbuf.buf, jpegbuf.bufsize, 20000);
+	
+			count++;
+	
+			if (vpathcfg.fps && ret > 0)
+			{
+				ret = socket_write(&http_peer.peer, "\r\n--Juigt9G7bb7sfdgsdZGIDFsjhn\r\n", 32, 20000);
+				usleep(1000000 / vpathcfg.fps);
+			}
+			
+			image_destroy(&img);
+			if (!vpathcfg.raw)
+				free(jpegbuf.buf);
+		}
+		while (vpathcfg.fps > 0 && ret > 0);
 	}
-	while (fps > 0 && ret > 0);
+	while (ret > 0);
 
 closenout:
 	log_log(MODNAME, "Closing connection from %s:%i, %i frame(s) served\n",
@@ -330,14 +362,17 @@ http_err(struct peer *peer, char *err)
 }
 
 static
-int
-http_get_fps(xmlNodePtr node)
+void
+http_fill_vpathcfg(xmlNodePtr node, struct vpathcfg *cfg)
 {
+	memset(cfg, 0, sizeof(*cfg));
+	
 	for (node = node->xml_children; node; node = node->next)
 	{
 		if (xml_isnode(node, "fps"))
-			return xml_atoi(node, 0);
+			cfg->fps = xml_atoi(node, 0);
+		else if (xml_isnode(node, "raw") && !strcmp("yes", xml_getcontent_def(node, "")))
+			cfg->raw = 1;
 	}
-	return 0;
 }
 

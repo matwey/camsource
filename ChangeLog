@@ -1,6 +1,11 @@
 $Id$
 
 Jan 14 2003
+	- The http module can now server raw image data, plus it now
+	  supports 'connection: keep-alive'. Combining those two
+	  features, it is possible for third-party processes to
+	  access the video data.
+	- Fixed old jpeg compression crash bug
 	- Added capability of handling multiple input v4l devices
 	  at the same time.
 

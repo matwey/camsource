@@ -65,7 +65,7 @@ j_eob(struct jpeg_compress_struct *cinfo)
 	struct jpeg_ctx *jctx;
 	int filled;
 	
-	jctx = (struct jpeg_ctx *) cinfo;
+	jctx = (struct jpeg_ctx *) cinfo->dest;
 	filled = jctx->bufsize - jctx->jdm.free_in_buffer;
 	jctx->buf = realloc(jctx->buf, jctx->bufsize * 2);
 	jctx->jdm.next_output_byte = jctx->buf + filled;
@@ -120,7 +120,7 @@ jpeg_compress(struct jpegbuf *dst, const struct image *src, xmlNodePtr node)
 	cinfo.dest = &jctx.jdm;
 	
 	cinfo.image_width = src->x;
-	cinfo.image_height =	src->y;
+	cinfo.image_height = src->y;
 	cinfo.input_components = 3;
 	cinfo.in_color_space = JCS_RGB;
 	jpeg_set_defaults(&cinfo);
