@@ -21,10 +21,17 @@ sub main() {
     die("Don't know how to handle '$url{protocol}' protocol") if (lc($url{protocol}) ne "http");
     
     my $fd = connectto($url{host}, $url{port})
-    	or die("Unable to connect to $url{host}: $!");
+    	or die("Unable to connect to $url{host}:$url{port}: $!");
     sendrequest($fd, $url{path});
     
     my @headers = getheaders($fd);
+    my $httpresp = shift(@headers);
+    
+    die("document contains no data")
+    	if (!defined($httpresp));
+    die("Got http response '$httpresp'")
+    	if ($httpresp !~ m,^HTTP/[\d.]+ 200\b,);
+
     my $conlen = grepheader("content-length", @headers)
     	or die("missing content-length header");
     my $x = grepheader("x-image-width", @headers)
@@ -147,17 +154,16 @@ sub sendrequest($$) {
 sub getheaders($) {
     my ($fd) = @_;
     
-    my $httpresp = <$fd>;
-    return () if ($httpresp !~ m,^HTTP/[\d.]+ 200,);
-    
     my @ret;
     for (;;) {
 	my $line = <$fd>;
-	return if (!defined($line));
+	last if (!defined($line));
 	$line =~ s/[\x0d\x0a]*$//;
-	return @ret if ($line eq "");
+	last if ($line eq "");
 	push(@ret, $line);
     }
+    
+    return @ret;
 }
 
 ##########################################
