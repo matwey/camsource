@@ -307,6 +307,7 @@ mod_close(struct module *mod)
 		}
 		dlclose(dlh);
 inuse:
+		;
 	}
 }
 
