@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <time.h>
 #include <sys/time.h>
 #include <libxml/parser.h>
 
@@ -67,6 +68,8 @@ thread(void *mctx)
 	struct peer peer;
 	int ret;
 	long usecs;
+	char tsfnbuf[1024];
+	struct tm tm;
 	
 	fctx = ((struct module_ctx *) mctx)->custom;
 	
@@ -120,10 +123,13 @@ thread(void *mctx)
 		if (ret)
 			goto closenstuff;
 		
+		localtime_r(&tstart.tv_sec, &tm);
+		strftime(tsfnbuf, sizeof(tsfnbuf) - 1, fctx->file, &tm);
+		
 		if (!fctx->safemode)
-			ftpup_cmd(fctx, "STOR %s\r\n", fctx->file);
+			ftpup_cmd(fctx, "STOR %s\r\n", tsfnbuf);
 		else
-			ftpup_cmd(fctx, "STOR %s.tmp\r\n", fctx->file);
+			ftpup_cmd(fctx, "STOR %s.tmp\r\n", tsfnbuf);
 		
 		ret = ftpup_create_data_conn(fctx);
 
@@ -147,10 +153,10 @@ thread(void *mctx)
 		
 		if (fctx->safemode)
 		{
-			ftpup_cmd(fctx, "RNFR %s.tmp\r\n", fctx->file);
+			ftpup_cmd(fctx, "RNFR %s.tmp\r\n", tsfnbuf);
 			if (ftpup_read_ftp_resp(fctx, 350))
 				goto closenstuff;
-			ftpup_cmd(fctx, "RNTO %s\r\n", fctx->file);
+			ftpup_cmd(fctx, "RNTO %s\r\n", tsfnbuf);
 			if (ftpup_read_ftp_resp(fctx, 250))
 				goto closenstuff;
 		}
@@ -159,7 +165,7 @@ thread(void *mctx)
 		ftpup_read_ftp_resp(fctx, 0);
 		gettimeofday(&tend, NULL);
 		log_log(MODNAME, "Upload of '%s' completed in %2.2f seconds\n",
-			fctx->file, (tend.tv_sec - tstart.tv_sec) + (tend.tv_usec - tstart.tv_usec)/1000000.0f);
+			tsfnbuf, (tend.tv_sec - tstart.tv_sec) + (tend.tv_usec - tstart.tv_usec)/1000000.0f);
 closenstuff:
 		socket_close(&peer);
 freensleep:

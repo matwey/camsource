@@ -285,7 +285,10 @@
 			Supported options:
 			
 			- path: Destination filename. The prefix "~/" has
-			  the usual meaning.
+			  the usual meaning. The filename is passed to
+			  strftime(), so you can include a timestamp in
+			  the filename. Check your strftime man page for
+			  a list of % substitutions you can do.
 			- interval: Delay between writing snapshot files.
 			  This tag can take an attribute "unit" which
 			  can be one of "sec", "min", "hour" or "day".
@@ -384,7 +387,9 @@
 			  can be an absolute or relative pathname. If
 			  not specified, the file will be put into
 			  whatever dir is the current dir after login.
-			- file: Destination filename
+			- file: Destination filename. As in the filewrite
+			  module, you can put % format specifiers here,
+			  which will be interpreted by strftime().
 			- passive: A yes/no option, whether to use
 			  passive or active mode. Defaults to active
 			  mode ("no").

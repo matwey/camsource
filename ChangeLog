@@ -1,5 +1,9 @@
 $Id$
 
+Jan 26 2003
+	- Libfilewrite and libftpup now have the capability of
+	  timestamping filenames.
+
 Jan 23 2003
 	- Applied patch by Jaco Greeff to give libftpup a better
 	  sleep time precision, compensating for long upload times.

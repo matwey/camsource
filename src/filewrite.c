@@ -6,6 +6,8 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/wait.h>
+#include <sys/time.h>
+#include <time.h>
 
 #include "config.h"
 
@@ -60,13 +62,20 @@ thread(void *arg)
 	struct jpegbuf jbuf;
 	int ret;
 	int cpid;
+	char tsfnbuf[1024];
+	time_t now;
+	struct tm tm;
 	
 	fctx = ((struct module_ctx *) arg)->custom;
-	snprintf(buf, sizeof(buf) - 1, "%s.tmp", fctx->path);
 	
 	memset(&idx, 0, sizeof(idx));
 	for (;;)
 	{
+		time(&now);
+		localtime_r(&now, &tm);
+		strftime(tsfnbuf, sizeof(tsfnbuf) - 1, fctx->path, &tm);
+		snprintf(buf, sizeof(buf) - 1, "%s.tmp", tsfnbuf);
+
 		filter_get_image(&curimg, &idx, ((struct module_ctx *) arg)->node, NULL);
 		jpeg_compress(&jbuf, &curimg, ((struct module_ctx *) arg)->node);
 		
@@ -124,11 +133,11 @@ thread(void *arg)
 				goto freesleeploop;
 		}
 		
-		ret = rename(buf, fctx->path);
+		ret = rename(buf, tsfnbuf);
 		if (ret != 0)
 		{
 			log_log(MODNAME, "Rename of %s to %s failed: %s\n",
-				buf, fctx->path, strerror(errno));
+				buf, tsfnbuf, strerror(errno));
 			unlink(buf);
 			goto freesleeploop;
 		}
