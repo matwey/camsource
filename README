@@ -20,13 +20,17 @@ Or, if you didn't install it:
 
 $ src/camsource
 
-If camsource tells you it's ready to grab images, feel free to try it
+If camsource starts up without errors, it will go into background
+automatically. Note that any errors from the grabbing thread show up
+_after_ the logfile has been started, so you should check the logfile
+for any errors (by default .camsource.log in your home dir). If
+everything worked right and camsource shows up in your process list
+(multiple time as it's multithreaded), feel free to try it
 out. With the default config, point your browser to
 <http://localhost:9192/> to see a 320x240 snapshot. The "/large" path
 gives you an unresized snapshot. If the images appear mirrored, edit
 your config and disable the "flip" module (it's enabled by default to
-mirror all images). Note that camsource doesn't go into background by
-itself (at least not yet), so you have to use the '&' thing to do that.
+mirror all images).
 
 With the default config, you have multiple options for getting an
 animated webcam display:

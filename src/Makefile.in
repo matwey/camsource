@@ -85,11 +85,11 @@ pkglib_LTLIBRARIES = libwc_serv.la libjpeg_comp.la libflip.la \
 
 pkginclude_HEADERS = camdev.h configfile.h filter.h flip.h grab.h \
 	image.h jpeg.h main.h mod_handle.h module.h resize.h \
-	unpalette.h wc_serv.h xmlhelp.h socket.h http.h
+	unpalette.h wc_serv.h xmlhelp.h socket.h http.h log.h
 
 
 camsource_SOURCES = main.c grab.c camdev.c unpalette.c configfile.c \
-	mod_handle.c image.c filter.c xmlhelp.c
+	mod_handle.c image.c filter.c xmlhelp.c log.c
 
 
 libwc_serv_la_SOURCES = wc_serv.c
@@ -138,7 +138,8 @@ PROGRAMS = $(bin_PROGRAMS)
 
 am_camsource_OBJECTS = main.$(OBJEXT) grab.$(OBJEXT) camdev.$(OBJEXT) \
 	unpalette.$(OBJEXT) configfile.$(OBJEXT) mod_handle.$(OBJEXT) \
-	image.$(OBJEXT) filter.$(OBJEXT) xmlhelp.$(OBJEXT)
+	image.$(OBJEXT) filter.$(OBJEXT) xmlhelp.$(OBJEXT) \
+	log.$(OBJEXT)
 camsource_OBJECTS = $(am_camsource_OBJECTS)
 camsource_LDADD = $(LDADD)
 camsource_DEPENDENCIES =
@@ -154,10 +155,10 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/filter.Po $(DEPDIR)/flip.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/grab.Po $(DEPDIR)/http.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/image.Po $(DEPDIR)/jpeg.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/main.Po $(DEPDIR)/mod_handle.Po \
-@AMDEP_TRUE@	$(DEPDIR)/resize.Plo $(DEPDIR)/socket.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/unpalette.Po $(DEPDIR)/wc_serv.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/xmlhelp.Po
+@AMDEP_TRUE@	$(DEPDIR)/log.Po $(DEPDIR)/main.Po \
+@AMDEP_TRUE@	$(DEPDIR)/mod_handle.Po $(DEPDIR)/resize.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/socket.Plo $(DEPDIR)/unpalette.Po \
+@AMDEP_TRUE@	$(DEPDIR)/wc_serv.Plo $(DEPDIR)/xmlhelp.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
@@ -268,6 +269,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/http.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/image.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/jpeg.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/log.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/mod_handle.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/resize.Plo@am__quote@

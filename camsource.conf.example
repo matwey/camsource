@@ -21,6 +21,13 @@
 		<height>480</height>
 		<fps>15</fps>
 	</camdev>
+	
+	<!--
+		If no logfile is given (or tag is empty), camsource
+		will log to stdout only and not go into background.
+		The prefix "~/" has the usual meaning.
+	-->
+	<logfile>~/.camsource.log</logfile>
 
 	<!--
 		Available modules. A module will only be loaded

@@ -9,6 +9,7 @@
 #include "configfile.h"
 #include "mod_handle.h"
 #include "camdev.h"
+#include "log.h"
 
 int
 main(int argc, char **argv)
@@ -45,6 +46,7 @@ main_init(char *config)
 	int ret;
 	pthread_t grab_tid;
 	pthread_attr_t attr;
+	int logfd;
 	
 	signal(SIGPIPE, SIG_IGN);
 	
@@ -66,9 +68,14 @@ main_init(char *config)
 		exit(1);
 	}
 	
+	logfd = log_open();
+	
 	grab_thread_init();
 
 	mod_load_all();
+	
+	if (logfd >= 0)
+		log_replace_bg(logfd);
 	
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
