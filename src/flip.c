@@ -18,15 +18,30 @@ filter(struct image *img, xmlNodePtr node)
 	unsigned int x, y, vy;
 	unsigned char *r, *w;
 	int h, v;
+	char *cont;
 	
 	h = v = 0;
 	
 	for (node = node->children; node; node = node->next)
 	{
 		if (xml_isnode(node, "horiz"))
+		{
+			cont = xml_getcontent(node);
+			if (cont
+				&& (!strcmp(cont, "yes")
+					|| !strcmp(cont, "on")
+					|| !strcmp(cont, "1")))
 			h = 1;
+		}
 		else if (xml_isnode(node, "vert"))
+		{
+			cont = xml_getcontent(node);
+			if (cont
+				&& (!strcmp(cont, "yes")
+					|| !strcmp(cont, "on")
+					|| !strcmp(cont, "1")))
 			v = 1;
+		}
 	}
 	
 	if (!h && !v)

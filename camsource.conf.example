@@ -62,6 +62,16 @@
 	
 	<module name="http" active="yes">
 		<port>9192</port>
+		
+		<vpath>
+			<path>/</path>
+			<path>/small</path>
+			
+			<filter name="resize">
+				<width>320</width>
+				<height>240</height>
+			</filter>
+		</vpath>
 	</module>
 	
 	<module name="jpeg_comp" active="yes">
@@ -82,8 +92,8 @@
 		it to the image several times.
 	-->
 	<filter name="flip">
-		<horiz/>
-		<!-- <vert/> -->
+		<horiz>yes</horiz>
+		<vert>no</vert>
 	</filter>
 	
 </camsourceconfig>
