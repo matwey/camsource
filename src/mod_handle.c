@@ -188,6 +188,15 @@ mod_try_dlopen(char *mod)
 	char modname[1024];
 	char *modpatterns[] =
 	{
+#ifdef PKGLIBDIR
+		PKGLIBDIR "/lib%s.so",
+#endif
+#ifdef PREFIX
+		PREFIX "/camsource/lib%s.so",
+		PREFIX "/lib/lib%s.so",
+#endif
+		"/usr/local/lib/camsource/lib%s.so",
+		"/usr/lib/camsource/lib%s.so",
 		"lib%s.so",
 		".libs/lib%s.so",
 		"src/.libs/lib%s.so",

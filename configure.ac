@@ -45,7 +45,7 @@ fi
 # Libs for plugins
 AC_CHECK_LIB(jpeg, jpeg_start_compress, :, [AC_MSG_ERROR([Could not find libjpeg])])
 
-CFLAGS="$CFLAGS -Wall -D_REENTRANT"
+CFLAGS="$CFLAGS -Wall -D_REENTRANT -DPREFIX=\"\\\"\${prefix}\\\"\" -DPKGLIBDIR=\"\\\"\${pkglibdir}\\\"\""
 LDFLAGS="$LDFLAGS -rdynamic"
 
 AC_OUTPUT

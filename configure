@@ -8645,7 +8645,7 @@ echo "$as_me: error: Could not find libjpeg" >&2;}
 fi
 
 
-CFLAGS="$CFLAGS -Wall -D_REENTRANT"
+CFLAGS="$CFLAGS -Wall -D_REENTRANT -DPREFIX=\"\\\"\${prefix}\\\"\" -DPKGLIBDIR=\"\\\"\${pkglibdir}\\\"\""
 LDFLAGS="$LDFLAGS -rdynamic"
 
 cat >confcache <<\_ACEOF
