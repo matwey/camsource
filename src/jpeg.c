@@ -81,16 +81,29 @@ j_td(struct jpeg_compress_struct *cinfo)
 }
 
 void
-jpeg_compress(struct jpegbuf *dst, const struct image *src, int qual)
+jpeg_compress(struct jpegbuf *dst, const struct image *src, xmlNodePtr node)
 {
 	struct jpeg_compress_struct cinfo;
 	struct jpeg_error_mgr jerr;
 	JSAMPROW row;
 	int rownum;
 	struct jpeg_ctx jctx;
+	int qual;
 	
-	if (qual <= 0)
-		qual = defqual;
+	qual = defqual;
+	if (node)
+	{
+		for (node = node->children; node; node = node->next)
+		{
+			if (xml_isnode(node, "jpegqual")
+				|| xml_isnode(node, "jpgqual")
+				|| xml_isnode(node, "jpegquality")
+				|| xml_isnode(node, "jpgquality"))
+			{
+				qual = xml_atoi(node, qual);
+			}
+		}
+	}
 	
 	cinfo.err = jpeg_std_error(&jerr);
 	jpeg_create_compress(&cinfo);

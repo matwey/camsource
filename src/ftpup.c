@@ -71,7 +71,7 @@ thread(void *mctx)
 	{
 		grab_get_image(&img, &idx);
 		filter_apply(&img, ((struct module_ctx *) mctx)->node);
-		jpeg_compress(&jbuf, &img, 0);
+		jpeg_compress(&jbuf, &img, ((struct module_ctx *) mctx)->node);
 		
 		ret = socket_connect(&peer, fctx->host, fctx->port);
 		if (ret)

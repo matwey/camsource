@@ -1,4 +1,7 @@
+$Id$
+
 Sep 20 2002
+	- Made custom jpeg compression quality levels possible (<jpegqual>)
 	- Pumped devel version number to 0.2.1
 
 --- 0.2.0 ---

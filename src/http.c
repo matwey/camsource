@@ -209,7 +209,7 @@ match:
 		grab_get_image(&img, &idx);
 		filter_apply(&img, http_peer.mod_ctx->node);
 		filter_apply(&img, subnode);
-		jpeg_compress(&jpegbuf, &img, 0);
+		jpeg_compress(&jpegbuf, &img, subnode);
 		
 		if (!fps)
 			snprintf(buf, sizeof(buf) - 1,

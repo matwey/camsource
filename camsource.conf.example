@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<!-- $Id$ -->
 <camsourceconfig>
 
 	<!-- Global config options -->
@@ -85,6 +86,10 @@
 		sections. Each of these sections describes another
 		variation of the image, with different properties,
 		using different filters.
+		If you want to specify a custom jpeg compression quality
+		with a <jpegqual> tag, you must specify it within
+		the <vpath> definitions. There is no global config
+		tag for this.
 		Each vpath definition should contain one or more <path>
 		tags, each of which can be used to access this image
 		variant (those paths can be thought of as aliases).
@@ -163,11 +168,17 @@
 			  to the logfile. If you need to have anything
 			  fancy for a command, make a shell script.
 			- Of course you can add filters here too.
+			- And, like with all worker modules, you can
+			  have multiple instances/aliases of it too,
+			  each with different configurations.
 		-->
-		<path>~/tmp/camera.jpg</path>
+		<path>/usr/local/apache/htdocs/camera.jpg</path>
 		<interval unit="sec">30</interval>
 		<chmod>0644</chmod>
-		<cmd>~/bin/snapshot.sh</cmd>
+		<!-- <cmd>~/bin/snapshot.sh</cmd> -->
+		<jpegqual>75</jpegqual>
+		<!-- For a description of the <jpegqual> tag, see
+			the jpeg_comp module entry -->
 	</module>
 	
 	<module name="ftpup" active="no">
@@ -209,11 +220,20 @@
 		<passive>no</passive>
 		<safemode>yes</safemode>
 		<interval unit="sec">30</interval>
+		<jpegqual>75</jpegqual>
 	</module>
 
 	<module name="jpeg_comp" active="yes">
-		<!-- quality: default compression quality, 1-100 -->
+		<!-- quality: default compression quality, 1-100.
+			If not specified, defaults to 75. -->
 		<quality>40</quality>
+		<!--
+			The modules which use jpeg_comp may pass a pointer
+			to an xml tree to it, which can include a <jpegqual>
+			tag. This tag, if present, specifies a quality
+			override. Usually you can put this tag into the
+			main <module> config section.
+		-->
 	</module>
 	
 	<module name="flip" active="yes"/>
