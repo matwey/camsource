@@ -13,7 +13,8 @@
 			all frame rates are supported either).
 			Path defaults to /dev/video0, frame size defaults
 			to max size as reported by the driver, fps
-			defaults to unchanged.
+			defaults to unchanged. You can put 0 for the fps
+			and width/height options to use the default values.
 		-->
 		<path>/dev/video0</path>
 		<width>640</width>

@@ -75,6 +75,7 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 	if (ret != 0)
 	{
 		printf("ioctl \"set grab window\" failed: %s\n", strerror(errno));
+		printf("Check your <camdev> config section for width/height and fps settings\n");
 		return -1;
 	}
 	ret = ioctl(newcamdev.fd, VIDIOCGWIN, &vidwin);
