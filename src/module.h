@@ -42,7 +42,11 @@
  *    of the associated input plugin to get frames. The init()
  *    function will still get a pointer to its <module> structure,
  *    while the opendev() function will get a pointer to the <camdev>
- *    config structure.
+ *    config structure. Another optional function is the postprocess()
+ *    function, which (if present) will be called for each grabbed
+ *    frame, after it has been converted to the normal rgb format.
+ *    The optional capdump() function should be included to support
+ *    the -c command line switch.
  * You must define at least one of the above before including this
  * file (module.h). The brave can even define multiple of them,
  * for example a module that has both its own thread and provides
@@ -101,8 +105,11 @@ int filter(struct image *, xmlNodePtr, void **);
 #ifdef MODULE_INPUT
 
 struct grab_camdev;
+struct image;
 int opendev(xmlNodePtr, struct grab_camdev *);
 unsigned char *input(struct grab_camdev *);
+void postprocess(struct grab_camdev *, struct image *);
+void capdump(xmlNodePtr, struct grab_camdev *);
 
 #endif	/* MODULE_INPUT */
 

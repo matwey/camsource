@@ -49,7 +49,7 @@ image_move(struct image *dst, const struct image *src)
 float
 image_brightness(struct image *img)
 {
-	int i, v;
+	int i;
 	float sum = 0;
 	unsigned char *p = img->buf;
 	for (i=0; i<img->x*img->y; i++) {

@@ -27,6 +27,7 @@ struct grab_camdev
 
 int grab_threads_init(void);
 int grab_open_all(void);
+void grab_dump_all(void);
 void grab_start_all(void);
 long timeval_diff(struct timeval *, struct timeval *);
 

@@ -1,6 +1,8 @@
 $Id$
 
 Apr 20 2003
+	- Brought back the -c flag with changed behavior to
+	  fit the new modular input plugin design.
 	- Applied (modified) patch sent by Nigel Roberts
 	  implementing the <autobrightness> feature. Credits
 	  also go to Stefan Meyer for the original code from

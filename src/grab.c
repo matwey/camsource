@@ -71,6 +71,7 @@ struct grabthread {
 	int (*opendev)(xmlNodePtr, struct grab_camdev *);
 	unsigned char *(*input)(struct grab_camdev *);
 	void (*postprocess)(struct grab_camdev *, struct image *);
+	void (*capdump)(xmlNodePtr, struct grab_camdev *);
 	char *cmd;
 	int cmdtimeout;
 	int cmdfired;
@@ -137,6 +138,7 @@ grab_threads_init()
 		newthread->opendev = opendev;
 		newthread->input = input;
 		newthread->postprocess = dlsym(mod->dlhand, "postprocess");
+		newthread->capdump = dlsym(mod->dlhand, "capdump");
 		newthread->cmd = cmd;
 		newthread->cmdtimeout = cmdtimeout;
 
@@ -182,6 +184,21 @@ grab_open_all()
 	}
 	
 	return 0;
+}
+
+void
+grab_dump_all()
+{
+	struct grabthread *thread;
+	
+	printf("\n");
+	for (thread = grabthreadshead; thread; thread = thread->next) {
+		if (thread->capdump)
+			thread->capdump(thread->node, &thread->gcamdev);
+		else
+			printf("Device \"%s\" doesn't support capabilities dumping.\n", thread->name);
+		printf("\n");
+	}
 }
 
 void

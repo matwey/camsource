@@ -18,19 +18,16 @@
 
 /* $Id$ */
 
-static void main_init(char *);
+static void main_init(char *, int);
 static int kill_camsource(struct stat *);
 
 int
 main(int argc, char **argv)
 {
 	if (argc >= 2 && *argv[1] == '-') {
-		if (!strcmp(argv[1], "-c")) {
-			/*camdev_capdump(argv[2]);*/
-			exit(0);
-		}
-		
-		if (!strcmp(argv[1], "-k") || !strcmp(argv[1], "-s")) {
+		if (!strcmp(argv[1], "-c"))
+			main_init(argv[2], 1);
+		else if (!strcmp(argv[1], "-k") || !strcmp(argv[1], "-s")) {
 			struct stat sb;
 			
 			if (!argv[2])
@@ -43,8 +40,7 @@ main(int argc, char **argv)
 			}
 			exit(0);
 		}
-
-		if (!strcmp(argv[1], "-r")) {
+		else if (!strcmp(argv[1], "-r")) {
 			struct stat sb;
 			int arg;
 			int ret;
@@ -62,7 +58,7 @@ main(int argc, char **argv)
 				printf("Sleeping before starting up...\n");
 				sleep(2);
 			}
-			main_init(argv[arg]);
+			main_init(argv[arg], 0);
 			/* drop thru */
 		}
 		else {
@@ -78,16 +74,16 @@ main(int argc, char **argv)
 			printf("       - Restarts camsource. This flag combines a 'camsource -k [device]'\n");
 			printf("         call with a 'camsource [configfile]' call. Both arguments are\n");
 			printf("         optional.\n");
-			printf("  %s -c [device]\n", argv[0]);
-			printf("       - Dumps the video capabilites info for given device. If no device\n");
-			printf("         is given, the device defaults to '/dev/video0'.\n");
+			printf("  %s -c [configfile]\n", argv[0]);
+			printf("       - Loads the specified (or default) config file, and dumps the\n");
+			printf("         capabilities for each specified grabbing device, then exits.\n");
 			printf("  %s -h\n", argv[0]);
 			printf("       - Shows this text.\n");
 			exit(0);
 		}
 	}
 	else
-		main_init(argv[1]);
+		main_init(argv[1], 0);
 	
 	
 	/* nothing to do, so exit */
@@ -98,7 +94,7 @@ main(int argc, char **argv)
 
 static
 void
-main_init(char *config)
+main_init(char *config, int dump)
 {
 	int ret;
 	int logfd;
@@ -126,7 +122,10 @@ main_init(char *config)
 		exit(1);
 	}
 	
-	logfd = log_open();
+	if (dump)
+		logfd = -1;
+	else
+		logfd = log_open();
 	
 	mod_load_all();
 
@@ -136,6 +135,11 @@ main_init(char *config)
 		exit(1);
 	}
 	
+	if (dump) {
+		grab_dump_all();
+		exit(0);
+	}
+
 	ret = grab_open_all();
 	if (ret)
 		exit(1);

@@ -361,7 +361,7 @@ postprocess(struct grab_camdev *gcamdev, struct image *img)
 		return;
 
 	brightness = image_brightness(img);
-	printf("Current Image Brightness = %2.1f\n", brightness);	
+	/*printf("Current Image Brightness = %2.1f\n", brightness);*/
 
 	if (!(brightness < camdev->autobrightness -1 || brightness > camdev->autobrightness +1))
 		return;
@@ -374,20 +374,107 @@ postprocess(struct grab_camdev *gcamdev, struct image *img)
 	change = camdev->autobrightness - brightness;
 	if (camdev->vidpic.brightness < 50) camdev->vidpic.brightness = 50;
 	change = camdev->vidpic.brightness * (change/100) * 3;
-	printf("Calculated change = %i\n", (int)change);
+	/*printf("Calculated change = %i\n", (int)change);*/
 	if (camdev->vidpic.brightness + change < 50) {
-		printf("Setting to MIN (50)\n");
+		/*printf("Setting to MIN (50)\n");*/
 		camdev->vidpic.brightness = 50;
 	} 
 	else if (camdev->vidpic.brightness + change > 65535) {
-		printf("Setting to MAX (65535)\n");
+		/*printf("Setting to MAX (65535)\n");*/
 		camdev->vidpic.brightness = 65535;
 	} 
 	else {
 		camdev->vidpic.brightness += (int)change; 
-		printf("Setting camera brightness to %i\n", camdev->vidpic.brightness);
+		/*printf("Setting camera brightness to %i\n", camdev->vidpic.brightness);*/
 	}
 	if (ioctl(camdev->fd, VIDIOCSPICT, &camdev->vidpic) == -1) {
 		perror ("ioctl (VIDIOCSPICT)");
 	}
+}
+
+void
+capdump(xmlNodePtr node, struct grab_camdev *gcamdev)
+{
+	char *path;
+	int fd, ret;
+	struct video_capability vidcap;
+	struct video_picture vidpic;
+	struct palette *pal;
+
+	path = "/dev/video0";
+	if (node)
+	{
+		for (node = node->xml_children; node; node = node->next)
+		{
+			if (xml_isnode(node, "path"))
+				path = xml_getcontent_def(node, path);
+		}
+	}
+
+	fd = open(path, O_RDONLY);
+	if (fd < 0)
+	{
+		printf("Unable to open %s (%s)\n", path, strerror(errno));
+		return;
+	}
+
+	ret = ioctl(fd, VIDIOCGCAP, &vidcap);
+	if (ret < 0)
+	{
+		printf("ioctl(VIDIOCGCAP) (get video capabilites) failed: %s\n", strerror(errno));
+		goto closenout;
+	}
+	
+	printf("Capability info for %s:\n", path);
+	printf("  Name: %s\n", vidcap.name);
+	printf("    Can %scapture to memory\n", (vidcap.type & VID_TYPE_CAPTURE) ? "" : "not ");
+	printf("    %s a tuner\n", (vidcap.type & VID_TYPE_TUNER) ? "Has" : "Doesn't have");
+	printf("    Can%s receive teletext\n", (vidcap.type & VID_TYPE_TELETEXT) ? "" : "not");
+	printf("    Overlay is %schromakeyed\n", (vidcap.type & VID_TYPE_CHROMAKEY) ? "" : "not ");
+	printf("    Overlay clipping is %ssupported\n", (vidcap.type & VID_TYPE_CLIPPING) ? "" : "not ");
+	printf("    Overlay %s frame buffer mem\n", (vidcap.type & VID_TYPE_FRAMERAM) ? "overwrites" : "doesn't overwrite");
+	printf("    Hardware image scaling %ssupported\n", (vidcap.type & VID_TYPE_SCALES) ? "" : "not ");
+	printf("    Captures in %s\n", (vidcap.type & VID_TYPE_MONOCHROME) ? "grayscale only" : "color");
+	printf("    Can capture %s image\n", (vidcap.type & VID_TYPE_SUBCAPTURE) ? "only part of the" : "the complete");
+	printf("  Number of channels: %i\n", vidcap.channels);
+	printf("  Number of audio devices: %i\n", vidcap.audios);
+	printf("  Grabbing frame size:\n");
+	printf("    Min: %ix%i\n", vidcap.minwidth, vidcap.minheight);
+	printf("    Max: %ix%i\n", vidcap.maxwidth, vidcap.maxheight);
+	
+	ret = ioctl(fd, VIDIOCGPICT, &vidpic);
+	if (ret != 0)
+	{
+		printf("ioctl(VIDIOCGPICT) (get picture properties) failed: %s\n", strerror(errno));
+		goto closenout;
+	}
+	
+	printf("\n");
+	printf("Palette information:\n");
+	for (pal = palettes; pal->val >= 0; pal++)
+	{
+		if (pal->val == vidpic.palette)
+		{
+			printf("  Currenctly active palette: %s with depth %u\n", pal->name, vidpic.depth);
+			goto palfound;
+		}
+	}
+	printf("  Currenctly active palette: not found/supported? (value %u, depth %u)\n", vidpic.palette, vidpic.depth);
+	
+palfound:
+	printf("  Probing for supported palettes:\n");
+	for (pal = palettes; pal->val >= 0; pal++)
+	{
+		vidpic.palette = pal->val;
+		vidpic.depth = pal->depth;
+		ioctl(fd, VIDIOCSPICT, &vidpic);
+		ioctl(fd, VIDIOCGPICT, &vidpic);
+		if (vidpic.palette == pal->val)
+			printf("    Palette \"%s\" supported: Yes, with depth %u\n", pal->name, vidpic.depth);
+		else
+			printf("    Palette \"%s\" supported: No\n", pal->name);
+	}	
+
+closenout:
+	close(fd);
 }
