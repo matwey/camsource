@@ -22,4 +22,6 @@ libtext.la
 text.lo
 librgbbgr.la
 rgbbgr.lo
+rotate.lo
+librotate.la
 

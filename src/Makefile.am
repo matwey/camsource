@@ -1,7 +1,7 @@
 bin_PROGRAMS = camsource
 pkglib_LTLIBRARIES = libwc_serv.la libjpeg_comp.la libflip.la \
 	libresize.la libsocket.la libhttp.la libfilewrite.la \
-	libftpup.la libtext.la librgbbgr.la
+	libftpup.la libtext.la librgbbgr.la librotate.la
 
 pkginclude_HEADERS = camdev.h configfile.h filter.h grab.h \
 	image.h jpeg.h mod_handle.h module.h unpalette.h xmlhelp.h \
@@ -23,6 +23,7 @@ libfilewrite_la_SOURCES = filewrite.c filewrite.h
 libftpup_la_SOURCES = ftpup.c ftpup.h
 libtext_la_SOURCES = text.c text.h font_6x11.h
 librgbbgr_la_SOURCES = rgbbgr.c
+librotate_la_SOURCES = rotate.c
 
 # $Id$
 

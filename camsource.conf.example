@@ -277,6 +277,13 @@
 		-->
 	</module>
 	
+	<!--
+		The following two modules are filters which are described
+		elsewhere. The flip filter by default is applied to all
+		images, see its <filter> tag near the bottom of this
+		file. The resize filter is applied to certain worker
+		module/configurations, see there for a description.
+	-->
 	<module name="flip" active="yes"/>
 	<module name="resize" active="yes"/>
 	
@@ -325,6 +332,15 @@
 	<module name="rgbbgr" active="no"/>
 	
 	<!--
+		A filter capable of rotating the image right (90 degrees)
+		or left (270 degrees). Rotating by 180 degrees is not
+		supported, as the flip filter with both horiz and vert
+		set to yes does exactly that. See below for an example
+		config (filter disabled by default).
+	-->
+	<module name="rotate" active="no"/>
+	
+	<!--
 		Global filters to use. Any filter given here
 		will be applied to every grabbed frame. If
 		a given filter module is not loaded, the filter
@@ -340,6 +356,15 @@
 	
 	<!-- Module not active by default -->
 	<filter name="rgbbgr"/>
+	
+	<!--
+		Ditto. If active, it would rotate the image right
+		(= 90 degrees clockwise). The only other possible
+		direction is "left".
+	-->
+	<filter name="rotate">
+		<direction>right</direction>
+	</filter>
 	
 </camsourceconfig>
 
