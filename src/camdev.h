@@ -3,7 +3,7 @@
 
 #include <linux/videodev.h>
 
-#include "unpalette.h"
+struct palette;
 
 struct camdev
 {

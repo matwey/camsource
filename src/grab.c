@@ -14,6 +14,7 @@
 #include "configfile.h"
 #include "mod_handle.h"
 #include "image.h"
+#include "unpalette.h"
 
 struct image current_image;
 pthread_cond_t image_cond;
