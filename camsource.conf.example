@@ -110,8 +110,11 @@
 				<width>320</width>
 				<height>240</height>
 			</filter>
+			
 			<filter name="text">
 				<text>Test</text>
+				<color>ffffff</color>
+				<bgcolor>trans</bgcolor>
 			</filter>
 		</vpath>
 
