@@ -86,7 +86,6 @@ load_config()
 	struct wc_config newconfig;
 	xmlDocPtr doc;
 	xmlNodePtr node;
-	char *s;
 	
 	memcpy(&newconfig, &wc_config, sizeof(newconfig));
 	
@@ -111,24 +110,22 @@ load_config()
 	{
 		if (xmlStrEqual(node->name, "port"))
 		{
-			s = xmlNodeListGetString(doc, node->children, 1);
-			newconfig.port = atoi(s);
-			free(s);
-			if (newconfig.port <= 0 || newconfig.port > 0xffff)
-			{
-				printf("Invalid port: %i\n", newconfig.port);
-				goto error;
-			}
+			if (!node->children || !node->children->content)
+				continue;
+			newconfig.port = atoi(node->children->content);
 		}
 	}
 	
 	xmlFreeDoc(doc);
+
+	if (newconfig.port <= 0 || newconfig.port > 0xffff)
+	{
+		printf("Invalid port: %i\n", newconfig.port);
+		return -1;
+	}
+
 	memcpy(&wc_config, &newconfig, sizeof(wc_config));
 	return 0;
-	
-error:
-	xmlFreeDoc(doc);
-	return -1;
 }
 
 int

@@ -73,7 +73,7 @@ grab_glob_filters(struct image *img)
 {
 	xmlDocPtr doc;
 	xmlNodePtr node;
-	char *prop;
+	xmlAttrPtr filtername;
 	struct module *mod;
 	int (*filter)(struct image *, xmlNodePtr);
 
@@ -91,14 +91,14 @@ grab_glob_filters(struct image *img)
 	{
 		if (!xmlStrEqual(node->name, "filter"))
 			continue;
-		prop = xmlGetProp(node, "name");
-		if (!prop)
+		filtername = xmlHasProp(node, "name");
+		if (!filtername || !filtername->children || !filtername->children->content)
 		{
 			printf("<filter> without name\n");
 			continue;
 		}
 		rwlock_rlock(&modules_lock);
-		mod = mod_find(prop);
+		mod = mod_find(filtername->children->content);
 		rwlock_runlock(&modules_lock);
 		if (mod)
 		{
@@ -106,9 +106,8 @@ grab_glob_filters(struct image *img)
 			if (filter)
 				filter(img, node);
 			else
-				printf("Module %s has no \"filter\" routine\n", prop);
+				printf("Module %s has no \"filter\" routine\n", filtername->children->content);
 		}
-		free(prop);
 	}
 	xmlFreeDoc(doc);
 }

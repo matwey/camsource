@@ -22,8 +22,8 @@ mod_load_all()
 {
 	xmlDocPtr doc;
 	xmlNodePtr node;
-	char *modname, *prop;
 	int modidx;
+	xmlAttrPtr modname, loadyn;
 	
 	rwlock_rlock(&configdoc_lock);
 	doc = xmlCopyDoc(configdoc, 1);
@@ -40,27 +40,26 @@ mod_load_all()
 	{
 		if (!xmlStrEqual(node->name, "module"))
 			continue;
-		modname = xmlGetProp(node, "name");
-		if (!modname)
+		modname = xmlHasProp(node, "name");
+		if (!modname || !modname->children || !modname->children->content)
 		{
-			printf("<module> tag without name property\n");
+			printf("<module> tag without valid name property\n");
 			continue;
 		}
-		prop = xmlGetProp(node, "load");
-		if (!prop || (strcmp(prop, "yes") && strcmp(prop, "1") && strcmp(prop, "on")))
+		loadyn = xmlHasProp(node, "load");
+		if (!loadyn
+			|| !loadyn->children
+			|| !loadyn->children->content
+			|| (strcmp(loadyn->children->content, "yes")
+				&& strcmp(loadyn->children->content, "1")
+				&& strcmp(loadyn->children->content, "on")))
 		{
-			if (prop)
-				free(prop);
-			free(modname);
 			continue;
 		}
-		free(prop);
 		
 		rwlock_wlock(&modules_lock);
-		mod_load(modname);
+		mod_load(modname->children->content);
 		rwlock_wunlock(&modules_lock);
-
-		free(modname);
 	}
 	
 	xmlFreeDoc(doc);

@@ -88,22 +88,18 @@ xmlNodePtr
 config_find_mod_section(xmlDocPtr doc, const char *mod)
 {
 	xmlNodePtr node;
-	char *modname;
+	xmlAttrPtr modname;
 	
 	node = xmlDocGetRootElement(doc);
 	for (node = node->children; node; node = node->next)
 	{
 		if (!xmlStrEqual(node->name, "module"))
 			continue;
-		modname = xmlGetProp(node, "name");
-		if (!modname)
+		modname = xmlHasProp(node, "name");
+		if (!modname || !modname->children || !modname->children->content)
 			continue;
-		if (strcmp(modname, mod))
-		{
-			free(modname);
+		if (strcmp(modname->children->content, mod))
 			continue;
-		}
-		free(modname);
 		return node->children;
 	}
 	return NULL;
