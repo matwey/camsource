@@ -45,7 +45,7 @@
  *    struct member. Note that the thread-id and custom pointer
  *    only make sense for a thread module. Returning anything but 0
  *    from init() means module init has failed. You may also omit
- *    init() altogether.
+ *    init() altogether. Note: do not create threads from init().
  */
 
 

@@ -12,10 +12,12 @@ struct camdev
 	struct video_capability vidcap;
 	struct video_picture vidpic;
 	struct palette *pal;
-	unsigned int x, y;
+	unsigned int x, y;	/* grabbing width and height being used */
 };
 
-/* Opens v4l device and fills struct with context info. Returns -1 on error */
+/* Opens v4l device and fills struct with context info. Second arg
+ * points to the <camdev> config section to use. On error, prints
+ * error msg and returns -1. */
 int camdev_open(struct camdev *, xmlNodePtr);
 
 #endif
