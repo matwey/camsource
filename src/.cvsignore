@@ -1,0 +1,6 @@
+.deps
+.libs
+Makefile
+camsource
+libwc_serv.la
+wc_serv.lo
