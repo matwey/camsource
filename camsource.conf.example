@@ -72,6 +72,11 @@
 				<height>240</height>
 			</filter>
 		</vpath>
+
+		<vpath>
+			<path>/big</path>
+			<path>/large</path>
+		</vpath>
 	</module>
 	
 	<module name="jpeg_comp" active="yes">

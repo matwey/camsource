@@ -81,3 +81,30 @@ socket_accept_thread(int fd, struct peer *peer, void *(*func)(void *), void *arg
 	return 0;
 }
 
+int
+socket_readline(int fd, char *buf, unsigned int bufsize)
+{
+	int ret;
+	unsigned int count;
+	
+	count = 0;
+	for (;;)
+	{
+		ret = read(fd, buf, 1);
+		if (ret != 1)
+			return -1;
+		if (*buf == '\n')
+			break;
+		buf++;
+		count++;
+		if (count >= bufsize)
+			return -1;
+	}
+	
+	*buf-- = '\0';
+	if (count >= 1 && *buf == '\r')
+		*buf = '\0';
+		
+	return 0;
+}
+

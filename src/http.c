@@ -1,3 +1,8 @@
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
 #include <libxml/parser.h>
 
 #include "config.h"
@@ -7,6 +12,9 @@
 #include "module.h"
 #include "xmlhelp.h"
 #include "socket.h"
+#include "grab.h"
+#include "filter.h"
+#include "jpeg.h"
 
 char *name = "http";
 char *deps[] =
@@ -21,6 +29,9 @@ init(struct module_ctx *mod_ctx)
 {
 	int ret;
 	struct http_ctx *http_ctx;
+	
+	if (!mod_ctx->node)
+		return -1;
 	
 	http_ctx = malloc(sizeof(*http_ctx));
 	ret = load_conf(http_ctx, mod_ctx->node);
@@ -45,6 +56,26 @@ init(struct module_ctx *mod_ctx)
 void *
 thread(void *mod_ctx)
 {
+	int ret;
+	struct http_ctx *http_ctx;
+	struct http_peer *http_peer;
+	
+	http_ctx = ((struct module_ctx *) mod_ctx)->custom;
+	
+	for (;;)
+	{
+		http_peer = malloc(sizeof(*http_peer));
+		http_peer->mod_ctx = mod_ctx;
+		ret = socket_accept_thread(http_ctx->listen_fd, &http_peer->peer, conn, http_peer);
+		if (ret)
+		{
+			free(http_peer);
+			printf("Accept() error: %s\n", strerror(errno));
+			sleep(1);
+			continue;
+		}
+	}
+	
 	return NULL;
 }
 
@@ -69,5 +100,121 @@ load_conf(struct http_ctx *ctx, xmlNodePtr node)
 	}
 	
 	return 0;
+}
+
+void *
+conn(void *peer_p)
+{
+	struct http_peer http_peer;
+	char buf[1024];
+	int ret;
+	char *url;
+	char *p;
+	char *httpver;
+	xmlNodePtr subnode;
+	struct image img;
+	unsigned int idx;
+	struct jpegbuf jpegbuf;
+	char outbuf[1024];
+	
+	memcpy(&http_peer, peer_p, sizeof(http_peer));
+	free(peer_p);
+	
+	ret = socket_readline(http_peer.peer.fd, buf, sizeof(buf));
+	if (ret)
+	{
+closenout:
+		close(http_peer.peer.fd);
+		return NULL;
+	}
+	
+	if (strncmp("GET ", buf, 4))
+		goto closenout;
+	
+	url = buf + 4;
+	
+	p = strchr(url, ' ');
+	if (!p)
+		httpver = NULL;
+	else
+	{
+		*p++ = '\0';
+		if (strncmp("HTTP/", p, 5))
+			httpver = NULL;
+		else
+		{
+			httpver = p + 5;
+			if (!*httpver)
+				httpver = NULL;
+		}
+	}
+	
+	if (!*url || !httpver)
+		goto closenout;
+	
+	for (subnode = http_peer.mod_ctx->node->children; subnode; subnode = subnode->next)
+	{
+		if (!xml_isnode(subnode, "vpath"))
+			continue;
+		if (!path_ismatch(subnode, url))
+			continue;
+		goto match;
+	}
+	http_err(http_peer.peer.fd, "404 Not found");
+	goto closenout;
+	
+match:
+	idx = 0;
+	grab_get_image(&img, &idx);
+	filter_apply(&img, http_peer.mod_ctx->node);
+	filter_apply(&img, subnode);
+	jpeg_compress(&jpegbuf, &img, 0);
+	
+	snprintf(outbuf, sizeof(outbuf) - 1,
+		"HTTP/1.0 200 OK\r\n"
+		"Server: " PACKAGE_STRING "\r\n"
+		"Content-Length: %i\r\n"
+		"Connection: close\r\n"
+		"Content-Type: image/jpeg\r\n"
+		"\r\n",
+		jpegbuf.bufsize);
+	write(http_peer.peer.fd, outbuf, strlen(outbuf));
+	write(http_peer.peer.fd, jpegbuf.buf, jpegbuf.bufsize);
+	
+	image_destroy(&img);
+	free(jpegbuf.buf);
+
+	return NULL;
+}
+
+int
+path_ismatch(xmlNodePtr node, char *path)
+{
+	for (node = node->children; node; node = node->next)
+	{
+		if (!xml_isnode(node, "path"))
+			continue;
+		if (!strcmp(path, xml_getcontent_def(node, "")))
+			return 1;
+	}
+	
+	return 0;
+}
+
+void
+http_err(int fd, char *err)
+{
+	char buf[1024];
+	
+	snprintf(buf, sizeof(buf) - 1,
+		"HTTP/1.0 %s\r\n"
+		"Server: " PACKAGE_STRING "\r\n"
+		"Content-Length: %i\r\n"
+		"Connection: close\r\n"
+		"Content-Type: text/html\r\n"
+		"\r\n"
+		"<html><body>%s</body></html>\r\n",
+		err, strlen(err) + 28, err);
+	write(fd, buf, strlen(buf));
 }
 

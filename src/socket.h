@@ -42,5 +42,8 @@ int socket_accept(int, struct peer *);
  * free'ing ctx/peer when it's done with it. */
 int socket_accept_thread(int, struct peer *, void *(*)(void *), void *);
 
+/* Reads one line from fd into buf of given size. Returns -1 on error (such as eof) */
+int socket_readline(int, char *, unsigned int);
+
 #endif
 
