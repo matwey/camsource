@@ -62,7 +62,7 @@ thread(void *arg)
 	int cpid;
 	
 	fctx = ((struct module_ctx *) arg)->custom;
-	snprintf(buf, sizeof(buf) - 1, "%s~", fctx->path);
+	snprintf(buf, sizeof(buf) - 1, "%s.tmp", fctx->path);
 	
 	memset(&idx, 0, sizeof(idx));
 	for (;;)

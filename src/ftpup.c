@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <sys/time.h>
 #include <libxml/parser.h>
 
 #include "config.h"
@@ -58,18 +59,21 @@ init(struct module_ctx *mctx)
 void *
 thread(void *mctx)
 {
+	struct timeval tstart, tend;
 	struct ftpup_ctx *fctx;
 	struct image img;
 	struct grab_ctx idx;
 	struct jpegbuf jbuf;
 	struct peer peer;
 	int ret;
+	long usecs;
 	
 	fctx = ((struct module_ctx *) mctx)->custom;
 	
 	memset(&idx, 0, sizeof(idx));
 	for (;;)
 	{
+		gettimeofday(&tstart, NULL);
 		filter_get_image(&img, &idx, ((struct module_ctx *) mctx)->node, NULL);
 		jpeg_compress(&jbuf, &img, ((struct module_ctx *) mctx)->node);
 		
@@ -153,14 +157,21 @@ thread(void *mctx)
 		
 		socket_printf(&peer, "QUIT\r\n");
 		ftpup_read_ftp_resp(fctx, 0);
-
+		gettimeofday(&tend, NULL);
+		log_log(MODNAME, "Upload of '%s' completed in %2.2f seconds\n",
+			fctx->file, (tend.tv_sec - tstart.tv_sec) + (tend.tv_usec - tstart.tv_usec)/1000000.0f);
 closenstuff:
 		socket_close(&peer);
 freensleep:
 		image_destroy(&img);
 		free(jbuf.buf);
+		usecs = (tend.tv_sec - tstart.tv_sec) * 1000000 + (tend.tv_usec - tstart.tv_usec);
 		if (fctx->interval > 0)
-			sleep(fctx->interval);
+		{
+			usecs = 1000000 * fctx->interval - usecs;
+			if (usecs > 0)
+				usleep(usecs);
+		}
 		else
 		{
 			sleep(5);

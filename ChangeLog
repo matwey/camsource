@@ -1,7 +1,12 @@
 $Id$
 
+Jan 23 2003
+	- Applied patch by Jaco Greeff to give libftpup a better
+	  sleep time precision, compensating for long upload times.
+
 Jan 20 2003
-	- Changed the '~' filename postfix to '.tmp' in libfilewrite.
+	- Changed the '~' filename postfix to '.tmp' in libfilewrite
+	  and libftpup.
 
 Jan 18 2003
 	- Added scripts/camsource2bmp.pl example script.
