@@ -3,6 +3,7 @@
 #include "config.h"
 
 #include "unpalette.h"
+#include "image.h"
 
 struct palette palettes[] =
 {
@@ -28,34 +29,36 @@ citb(int i)
 }
 
 void
-unpalette_stub(unsigned int x, unsigned int y, unsigned char *src, unsigned char *dst)
+unpalette_stub(struct image *dst, const unsigned char *src)
 {
 }
 
 void
-unpalette_yuv420p(unsigned int x, unsigned int y, unsigned char *src, unsigned char *dst)
+unpalette_yuv420p(struct image *dst, const unsigned char *src)
 {
-	unsigned char *u, *v, *bu, *bv;
+	const unsigned char *u, *v, *bu, *bv;
+	unsigned char *dstbuf;
 	unsigned int dx, dy, uvc, buvc;
 	
-	u = src + x * y;
-	v = u + (x / 2) * (y / 2);
+	u = src + dst->x * dst->y;
+	v = u + (dst->x / 2) * (dst->y / 2);
+	dstbuf = dst->buf;
 	
 	buvc = 0;
-	for (dy = 0; dy < y; dy++)
+	for (dy = 0; dy < dst->y; dy++)
 	{
 		bu = u;
 		bv = v;
 		uvc = 0;
 		
-		for (dx = 0; dx < x; dx++)
+		for (dx = 0; dx < dst->x; dx++)
 		{
-			/**dst++ = citb((int) *src + 1.4075 * ((int) *v - 128));
-			*dst++ = citb((int) *src - 0.3455 * ((int) *u - 128) - 0.7169 * ((int) *v - 128));
-			*dst++ = citb((int) *src++ + 1.7790 * ((int) *u - 128));*/
-			*dst++ = citb((int) *src + 1.140 * ((int) *v - 128));
-			*dst++ = citb((int) *src - 0.396 * ((int) *u - 128) - 0.581 * ((int) *v - 128));
-			*dst++ = citb((int) *src++ + 2.029 * ((int) *u - 128));
+			/**dstbuf++ = citb((int) *src + 1.4075 * ((int) *v - 128));
+			*dstbuf++ = citb((int) *src - 0.3455 * ((int) *u - 128) - 0.7169 * ((int) *v - 128));
+			*dstbuf++ = citb((int) *src++ + 1.7790 * ((int) *u - 128));*/
+			*dstbuf++ = citb((int) *src + 1.140 * ((int) *v - 128));
+			*dstbuf++ = citb((int) *src - 0.396 * ((int) *u - 128) - 0.581 * ((int) *v - 128));
+			*dstbuf++ = citb((int) *src++ + 2.029 * ((int) *u - 128));
 			
 			uvc++;
 			if (uvc >= 2)

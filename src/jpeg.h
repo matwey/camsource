@@ -1,9 +1,15 @@
 #ifndef _JPEG_H_
 #define _JPEG_H_
 
-#include "grab.h"
+struct image;
 
-void jpeg_compress(struct image *, const struct image *);
+struct jpegbuf
+{
+	char *buf;
+	unsigned int bufsize;
+};
+
+void jpeg_compress(struct jpegbuf *, const struct image *);
 
 #endif
 

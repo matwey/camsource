@@ -14,6 +14,7 @@
 #include "module.h"
 #include "wc_serv.h"
 #include "grab.h"
+#include "image.h"
 #include "configfile.h"
 #include "rwlock.h"
 #include "jpeg.h"
@@ -171,7 +172,7 @@ handle_conn(void *arg)
 	char c;
 	char buf[1024];
 	struct image curimg;
-	struct image jpegimg;
+	struct jpegbuf jpegimg;
 	
 	memcpy(&peer, arg, sizeof(peer));
 	free(arg);
@@ -185,8 +186,11 @@ handle_conn(void *arg)
 	}
 
 	rwlock_rlock(&image_lock);
-	copy_image(&curimg, &current_image);
+	image_copy(&curimg, &current_image);
 	rwlock_runlock(&image_lock);
+	
+	if (!curimg.buf)
+		return NULL;
 	
 	jpeg_compress(&jpegimg, &curimg);
 
@@ -201,7 +205,7 @@ handle_conn(void *arg)
 	
 	sleep(1);
 	close(peer.fd);
-	free(curimg.buf);
+	image_destroy(&curimg);
 	free(jpegimg.buf);
 	
 	return NULL;

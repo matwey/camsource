@@ -13,6 +13,7 @@
 #include "rwlock.h"
 #include "configfile.h"
 #include "mod_handle.h"
+#include "image.h"
 
 struct image current_image;
 pthread_cond_t image_cond;
@@ -34,12 +35,12 @@ grab_thread(void *arg)
 	struct camdev camdev;
 	unsigned int bpf;
 	unsigned char *imgbuf;
-	struct image newimg, filterimg;
+	struct image newimg;
 	xmlDocPtr doc;
 	xmlNodePtr node;
 	char *prop;
 	struct module *mod;
-	int (*filter)(struct image *, const struct image *);
+	int (*filter)(struct image *);
 	
 	ret = camdev_open(&camdev, "/dev/video0");
 	if (ret == -1)
@@ -51,22 +52,12 @@ grab_thread(void *arg)
 	bpf = (camdev.x * camdev.y) * camdev.pal->bpp;
 	imgbuf = malloc(bpf);
 	
-	newimg.x = camdev.x;
-	newimg.y = camdev.y;
-	newimg.bufsize = camdev.x * camdev.y * 3;
-	newimg.buf = malloc(newimg.bufsize);
-	
-	rwlock_wlock(&image_lock);
-	memcpy(&current_image, &newimg, sizeof(current_image));
-	current_image.buf = malloc(current_image.bufsize);
-	memset(current_image.buf, 0, current_image.bufsize);
-	rwlock_wunlock(&image_lock);
-
 	for (;;)
 	{
 		ret = read(camdev.fd, imgbuf, bpf);
 		printf("image\n");
-		camdev.pal->routine(camdev.x, camdev.y, imgbuf, newimg.buf);
+		image_new(&newimg, camdev.x, camdev.y);
+		camdev.pal->routine(&newimg, imgbuf);
 		
 		rwlock_rlock(&configdoc_lock);
 		doc = xmlCopyDoc(configdoc, 1);
@@ -91,14 +82,7 @@ grab_thread(void *arg)
 				{
 					filter = dlsym(mod->dlhand, "filter");
 					if (filter)
-					{
-						ret = filter(&filterimg, &newimg);
-						if (!ret)
-						{
-							free(newimg.buf);
-							memcpy(&newimg, &filterimg, sizeof(newimg));
-						}
-					}
+						filter(&newimg);
 					else
 						printf("Module %s has no \"filter\" routine\n", prop);
 				}
@@ -110,7 +94,7 @@ grab_thread(void *arg)
 			printf("xmlCopyDoc failed\n");
 		
 		rwlock_wlock(&image_lock);
-		memcpy(current_image.buf, newimg.buf, current_image.bufsize);
+		image_move(&current_image, &newimg);
 		rwlock_wunlock(&image_lock);
 		pthread_mutex_lock(&image_cond_mutex);
 		pthread_cond_broadcast(&image_cond);
@@ -118,13 +102,5 @@ grab_thread(void *arg)
 	}
 
 	return 0;
-}
-
-void
-copy_image(struct image *dst, const struct image *src)
-{
-	memcpy(dst, src, sizeof(*dst));
-	dst->buf = malloc(dst->bufsize);
-	memcpy(dst->buf, src->buf, dst->bufsize);
 }
 

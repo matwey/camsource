@@ -11,7 +11,7 @@
  *    is filled in by camsource with the thread's id.
  * .) MODULE_FILTER is an image filter module. It provides a filter()
  *    function that takes an image as input and outputs another one.
- *    The destination image's buffer will be allocated by filter().
+ *    Filtering happens in-place.
  * .) MODULE_GENERIC is a module which doesn't do anything by itself,
  *    but provides special functionality for other modules. It is
  *    usually listed as dependency in other modules.
@@ -49,7 +49,7 @@ void *thread(void *);
 #endif
 
 #ifdef MODULE_FILTER
-int filter(struct image *dest, const struct image *src);	/* Returns 0 on success */
+int filter(struct image *);	/* Returns 0 on success */
 #endif
 
 #if !defined(MODULE_THREAD) && !defined(MODULE_FILTER) && !defined(MODULE_GENERIC)

@@ -7,7 +7,7 @@
 #include "config.h"
 
 #include "jpeg.h"
-#include "grab.h"
+#include "image.h"
 #define MODULE_GENERIC
 #include "module.h"
 
@@ -49,7 +49,7 @@ j_td(struct jpeg_compress_struct *cinfo)
 }
 
 void
-jpeg_compress(struct image *dst, const struct image *src)
+jpeg_compress(struct jpegbuf *dst, const struct image *src)
 {
 	struct jpeg_compress_struct cinfo;
 	struct jpeg_error_mgr jerr;
@@ -57,9 +57,6 @@ jpeg_compress(struct image *dst, const struct image *src)
 	int rownum;
 	struct jpeg_ctx jctx;
 	
-	dst->x = src->x;
-	dst->y = src->y;
-
 	cinfo.err = jpeg_std_error(&jerr);
 	jpeg_create_compress(&cinfo);
 	

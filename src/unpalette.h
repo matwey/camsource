@@ -1,7 +1,9 @@
 #ifndef _UNPALETTE_H_
 #define _UNPALETTE_H_
 
-typedef void unpalettizer(unsigned int, unsigned int, unsigned char *, unsigned char *);
+struct image;
+
+typedef void unpalettizer(struct image *, const unsigned char *);
 
 struct palette
 {
