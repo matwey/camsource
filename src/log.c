@@ -51,14 +51,17 @@ log_replace_bg(int fd)
 	char buf[256];
 	struct tm tm;
 	time_t now;
+	int nullfd;
 	
 	printf("Main init done and logfile opened.\n");
 	printf("Closing stdout and going into background...\n");
-	close(STDIN_FILENO);
+	nullfd = open("/dev/null", O_RDONLY);
+	dup2(nullfd, STDIN_FILENO);
+	close(nullfd);
 	dup2(fd, STDOUT_FILENO);
 	dup2(fd, STDERR_FILENO);
 	close(fd);
-	if (!fork())
+	if (!fork()) {
 		if (!fork())
 		{
 			setsid();
@@ -69,6 +72,7 @@ log_replace_bg(int fd)
 			printf("-----\nLog file opened at %s\n", buf);
 			return;
 		}
+	}
 	exit(0);
 }
 

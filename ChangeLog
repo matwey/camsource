@@ -1,5 +1,9 @@
 $Id$
 
+Jan 18 2003
+	- Implemented -r and -s/-k command line switches to restart
+	  and shut down camsource.
+
 Jan 16 2003
 	- Reworked _private handling a bit. Avoid repeated parsing
 	  or large xml trees.

@@ -1,6 +1,12 @@
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <errno.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <signal.h>
+#include <dirent.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "config.h"
 
@@ -12,29 +18,76 @@
 #include "log.h"
 
 static void main_init(char *);
+static int kill_camsource(struct stat *);
 
 int
 main(int argc, char **argv)
 {
-	if (argc >= 2 && (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help") || !strcmp(argv[1], "-?")))
-	{
-		printf("Usage:\n");
-		printf("  %s [configfile]\n", argv[0]);
-		printf("       - Starts camsource, optionally with a certain config file\n");
-		printf("  %s -c [device]\n", argv[0]);
-		printf("       - Dumps the video capabilites info for given device\n");
-		printf("  %s -h\n", argv[0]);
-		printf("       - Shows this text\n");
-		exit(0);
+	if (argc >= 2 && *argv[1] == '-') {
+		if (!strcmp(argv[1], "-c")) {
+			camdev_capdump(argv[2]);
+			exit(0);
+		}
+		
+		if (!strcmp(argv[1], "-k") || !strcmp(argv[1], "-s")) {
+			struct stat sb;
+			
+			if (!argv[2])
+				kill_camsource(NULL);
+			else {
+				if (!stat(argv[2], &sb) && S_ISCHR(sb.st_mode))
+					kill_camsource(&sb);
+				else
+					printf("%s is not a device file\n", argv[2]);
+			}
+			exit(0);
+		}
+
+		if (!strcmp(argv[1], "-r")) {
+			struct stat sb;
+			int arg;
+			int ret;
+			
+			if (argv[2] && !stat(argv[2], &sb) && S_ISCHR(sb.st_mode)) {
+				ret = kill_camsource(&sb);
+				arg = 3;
+			}
+			else {
+				ret = kill_camsource(NULL);
+				arg = 2;
+			}
+			
+			if (ret >= 1) {
+				printf("Sleeping before starting up...\n");
+				sleep(2);
+			}
+			main_init(argv[arg]);
+			/* drop thru */
+		}
+		else {
+			printf("Camsource version " VERSION "\n");
+			printf("Usage:\n");
+			printf("  %s [configfile]\n", argv[0]);
+			printf("       - Starts camsource, optionally with a certain config file.\n");
+			printf("  %s {-k | -s} [device]\n", argv[0]);
+			printf("       - Shuts down (kills) the camsource instance which has the given\n");
+			printf("         video device opened. If no device is given, kills all camsource\n");
+			printf("         instances.\n");
+			printf("  %s -r [device] [configfile]\n", argv[0]);
+			printf("       - Restarts camsource. This flag combines a 'camsource -k [device]'\n");
+			printf("         call with a 'camsource [configfile]' call. Both arguments are\n");
+			printf("         optional.\n");
+			printf("  %s -c [device]\n", argv[0]);
+			printf("       - Dumps the video capabilites info for given device. If no device\n");
+			printf("         is given, the device defaults to '/dev/video0'.\n");
+			printf("  %s -h\n", argv[0]);
+			printf("       - Shows this text.\n");
+			exit(0);
+		}
 	}
+	else
+		main_init(argv[1]);
 	
-	if (argc >= 2 && !strcmp(argv[1], "-c"))
-	{
-		camdev_capdump(argv[2]);
-		exit(0);
-	}
-	
-	main_init(argv[1]);
 	
 	/* nothing to do, so exit */
 	pthread_exit(NULL);
@@ -93,3 +146,78 @@ main_init(char *config)
 	mod_start_all();
 }
 
+static
+int
+kill_camsource(struct stat *sp)
+{
+	DIR *dp;
+	struct dirent *de;
+	char buf[1024];
+	FILE *fp;
+	int ret;
+	DIR *fddp;
+	struct dirent *fdde;
+	int pid;
+	int count;
+	struct stat sb;
+	int mypid;
+	
+	dp = opendir("/proc");
+	if (!dp) {
+		printf("Unable to open /proc (not mounted?): %s\n", strerror(errno));
+		return -1;
+	}
+	
+	mypid = getpid();
+	
+	count = 0;
+	while ((de = readdir(dp))) {
+		if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, ".."))
+			continue;
+		pid = atoi(de->d_name);
+		if (pid <= 0)
+			continue;
+		if (pid == mypid)
+			continue;
+		snprintf(buf, sizeof(buf) - 1, "/proc/%s/stat", de->d_name);
+		fp = fopen(buf, "r");
+		if (!fp)
+			continue;
+		ret = fscanf(fp, "%*i %32s", buf);
+		fclose(fp);
+		if (ret != 1)
+			continue;
+		if (strcmp(buf, "(camsource)"))
+			continue;
+		if (sp) {
+			snprintf(buf, sizeof(buf) - 1, "/proc/%s/fd", de->d_name);
+			fddp = opendir(buf);
+			if (!fddp)
+				continue;
+			while ((fdde = readdir(fddp))) {
+				if (!strcmp(fdde->d_name, ".") || !strcmp(fdde->d_name, ".."))
+					continue;
+				snprintf(buf, sizeof(buf) - 1, "/proc/%s/fd/%s", de->d_name, fdde->d_name);
+				ret = stat(buf, &sb);
+				if (ret < 0)
+					continue;
+				if (sb.st_dev == sp->st_dev
+					&& (sb.st_mode & S_IFMT) == (sp->st_mode & S_IFMT)
+					&& sb.st_rdev == sp->st_rdev)
+					goto found;
+			}
+			closedir(fddp);
+			continue;
+found:
+			closedir(fddp);
+		}
+		kill(pid, SIGTERM);
+		kill(pid, SIGKILL);
+		count++;
+	}
+	
+	closedir(dp);
+	
+	printf("%i matching process(es)/thread(s) killed\n", count);
+	return count;
+}
