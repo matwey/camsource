@@ -254,6 +254,10 @@
 		<jpegqual>75</jpegqual>
 		<!-- For a description of the <jpegqual> tag, see
 			the jpeg_comp module entry -->
+		
+		<!-- The motiondetect filter is not active by default -->
+		<filter name="motiondetect"/>
+		
 		<filter name="text"/>
 	</module>
 	
@@ -300,6 +304,7 @@
 		<interval unit="sec">30</interval>
 
 		<jpegqual>75</jpegqual>
+		<filter name="motiondetect"/>
 		<filter name="text"/>
 	</module>
 	
@@ -397,6 +402,15 @@
 	
 	<!-- This filter converts the image into bw (grayscale) -->
 	<module name="bw" active="no"/>
+	
+	<!-- 
+		A simple motion detection filter, which simply swallows
+		the frame if no motion was detected, making the
+		receiving module wait for a more interesting picture.
+		Useful for filewrite of ftpup uses, and not so
+		useful for live viewing modules.
+	-->
+	<module name="motiondetect" active="no"/>
 	
 	<!--
 		Global filters to use. Any filter given here

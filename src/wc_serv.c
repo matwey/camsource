@@ -164,11 +164,7 @@ wc_handle_conn(void *arg)
 			continue;
 		}
 	
-		grab_get_image(&curimg, &last_idx);
-		
-		if (peer.ctx->node)
-			filter_apply(&curimg, peer.ctx->node);
-	
+		filter_get_image(&curimg, &last_idx, peer.ctx->node, NULL);
 		jpeg_compress(&jpegimg, &curimg, peer.ctx->node);
 	
 		snprintf(buf, sizeof(buf) - 1,

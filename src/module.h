@@ -22,7 +22,11 @@
  *    function that takes an image as input and outputs another one.
  *    Filtering happens in-place. A pointer to the xml config
  *    tree is passed to the filter function (so that node->name ==
- *    "filter").
+ *    "filter"). The filter function returns 0 on success, a negative
+ *    number on error (which will be more or less ignore), or a
+ *    positive number to "swallow" the image, in which case the
+ *    number is the number of microseconds to sleep before grabbing
+ *    another image.
  * .) MODULE_GENERIC is a module which doesn't do anything by itself,
  *    but provides special functionality for other modules. It is
  *    usually listed as dependency in other modules.

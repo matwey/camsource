@@ -34,7 +34,7 @@ char *version = VERSION;
  * 
  */
 int init_kernel_module (struct vloopback_ctx * mctx) {
-  struct video_capability vid_caps;
+	/*struct video_capability vid_caps;*/
 	struct video_window vid_win;
 	struct video_picture vid_pic;
 	
@@ -127,8 +127,7 @@ thread(void *arg)
 	memset(&idx, 0, sizeof(idx));
 	while (1)
 	{
-		grab_get_image(&img, &idx);
-		filter_apply(&img, ctx->node);
+		filter_get_image(&img, &idx, ctx->node, NULL);
 		write (mctx->dev_out, img.buf, img.bufsize);
 		image_destroy (&img);
 	}

@@ -67,8 +67,7 @@ thread(void *arg)
 	memset(&idx, 0, sizeof(idx));
 	for (;;)
 	{
-		grab_get_image(&curimg, &idx);
-		filter_apply(&curimg, ((struct module_ctx *) arg)->node);
+		filter_get_image(&curimg, &idx, ((struct module_ctx *) arg)->node, NULL);
 		jpeg_compress(&jbuf, &curimg, ((struct module_ctx *) arg)->node);
 		
 		fd = open(buf, O_WRONLY | O_CREAT | O_TRUNC, 0666);

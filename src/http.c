@@ -233,9 +233,7 @@ match:
 	memset(&idx, 0, sizeof(idx));
 	do
 	{
-		grab_get_image(&img, &idx);
-		filter_apply(&img, http_peer.mod_ctx->node);
-		filter_apply(&img, subnode);
+		filter_get_image(&img, &idx, http_peer.mod_ctx->node, subnode, NULL);
 		jpeg_compress(&jpegbuf, &img, subnode);
 		
 		if (!fps)

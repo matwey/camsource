@@ -28,3 +28,5 @@ bw.lo
 libbw.la
 libvloopback.la
 vloopback.lo
+libmotiondetect.la
+motiondetect.lo

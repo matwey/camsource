@@ -70,8 +70,7 @@ thread(void *mctx)
 	memset(&idx, 0, sizeof(idx));
 	for (;;)
 	{
-		grab_get_image(&img, &idx);
-		filter_apply(&img, ((struct module_ctx *) mctx)->node);
+		filter_get_image(&img, &idx, ((struct module_ctx *) mctx)->node, NULL);
 		jpeg_compress(&jbuf, &img, ((struct module_ctx *) mctx)->node);
 		
 		ret = socket_connect(&peer, fctx->host, fctx->port, 20000);

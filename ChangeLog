@@ -1,6 +1,9 @@
 $Id$
 
 Jan 4 2002
+	- Added a preliminary motiondetect filter. More to do.
+	- Changed the filter handling a bit, to make it possble
+	  to have filters which "swallow" the image.
 	- Added vloopback module, courtesy of Cyril Rocheteau.
 	- Tried to make up some login to autodetect whether overlay
 	  is supported, and gracefully ignore it if it isn't. Same
