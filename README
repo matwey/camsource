@@ -123,6 +123,10 @@ text (filter)
   certain options in the per-module filter definition. See the
   example config file for details.
 
+rgbbgr (filter)
+  Swaps the red and blue information. Activate it in case your camera
+  produces images with this reversed.
+
 
 
 The config file should be pretty self explanatory. Every possible
@@ -154,3 +158,4 @@ Homepage: http://camsource.sf.net/
 
 
 $Id$
+
