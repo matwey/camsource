@@ -12,7 +12,7 @@ extern xmlDocPtr configdoc;
 extern char *ourconfig;
 
 /* Figures out which config file to use, and sets up the "ourconfig" pointer. Returns -1 on error */
-int config_init(void);
+int config_init(char *);
 
 /* Opens "ourconfig" and builds the xml tree (configdoc) from it. Returns -1 on error */
 int config_load(void);

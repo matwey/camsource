@@ -20,5 +20,7 @@ struct camdev
  * error msg and returns -1. */
 int camdev_open(struct camdev *, xmlNodePtr);
 
+void camdev_capdump(char *);
+
 #endif
 

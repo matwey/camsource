@@ -24,7 +24,7 @@ char *ourconfig;
 xmlDocPtr configdoc;
 
 int
-config_init()
+config_init(char *customconfig)
 {
 	char *s, **ss;
 	

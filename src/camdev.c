@@ -112,3 +112,44 @@ palfound:
 	return 0;
 }
 
+void
+camdev_capdump(char *dev)
+{
+	int fd, ret;
+	struct video_capability vidcap;
+	
+	if (!dev)
+		dev = "/dev/video0";
+	
+	fd = open(dev, O_RDONLY);
+	if (fd < 0)
+	{
+		printf("Unable to open %s (%s)\n", dev, strerror(errno));
+		return;
+	}
+
+	ret = ioctl(fd, VIDIOCGCAP, &vidcap);
+	if (ret < 0)
+	{
+		printf("ioctl(VIDIOCGCAP) (get video capabilites) failed: %s\n", strerror(errno));
+		return;
+	}
+	
+	printf("Capability info for %s:\n", dev);
+	printf("  Name: %s\n", vidcap.name);
+	printf("    Can %scapture to memory\n", (vidcap.type & VID_TYPE_CAPTURE) ? "" : "not ");
+	printf("    %s a tuner\n", (vidcap.type & VID_TYPE_TUNER) ? "Has" : "Doesn't have");
+	printf("    Can%s receive teletext\n", (vidcap.type & VID_TYPE_TELETEXT) ? "" : "not");
+	printf("    Overlay is %schromakeyed\n", (vidcap.type & VID_TYPE_CHROMAKEY) ? "" : "not ");
+	printf("    Overlay clipping is %ssupported\n", (vidcap.type & VID_TYPE_CLIPPING) ? "" : "not ");
+	printf("    Overlay %s frame buffer mem\n", (vidcap.type & VID_TYPE_FRAMERAM) ? "overwrites" : "doesn't overwrite");
+	printf("    Hardware image scaling %ssupported\n", (vidcap.type & VID_TYPE_SCALES) ? "" : "not ");
+	printf("    Captures in %s\n", (vidcap.type & VID_TYPE_MONOCHROME) ? "grayscale only" : "color");
+	printf("    Can capture %s image\n", (vidcap.type & VID_TYPE_SUBCAPTURE) ? "only part of the" : "the complete");
+	printf("  Number of channels: %i\n", vidcap.channels);
+	printf("  Number of audio devices: %i\n", vidcap.audios);
+	printf("  Grabbing frame size:\n");
+	printf("    Min: %ix%i\n", vidcap.minwidth, vidcap.minheight);
+	printf("    Max: %ix%i\n", vidcap.maxwidth, vidcap.maxheight);
+}
+

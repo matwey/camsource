@@ -50,6 +50,7 @@ fi
 AC_CHECK_LIB(jpeg, jpeg_start_compress, :, [AC_MSG_ERROR([Could not find libjpeg])])
 
 CFLAGS="$CFLAGS -Wall -D_REENTRANT -DPREFIX=\"\\\"\${prefix}\\\"\" -DPKGLIBDIR=\"\\\"\${pkglibdir}\\\"\""
+CFLAGS="$CFLAGS -DSYSCONFDIR=\"\\\"\${sysconfdir}\\\"\""
 LDFLAGS="$LDFLAGS -rdynamic"
 
 AC_OUTPUT

@@ -8,11 +8,30 @@
 #include "grab.h"
 #include "configfile.h"
 #include "mod_handle.h"
+#include "camdev.h"
 
 int
 main(int argc, char **argv)
 {
-	main_init();
+	if (argc >= 2 && (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help") || !strcmp(argv[1], "-?")))
+	{
+		printf("Usage:\n");
+		printf("  %s [configfile]\n", argv[0]);
+		printf("       - Starts camsource, optionally with a certain config file\n");
+		printf("  %s -c [device]\n", argv[0]);
+		printf("       - Dumps the video capabilites info for given device\n");
+		printf("  %s -h\n", argv[0]);
+		printf("       - Shows this text\n");
+		exit(0);
+	}
+	
+	if (argc >= 2 && !strcmp(argv[1], "-c"))
+	{
+		camdev_capdump(argv[2]);
+		exit(0);
+	}
+	
+	main_init(argv[1]);
 	
 	/* nothing to do, so exit */
 	pthread_exit(NULL);
@@ -21,7 +40,7 @@ main(int argc, char **argv)
 }
 
 void
-main_init()
+main_init(char *config)
 {
 	int ret;
 	pthread_t grab_tid;
@@ -31,10 +50,12 @@ main_init()
 	
 	mod_init();
 	
-	ret = config_init();
+	ret = config_init(config);
 	if (ret)
 	{
 		printf("No config file found, exit.\n");
+		printf("If you've just installed or compiled, check out \"camsource.conf.example\",\n");
+		printf("either located in " SYSCONFDIR " or in the source tree.\n");
 		exit(1);
 	}
 	
