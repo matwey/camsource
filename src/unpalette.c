@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <linux/videodev.h>
 
 #include "config.h"
@@ -7,10 +8,10 @@
 
 struct palette palettes[] =
 {
-	{ VIDEO_PALETTE_RGB24,			unpalette_stub,		3		},
-	{ VIDEO_PALETTE_RGB24 | 0x80,	unpalette_stub,		3		},
-	{ VIDEO_PALETTE_RGB32,			unpalette_stub,		4		},
-	{ VIDEO_PALETTE_RGB32 | 0x80,	unpalette_stub,		4		},
+	{ VIDEO_PALETTE_RGB24,			unpalette_bgr24,		3		},
+	{ VIDEO_PALETTE_RGB24 | 0x80,	unpalette_rgb24,		3		},
+	{ VIDEO_PALETTE_RGB32,			unpalette_bgr32,		4		},
+	{ VIDEO_PALETTE_RGB32 | 0x80,	unpalette_rgb32,		4		},
 	{ VIDEO_PALETTE_YUYV,			unpalette_stub,		2		},
 	{ VIDEO_PALETTE_YUV422,			unpalette_stub,		2		},
 	{ VIDEO_PALETTE_YUV420,			unpalette_stub,		1.5	},
@@ -31,6 +32,7 @@ citb(int i)
 void
 unpalette_stub(struct image *dst, const unsigned char *src)
 {
+	printf("palette recognized but not yet supported!\n");
 }
 
 void
@@ -77,6 +79,62 @@ unpalette_yuv420p(struct image *dst, const unsigned char *src)
 		}
 		else
 			buvc = 0;
+	}
+}
+
+void
+unpalette_rgb24(struct image *dst, const unsigned char *src)
+{
+	memcpy(dst->buf, src, dst->bufsize);
+}
+
+void
+unpalette_bgr24(struct image *dst, const unsigned char *src)
+{
+	unsigned char *dstbuf, *dstend;
+	
+	dstbuf = dst->buf;
+	dstend = dstbuf + dst->bufsize; 
+	while (dstbuf < dstend)
+	{
+		dstbuf[0] = src[2];
+		dstbuf[1] = src[1];
+		dstbuf[2] = src[0];
+		dstbuf += 3;
+		src += 3;
+	}
+}
+
+void
+unpalette_rgb32(struct image *dst, const unsigned char *src)
+{
+	unsigned char *dstbuf, *dstend;
+	
+	dstbuf = dst->buf;
+	dstend = dstbuf + dst->bufsize; 
+	while (dstbuf < dstend)
+	{
+		*dstbuf++ = *src++;
+		*dstbuf++ = *src++;
+		*dstbuf++ = *src++;
+		src++;
+	}
+}
+
+void
+unpalette_bgr32(struct image *dst, const unsigned char *src)
+{
+	unsigned char *dstbuf, *dstend;
+	
+	dstbuf = dst->buf;
+	dstend = dstbuf + dst->bufsize; 
+	while (dstbuf < dstend)
+	{
+		dstbuf[0] = src[2];
+		dstbuf[1] = src[1];
+		dstbuf[2] = src[0];
+		dstbuf += 3;
+		src += 4;
 	}
 }
 
