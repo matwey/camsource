@@ -27,12 +27,14 @@ extern struct module modules[MAX_MODULES];
 void mod_init(void);
 void mod_load_all(void);
 int mod_load(char *, xmlNodePtr);
+
 char *mod_get_aliasname(xmlNodePtr, char *);
 void *mod_try_dlopen(char *);
 int mod_validate(void *, char *);
 int mod_load_deps(struct module *);
 int mod_init_mod(struct module *);
 void mod_close(struct module *);
+xmlNodePtr mod_find_config(char *);
 
 void mod_start_all(void);
 

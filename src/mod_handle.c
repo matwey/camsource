@@ -238,7 +238,7 @@ mod_load_deps(struct module *mod)
 
 	for (; *deps; deps++)
 	{
-		if (mod_load(*deps, NULL))
+		if (mod_load(*deps, mod_find_config(*deps)))
 			return -1;
 	}
 	
@@ -267,5 +267,25 @@ mod_init_mod(struct module *mod)
 	
 	ret = init(&mod->ctx);
 	return ret;
+}
+
+xmlNodePtr
+mod_find_config(char *mod)
+{
+	xmlNodePtr node;
+	char *modname, *alias;
+	
+	node = xmlDocGetRootElement(configdoc);
+	for (node = node->children; node; node = node->next)
+	{
+		if (!xml_isnode(node, "module"))
+			continue;
+		modname = xml_attrval(node, "name");
+		alias = xml_attrval(node, "alias");
+		if (!modname || strcmp(modname, mod) || (alias && strcmp(alias, mod)))
+			continue;
+		return node;
+	}
+	return NULL;
 }
 

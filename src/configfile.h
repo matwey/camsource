@@ -11,7 +11,6 @@ extern char *ourconfig;
 
 int config_init(void);
 int config_load(void);
-xmlNodePtr config_find_mod_section(xmlDocPtr, const char *);
 
 #endif
 

@@ -54,7 +54,7 @@ camdevopened:
 	bpf = (camdev.x * camdev.y) * camdev.pal->bpp;
 	imgbuf = malloc(bpf);
 	
-	printf("Camsource ready, ready to grab images...\n");
+	printf("Camsource ready to grab images...\n");
 	for (;;)
 	{
 		pthread_mutex_lock(&current_img.mutex);

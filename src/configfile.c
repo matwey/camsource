@@ -73,22 +73,3 @@ config_load()
 	return 0;
 }
 
-xmlNodePtr
-config_find_mod_section(xmlDocPtr doc, const char *mod)
-{
-	xmlNodePtr node;
-	char *modname;
-	
-	node = xmlDocGetRootElement(doc);
-	for (node = node->children; node; node = node->next)
-	{
-		if (!xml_isnode(node, "module"))
-			continue;
-		modname = xml_attrval(node, "name");
-		if (!modname || strcmp(modname, mod))
-			continue;
-		return node;
-	}
-	return NULL;
-}
-
