@@ -179,12 +179,17 @@ handle_conn(void *arg)
 	/* TODO: timeout */
 	for (;;)
 	{
-		ret = read(peer.fd, &c, 1);
-		if (ret != 1)
+		do
 		{
-			close(peer.fd);
-			return NULL;
+			ret = read(peer.fd, &c, 1);
+			if (ret != 1)
+			{
+				close(peer.fd);
+				return NULL;
+			}
 		}
+		while (c == '\r');
+		
 		if (c == '\n' && first)
 		{
 			/* The webcam_server java applet has a bug in that
