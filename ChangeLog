@@ -1,5 +1,8 @@
 $Id$
 
+Dec 16 2003
+	- Fixed no-sleep bug in ftpup module after a failed upload.
+
 Nov 29 2003
 	- I'm still alive... added VIDIOCCAPTURE ioctl for testing
 	  purposes.

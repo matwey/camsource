@@ -201,6 +201,8 @@ freensleep:
 		image_destroy(&img);
 		free(jbuf.buf);
 		usecs = (tend.tv_sec - tstart.tv_sec) * 1000000 + (tend.tv_usec - tstart.tv_usec);
+		if (usecs < 0)
+			usecs = 0;
 		if (fctx->interval > 0)
 		{
 			usecs = 1000000 * fctx->interval - usecs;
