@@ -199,9 +199,9 @@ handle_conn(void *arg)
 			continue;
 		}
 	
-		rwlock_rlock(&image_lock);
-		image_copy(&curimg, &current_image);
-		rwlock_runlock(&image_lock);
+		rwlock_rlock(&current_img_lock);
+		image_copy(&curimg, &current_img.img);
+		rwlock_runlock(&current_img_lock);
 		
 		if (!curimg.buf)
 		{

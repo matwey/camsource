@@ -6,10 +6,16 @@
 #include "rwlock.h"
 #include "image.h"
 
-extern struct image current_image;
-extern pthread_cond_t image_cond;
-extern pthread_mutex_t image_cond_mutex;
-extern struct rwlock image_lock;
+struct grabimage
+{
+	struct image img;
+	unsigned int idx;
+};
+
+extern struct grabimage current_img;
+extern pthread_cond_t current_img_cond;
+extern pthread_mutex_t current_img_cond_mutex;
+extern struct rwlock current_img_lock;
 
 void grab_thread_init(void);
 void *grab_thread(void *);
