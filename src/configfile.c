@@ -15,6 +15,7 @@ char *globalconfigs[] =
 	"/etc/defaults/camsource",
 	"/usr/local/etc/camsource.conf",
 	"/usr/local/etc/defaults/camsource",
+	"./camsource.conf",
 	NULL
 };
 char localconfig[256];
