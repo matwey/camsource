@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <jpeglib.h>
 #undef HAVE_STDLIB_H
+#include <libxml/parser.h>
 
 #include "config.h"
 
@@ -10,6 +11,7 @@
 #include "image.h"
 #define MODULE_GENERIC
 #include "module.h"
+#include "xmlhelp.h"
 
 struct jpeg_ctx
 {
@@ -19,6 +21,30 @@ struct jpeg_ctx
 };
 
 char *name = "jpeg_comp";
+
+int defqual;
+
+
+int
+init(struct module_ctx *ctx)
+{
+	xmlNodePtr node;
+	
+	defqual = 75;
+	
+	node = ctx->node;
+	if (node)
+	{
+		for (node = node->children; node; node = node->next)
+		{
+			if (xml_isnode(node, "quality"))
+				defqual = xml_atoi(node, defqual);
+		}
+	}
+	
+	return 0;
+}
+
 
 void
 j_id(struct jpeg_compress_struct *cinfo)
@@ -47,13 +73,16 @@ j_td(struct jpeg_compress_struct *cinfo)
 }
 
 void
-jpeg_compress(struct jpegbuf *dst, const struct image *src)
+jpeg_compress(struct jpegbuf *dst, const struct image *src, int qual)
 {
 	struct jpeg_compress_struct cinfo;
 	struct jpeg_error_mgr jerr;
 	JSAMPROW row;
 	int rownum;
 	struct jpeg_ctx jctx;
+	
+	if (qual <= 0)
+		qual = defqual;
 	
 	cinfo.err = jpeg_std_error(&jerr);
 	jpeg_create_compress(&cinfo);
@@ -73,6 +102,7 @@ jpeg_compress(struct jpegbuf *dst, const struct image *src)
 	cinfo.input_components = 3;
 	cinfo.in_color_space = JCS_RGB;
 	jpeg_set_defaults(&cinfo);
+	jpeg_set_quality(&cinfo, qual, 1);
 
 	jpeg_start_compress(&cinfo, TRUE);
 	

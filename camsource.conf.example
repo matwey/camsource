@@ -60,7 +60,11 @@
 		<port>8889</port>
 	</module>
 	
-	<module name="jpeg_comp" active="yes"/>
+	<module name="jpeg_comp" active="yes">
+		<!-- quality: default compression quality, 1-100 -->
+		<quality>40</quality>
+	</module>
+	
 	<module name="flip" active="yes"/>
 	<module name="resize" active="yes"/>
 	

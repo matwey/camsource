@@ -9,7 +9,7 @@ struct jpegbuf
 	unsigned int bufsize;
 };
 
-void jpeg_compress(struct jpegbuf *, const struct image *);
+void jpeg_compress(struct jpegbuf *, const struct image *, int);
 
 #endif
 

@@ -188,7 +188,7 @@ handle_conn(void *arg)
 		if (peer.ctx->node)
 			filter_apply(&curimg, peer.ctx->node);
 	
-		jpeg_compress(&jpegimg, &curimg);
+		jpeg_compress(&jpegimg, &curimg, 0);
 	
 		snprintf(buf, sizeof(buf) - 1,
 			"HTTP/1.0 200 OK\n"
