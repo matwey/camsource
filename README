@@ -116,6 +116,13 @@ resize (filter)
   "scale" much, it just does nearest-neighbor matching (read: bad
   quality).
 
+text (filter)
+  This filter can add a text overlay containing a timestamp to an
+  image. It has some special functionality with regards to the config
+  file, which allow it to have a global config, and then override
+  certain options in the per-module filter definition. See the
+  example config file for details.
+
 
 
 The config file should be pretty self explanatory. Every possible
@@ -144,3 +151,4 @@ Links
 =====
 
 Homepage: http://camsource.sf.net/
+
