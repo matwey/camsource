@@ -2,45 +2,19 @@
 #define _GRAB_H_
 
 #include <pthread.h>
+#include <sys/time.h>
 
 #include "image.h"
 
 struct camdev;
 
-/* The grabimage struct and its only instance current_img.
- * This is where the grabbing thread stores the frames.
- * Every time a new frame is grabbed, the index is
- * incremented by one. The function grab_get_image is
- * provided to make it easy for a worker thread to read
- * images out of this.
- *
- * The grabber thread works like this:
- *  1) Acquire mutex.
- *  2) If request != 0, skip to step 5.
- *  3) Wait on request_cond, releasing mutex.
- *  4) Wake up from request_cond, reacquiring the mutex.
- *  5) Release mutex.
- *  6) Read frame from device into private local buffer,
- *     convert it to rgb palette, apply any global filters.
- *  7) Acquire mutex.
- *  8) Put new frame into current_img, increase index and
- *     set request = 0;
- *  9) Broadcast signal on ready_cond.
- * 10) Release mutex.
- * 11) Jump back to step 1.
- */
-struct grabimage
+struct grab_ctx
 {
-	pthread_mutex_t mutex;
-
-	struct image img;
 	unsigned int idx;
-	
-	int request;
-	pthread_cond_t request_cond;
-	pthread_cond_t ready_cond;
+	struct timeval tv;
 };
-extern struct grabimage current_img;
+
+
 
 void grab_thread_init(void);
 struct camdev *grab_open(void);
@@ -54,20 +28,23 @@ void *grab_thread(void *);
  * at the beginning. If the index in current_img is larger than the value
  * of the pointer, the current frame is copied without signalling the
  * grabbing thread.
+ * (The above description is a bit outdated now that we use a struct
+ * grab_ctx instead of a simple int idx.)
  *
  * Example code:
  *
  * struct image img;
- * unsigned int idx = 0;
+ * struct grabimage_ctx ctx;
+ * memset(&ctx, 0, sizeof(ctx));
  * for (;;) {
- *   grab_get_image(&img, &idx);
+ *   grab_get_image(&img, &ctx);
  *   do_something_with(&img);
  * }
  *
  * If you only want a single image (after which the thread exits), pass
  * NULL as the second argument.
  */
-void grab_get_image(struct image *, unsigned int *);
+void grab_get_image(struct image *, struct grab_ctx *);
 
 #endif
 

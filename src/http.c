@@ -125,7 +125,7 @@ http_conn(void *peer_p)
 	char *httpver;
 	xmlNodePtr subnode;
 	struct image img;
-	unsigned int idx;
+	struct grab_ctx idx;
 	struct jpegbuf jpegbuf;
 	int fps, count;
 	
@@ -203,7 +203,7 @@ match:
 		write(http_peer.peer.fd, buf, strlen(buf));
 	}
 	
-	idx = 0;
+	memset(&idx, 0, sizeof(idx));
 	do
 	{
 		grab_get_image(&img, &idx);

@@ -119,7 +119,7 @@ wc_handle_conn(void *arg)
 	struct image curimg;
 	struct jpegbuf jpegimg;
 	int first;
-	unsigned int last_idx;
+	struct grab_ctx last_idx;
 	int count;
 	
 	memcpy(&peer, arg, sizeof(peer));
@@ -128,7 +128,8 @@ wc_handle_conn(void *arg)
 	log_log(MODNAME, "New connection from %s:%i\n", socket_ip(&peer.peer), socket_port(&peer.peer));
 	
 	first = 1;
-	last_idx = count = 0;
+	count = 0;
+	memset(&last_idx, 0, sizeof(last_idx));
 	/* TODO: timeout */
 	for (;;)
 	{

@@ -55,14 +55,14 @@ thread(void *arg)
 	int fd;
 	char buf[1024];
 	struct image curimg;
-	unsigned int idx;
+	struct grab_ctx idx;
 	struct jpegbuf jbuf;
 	int ret;
 	
 	fctx = ((struct module_ctx *) arg)->custom;
 	snprintf(buf, sizeof(buf) - 1, "%s~", fctx->path);
 	
-	idx = 0;
+	memset(&idx, 0, sizeof(idx));
 	for (;;)
 	{
 		grab_get_image(&curimg, &idx);

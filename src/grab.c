@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <dlfcn.h>
 #include <libxml/parser.h>
+#include <sys/time.h>
 
 #include "config.h"
 
@@ -19,7 +20,41 @@
 
 static void grab_glob_filters(struct image *);
 
-struct grabimage current_img;
+/* The grabimage struct and its only instance current_img.
+ * (Private data now, not directly accessible by threads.)
+ * This is where the grabbing thread stores the frames.
+ * Every time a new frame is grabbed, the index is
+ * incremented by one. The function grab_get_image is
+ * provided to make it easy for a worker thread to read
+ * images out of this.
+ *
+ * The grabber thread works like this:
+ *  1) Acquire mutex.
+ *  2) If request != 0, skip to step 5.
+ *  3) Wait on request_cond, releasing mutex.
+ *  4) Wake up from request_cond, reacquiring the mutex.
+ *  5) Release mutex.
+ *  6) Read frame from device into private local buffer,
+ *     convert it to rgb palette, apply any global filters.
+ *  7) Acquire mutex.
+ *  8) Put new frame into current_img, increase index and
+ *     set request = 0;
+ *  9) Broadcast signal on ready_cond.
+ * 10) Release mutex.
+ * 11) Jump back to step 1.
+ */
+struct grabimage
+{
+	pthread_mutex_t mutex;
+
+	struct image img;
+	struct grab_ctx ctx;
+	
+	int request;
+	pthread_cond_t request_cond;
+	pthread_cond_t ready_cond;
+};
+static struct grabimage current_img;
 
 void
 grab_thread_init()
@@ -86,9 +121,12 @@ grab_thread(void *arg)
 
 		pthread_mutex_lock(&current_img.mutex);
 		image_move(&current_img.img, &newimg);
-		current_img.idx++;
-		if (current_img.idx == 0)
-			current_img.idx++;
+		
+		current_img.ctx.idx++;
+		if (current_img.ctx.idx == 0)
+			current_img.ctx.idx++;
+		gettimeofday(&current_img.ctx.tv, NULL);
+		
 		current_img.request = 0;
 		pthread_cond_broadcast(&current_img.ready_cond);
 		pthread_mutex_unlock(&current_img.mutex);
@@ -108,21 +146,39 @@ grab_glob_filters(struct image *img)
 }
 
 void
-grab_get_image(struct image *img, unsigned int *idx)
+grab_get_image(struct image *img, struct grab_ctx *ctx)
 {
+	struct timeval now;
+	int diff;
+	
 	if (!img)
 		return;
 	
 	pthread_mutex_lock(&current_img.mutex);
-	if (!idx || *idx == 0 || *idx == current_img.idx)
-	{
-		current_img.request = 1;
-		pthread_cond_signal(&current_img.request_cond);
-		pthread_cond_wait(&current_img.ready_cond, &current_img.mutex);
-	}
 	
-	if (idx)
-		*idx = current_img.idx;
+	if (ctx)
+	{
+		if (!ctx->idx || ctx->idx == current_img.ctx.idx)
+		{
+request:
+			current_img.request = 1;
+			pthread_cond_signal(&current_img.request_cond);
+			pthread_cond_wait(&current_img.ready_cond, &current_img.mutex);
+		}
+		else
+		{
+			gettimeofday(&now, NULL);
+			diff = now.tv_sec - ctx->tv.tv_sec;
+			if (diff < 0 || diff >= 2)
+				goto request;	/* considered harmful (!) */
+			diff *= 1000000;
+			diff += now.tv_usec - ctx->tv.tv_usec;
+			if (diff < 0 || diff >= 500000)
+				goto request;
+		}
+
+		memcpy(ctx, &current_img.ctx, sizeof(*ctx));
+	}
 	
 	image_copy(img, &current_img.img);
 	pthread_mutex_unlock(&current_img.mutex);

@@ -1,4 +1,6 @@
 Sep 18 2002
+	- Added grabbed image aging and struct grab_ctx handling to prevent
+	  that an outdated image gets output accidently
    - Improved logging facilities
 	- Converted lots of functions to static to prevent global symbol /
 	  namespace clashes
