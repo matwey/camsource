@@ -7,6 +7,7 @@
 #include "module.h"
 #include "resize.h"
 #include "image.h"
+#include "xmlhelp.h"
 
 char *name = "resize";
 char *deps[] = { NULL };
@@ -55,10 +56,10 @@ resize_get_dim(struct image *img, xmlNodePtr node)
 {
 	for (node = node->children; node; node = node->next)
 	{
-		if (xmlStrEqual(node->name, "width") && node->children && node->children->content)
-			img->x = atoi(node->children->content);
-		else if (xmlStrEqual(node->name, "height") && node->children && node->children->content)
-			img->y = atoi(node->children->content);
+		if (xml_isnode(node, "width"))
+			img->x = xml_atoi(node, img->x);
+		else if (xml_isnode(node, "height"))
+			img->y = xml_atoi(node, img->y);
 	}
 	
 	if (img->x == 0 || img->y == 0)

@@ -7,6 +7,7 @@
 #include "mod_handle.h"
 #include "rwlock.h"
 #include "configfile.h"
+#include "xmlhelp.h"
 
 struct module modules[MAX_MODULES];
 struct rwlock modules_lock;
@@ -23,7 +24,7 @@ mod_load_all()
 	xmlDocPtr doc;
 	xmlNodePtr node;
 	int modidx;
-	xmlAttrPtr modname, loadyn;
+	char *modname, *loadyn;
 	
 	rwlock_rlock(&configdoc_lock);
 	doc = xmlCopyDoc(configdoc, 1);
@@ -33,27 +34,23 @@ mod_load_all()
 	node = xmlDocGetRootElement(doc);
 	for (node = node->children; node; node = node->next)
 	{
-		if (!xmlStrEqual(node->name, "module"))
+		if (!xml_isnode(node, "module"))
 			continue;
-		modname = xmlHasProp(node, "name");
-		if (!modname || !modname->children || !modname->children->content)
+		modname = xml_attrval(node, "name");
+		if (!modname)
 		{
 			printf("<module> tag without valid name property\n");
 			continue;
 		}
-		loadyn = xmlHasProp(node, "load");
+		loadyn = xml_attrval(node, "load");
 		if (!loadyn
-			|| !loadyn->children
-			|| !loadyn->children->content
-			|| (strcmp(loadyn->children->content, "yes")
-				&& strcmp(loadyn->children->content, "1")
-				&& strcmp(loadyn->children->content, "on")))
-		{
+			|| (strcmp(loadyn, "yes")
+				&& strcmp(loadyn, "1")
+				&& strcmp(loadyn, "on")))
 			continue;
-		}
 		
 		rwlock_wlock(&modules_lock);
-		mod_load(modname->children->content);
+		mod_load(modname);
 		rwlock_wunlock(&modules_lock);
 	}
 	

@@ -7,6 +7,7 @@
 #include "module.h"
 #include "flip.h"
 #include "image.h"
+#include "xmlhelp.h"
 
 char *name = "flip";
 char *deps[] = { NULL };
@@ -23,9 +24,9 @@ filter(struct image *img, xmlNodePtr node)
 	
 	for (node = node->children; node; node = node->next)
 	{
-		if (xmlStrEqual(node->name, "horiz"))
+		if (xml_isnode(node, "horiz"))
 			h = 1;
-		else if (xmlStrEqual(node->name, "vert"))
+		else if (xml_isnode(node, "vert"))
 			v = 1;
 	}
 	

@@ -8,9 +8,7 @@
 
 #include "configfile.h"
 #include "rwlock.h"
-
-/*struct config config;
-struct rwlock config_lock;*/
+#include "xmlhelp.h"
 
 char *globalconfigs[] =
 {
@@ -32,7 +30,6 @@ config_init()
 	char *s, **ss;
 	
 	rwlock_init(&configdoc_lock);
-	/*rwlock_init(&config_lock);*/
 	
 	s = getenv("HOME");
 	if (s)
@@ -70,7 +67,7 @@ config_load()
 		return -1;
 		
 	node = xmlDocGetRootElement(doc);
-	if (!node || !xmlStrEqual(node->name, "camsourceconfig"))
+	if (!xml_isnode(node, "camsourceconfig"))
 	{
 		printf("Root node isn't 'camsourceconfig'\n");
 		xmlFreeDoc(doc);
@@ -88,17 +85,15 @@ xmlNodePtr
 config_find_mod_section(xmlDocPtr doc, const char *mod)
 {
 	xmlNodePtr node;
-	xmlAttrPtr modname;
+	char *modname;
 	
 	node = xmlDocGetRootElement(doc);
 	for (node = node->children; node; node = node->next)
 	{
-		if (!xmlStrEqual(node->name, "module"))
+		if (!xml_isnode(node, "module"))
 			continue;
-		modname = xmlHasProp(node, "name");
-		if (!modname || !modname->children || !modname->children->content)
-			continue;
-		if (strcmp(modname->children->content, mod))
+		modname = xml_attrval(node, "name");
+		if (!modname || strcmp(modname, mod))
 			continue;
 		return node;
 	}

@@ -15,6 +15,7 @@
 #include "image.h"
 #include "unpalette.h"
 #include "filter.h"
+#include "xmlhelp.h"
 
 struct grabimage current_img;
 
@@ -44,7 +45,7 @@ grab_thread(void *arg)
 	node = xmlDocGetRootElement(doc);
 	for (node = node->children; node; node = node->next)
 	{
-		if (xmlStrEqual(node->name, "camdev"))
+		if (xml_isnode(node, "camdev"))
 		{
 			ret = camdev_open(&camdev, node);
 			goto camdevopened;

@@ -19,6 +19,7 @@
 #include "rwlock.h"
 #include "jpeg.h"
 #include "filter.h"
+#include "xmlhelp.h"
 
 char *name = "wc_serv";
 char *deps[] =
@@ -104,12 +105,8 @@ load_config()
 	
 	for (node = node->children; node; node = node->next)
 	{
-		if (xmlStrEqual(node->name, "port"))
-		{
-			if (!node->children || !node->children->content)
-				continue;
-			newconfig.port = atoi(node->children->content);
-		}
+		if (xml_isnode(node, "port"))
+			newconfig.port = xml_atoi(node, newconfig.port);
 	}
 	
 	xmlFreeDoc(doc);

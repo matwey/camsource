@@ -11,6 +11,7 @@
 
 #include "camdev.h"
 #include "unpalette.h"
+#include "xmlhelp.h"
 
 int
 camdev_open(struct camdev *camdev, xmlNodePtr node)
@@ -28,30 +29,14 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 	{
 		for (node = node->children; node; node = node->next)
 		{
-			if (xmlStrEqual(node->name, "path"))
-			{
-				if (node->children && node->children->content)
-					path = node->children->content;
-				continue;
-			}
-			else if (xmlStrEqual(node->name, "width"))
-			{
-				if (node->children && node->children->content)
-					x = atoi(node->children->content);
-				continue;
-			}
-			else if (xmlStrEqual(node->name, "height"))
-			{
-				if (node->children && node->children->content)
-					y = atoi(node->children->content);
-				continue;
-			}
-			else if (xmlStrEqual(node->name, "fps"))
-			{
-				if (node->children && node->children->content)
-					fps = atoi(node->children->content);
-				continue;
-			}
+			if (xml_isnode(node, "path"))
+				path = xml_getcontent_def(node, path);
+			else if (xml_isnode(node, "width"))
+				x = xml_atoi(node, 0);
+			else if (xml_isnode(node, "height"))
+				y = xml_atoi(node, 0);
+			else if (xml_isnode(node, "fps"))
+				fps = xml_atoi(node, 0);
 		}
 	}
 	

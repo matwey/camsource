@@ -2,7 +2,7 @@ bin_PROGRAMS = camsource
 lib_LTLIBRARIES = libwc_serv.la libjpeg_comp.la libflip.la libresize.la
 
 camsource_SOURCES = rwlock.c main.c grab.c camdev.c unpalette.c configfile.c \
-	mod_handle.c image.c filter.c
+	mod_handle.c image.c filter.c xmlhelp.c
 
 libwc_serv_la_SOURCES = wc_serv.c
 
