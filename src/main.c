@@ -1,5 +1,6 @@
 #include <pthread.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "config.h"
 
@@ -26,6 +27,8 @@ main_init()
 	int ret;
 	pthread_t grab_tid;
 	pthread_attr_t attr;
+	
+	signal(SIGPIPE, SIG_IGN);
 	
 	mod_init();
 	
