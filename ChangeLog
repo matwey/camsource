@@ -1,4 +1,7 @@
+--- 0.2.0 ---
+
 Sep 19 2002
+	- Released 0.2.0
 	- Added timeout option to socket_accept()
 	- Finished ftpup functionality with adding safemode
 	- Lots of code cleanups and improvements in ftpup
