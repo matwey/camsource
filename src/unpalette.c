@@ -30,8 +30,8 @@ struct palette palettes[] =
 	{ VIDEO_PALETTE_YUV422,			unpalette_yuyv,		2,		24,	"yuv422 (16 bpp)"				},
 	{ VIDEO_PALETTE_RGB565,			unpalette_rgb565,		2,		16,	"rgb565"							},
 	{ VIDEO_PALETTE_RGB555,			unpalette_rgb555,		2,		15,	"rgb555"							},
-	{ VIDEO_PALETTE_YUV420,			unpalette_yuv420,		1.5,	24,	"yuv420 (12 bpp)"				},
 	{ VIDEO_PALETTE_YUV420P,		unpalette_yuv420p,	1.5,	24,	"yuv420 planar (12 bpp)"	},
+	{ VIDEO_PALETTE_YUV420,			unpalette_yuv420,		1.5,	24,	"yuv420 (12 bpp)"				},
 	{ VIDEO_PALETTE_GREY,			unpalette_grey,		1,		8,		"grayscale (8 bpp)"			},
 	{ -1 }
 };
