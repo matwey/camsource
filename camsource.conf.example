@@ -144,6 +144,21 @@
 		<plugin>input_xwd</plugin>
 		<command>DISPLAY=:0 /usr/X11R6/bin/xwd -root -silent</command>
 	</camdev>
+
+	<!--
+		Another input plugin, this one uses local jpg files as
+		image data source. The image will be read every time the
+		plugin gets a request, so any changes to the file are
+		immediately visible. The "fps" tag specifies a virtual
+		fps rate for this video source. Setting this higher than
+		1 makes only sense if the image file is continually
+		updated.
+	-->
+	<camdev name="jpg" active="no">
+		<plugin>input_jpg</plugin>
+		<file>/tmp/snapshot.jpg</file>
+		<fps>1</fps>
+	</camdev>
 	
 	
 	
@@ -177,6 +192,9 @@
 	
 	<!-- This is the xwd input plugin referenced above. -->
 	<module name="input_xwd" active="no"/>
+	
+	<!-- Ditto... -->
+	<module name="input_jpg" active="no"/>
 	
 	
 	
@@ -367,6 +385,11 @@
 			-->
 			<path>/raw</path>
 			<raw>yes</raw>
+		</vpath>
+
+		<vpath active="no">
+			<grabdev>jpg</grabdev>
+			<path>/localfile</path>
 		</vpath>
 	</module>
 	

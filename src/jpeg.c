@@ -21,6 +21,7 @@ static void j_td(struct jpeg_compress_struct *);
 struct jpeg_ctx
 {
 	struct jpeg_destination_mgr jdm;
+	struct jpeg_source_mgr jsm;
 	char *buf;
 	int bufsize;
 };
@@ -81,6 +82,35 @@ j_td(struct jpeg_compress_struct *cinfo)
 {
 }
 
+static void
+j_is(struct jpeg_decompress_struct *cinfo)
+{
+}
+
+static boolean
+j_fib(struct jpeg_decompress_struct *cinfo)
+{
+	return FALSE;
+}
+
+static void
+j_sid(struct jpeg_decompress_struct *cinfo, long num_bytes)
+{
+	if (num_bytes <= 0)
+		return;
+	cinfo->src->bytes_in_buffer -= num_bytes;
+	cinfo->src->next_input_byte += num_bytes;
+	if (cinfo->src->bytes_in_buffer < 0) {
+		cinfo->src->next_input_byte += cinfo->src->bytes_in_buffer;
+		cinfo->src->bytes_in_buffer = 0;
+	}
+}
+
+static void
+j_ts(struct jpeg_decompress_struct *cinfo)
+{
+}
+
 void
 jpeg_compress(struct jpegbuf *dst, const struct image *src, xmlNodePtr node)
 {
@@ -137,10 +167,57 @@ jpeg_compress(struct jpegbuf *dst, const struct image *src, xmlNodePtr node)
 	jpeg_finish_compress(&cinfo);
 	jpeg_destroy_compress(&cinfo);
 	
+#if 0
 	dst->bufsize = jctx.bufsize - jctx.jdm.free_in_buffer;
 	dst->buf = malloc(dst->bufsize);
 	memcpy(dst->buf, jctx.buf, dst->bufsize);
 	
 	free(jctx.buf);
+#else
+	dst->bufsize = jctx.bufsize - jctx.jdm.free_in_buffer;
+	dst->buf = jctx.buf;
+#endif
 }
 
+void
+jpeg_decompress(struct image *dst, const struct jpegbuf *src)
+{
+	struct jpeg_decompress_struct cinfo;
+	struct jpeg_error_mgr jerr;
+	struct jpeg_ctx jctx;
+	JSAMPROW row;
+	int rownum;
+
+	cinfo.err = jpeg_std_error(&jerr);
+	jpeg_create_decompress(&cinfo);
+
+	jctx.bufsize = src->bufsize;
+	jctx.buf = src->buf;
+	jctx.jsm.next_input_byte = jctx.buf;
+	jctx.jsm.bytes_in_buffer = jctx.bufsize;
+	jctx.jsm.init_source = j_is;
+	jctx.jsm.fill_input_buffer = j_fib;
+	jctx.jsm.skip_input_data = j_sid;
+	jctx.jsm.resync_to_restart = jpeg_resync_to_restart;
+	jctx.jsm.term_source = j_ts;
+
+	cinfo.src = &jctx.jsm;
+
+	jpeg_read_header(&cinfo, TRUE);
+
+	cinfo.out_color_space = JCS_RGB;
+	cinfo.output_components = 3;
+
+	jpeg_start_decompress(&cinfo);
+
+	image_new(dst, cinfo.output_width, cinfo.output_height);
+
+	for (rownum = 0; rownum < cinfo.output_height; rownum++)
+	{
+		row = dst->buf + (rownum * cinfo.output_width * 3);
+		jpeg_read_scanlines(&cinfo, &row, 1);
+	}
+
+	jpeg_finish_decompress(&cinfo);
+	jpeg_destroy_decompress(&cinfo);
+}

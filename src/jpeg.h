@@ -19,6 +19,7 @@ struct jpegbuf
  * is found or ptr is NULL, default quality will be used.
  */
 void jpeg_compress(struct jpegbuf *, const struct image *, xmlNodePtr);
+void jpeg_decompress(struct image *, const struct jpegbuf *);
 
 #endif
 

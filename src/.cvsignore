@@ -38,3 +38,6 @@ libinput_v4l.la
 input_v4l.lo
 input_xwd.lo
 libinput_xwd.la
+*.swp
+input_jpg.lo
+libinput_jpg.la

@@ -1,5 +1,8 @@
 $Id$
 
+May 25 2003
+	- Added libinput_jpg plugin.
+
 --- 0.7.0 ---
 
 May 1 2003
@@ -76,7 +79,7 @@ Jan 4 2003
 	- Changed the filter handling a bit, to make it possble
 	  to have filters which "swallow" the image.
 	- Added vloopback module, courtesy of Cyril Rocheteau.
-	- Tried to make up some login to autodetect whether overlay
+	- Tried to make up some logic to autodetect whether overlay
 	  is supported, and gracefully ignore it if it isn't. Same
 	  goes for unsupported fps settings (e.g. bttv).
 
