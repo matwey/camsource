@@ -175,6 +175,8 @@ match:
 		snprintf(buf, sizeof(buf) - 1,
 			"HTTP/1.0 200 OK\r\n"
 			"Server: " PACKAGE_STRING "\r\n"
+			"Pragma: no-cache\r\n"
+			"Cache-Control: no-cache\r\n"
 			"Content-Type: multipart/x-mixed-replace;boundary=Juigt9G7bb7sfdgsdZGIDFsjhn\r\n"
 			"\r\n"
 			"--Juigt9G7bb7sfdgsdZGIDFsjhn\r\n");
@@ -195,6 +197,8 @@ match:
 				"Server: " PACKAGE_STRING "\r\n"
 				"Content-Length: %i\r\n"
 				"Connection: close\r\n"
+				"Pragma: no-cache\r\n"
+				"Cache-Control: no-cache\r\n"
 				"Content-Type: image/jpeg\r\n"
 				"\r\n",
 				jpegbuf.bufsize);
@@ -250,6 +254,8 @@ http_err(int fd, char *err)
 		"Server: " PACKAGE_STRING "\r\n"
 		"Content-Length: %i\r\n"
 		"Connection: close\r\n"
+		"Pragma: no-cache\r\n"
+		"Cache-Control: no-cache\r\n"
 		"Content-Type: text/html\r\n"
 		"\r\n"
 		"<html><body>%s</body></html>\r\n",
