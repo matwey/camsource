@@ -34,6 +34,7 @@ static struct text_ctx text_gctx;
 #define MODNAME "text"
 
 char *name = MODNAME;
+char *version = PACKAGE_VERSION;
 
 int
 init(struct module_ctx *mctx)

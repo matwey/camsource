@@ -73,6 +73,7 @@ mod_load(char *mod, xmlNodePtr node)
 	int i, idx;
 	char *alias;
 	void *dlh;
+	char **version;
 	
 	/* check if mod is already loaded */
 	alias = mod_get_aliasname(node, mod);
@@ -142,6 +143,11 @@ mod_load(char *mod, xmlNodePtr node)
 		mod_close(&modules[idx]);
 		return -1;
 	}
+	
+	version = dlsym(modules[idx].dlhand, "version");
+	printf("Module \"%s\" (alias \"%s\", version %s) loaded and initialized\n",
+		modules[idx].name, modules[idx].alias,
+		(version && *version) ? *version : "unknown");
 
 	return 0;
 }

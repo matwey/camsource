@@ -19,6 +19,7 @@
 #include "socket.h"
 
 char *name = "socket";
+char *version = PACKAGE_VERSION;
 
 int
 socket_listen(unsigned short port, unsigned long ip)

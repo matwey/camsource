@@ -29,6 +29,7 @@ static int ftpup_create_data_conn(struct ftpup_ctx *);
 #define MODNAME "ftpup"
 
 char *name = MODNAME;
+char *version = PACKAGE_VERSION;
 char *deps[] =
 {
 	"jpeg_comp",

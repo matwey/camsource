@@ -28,6 +28,7 @@ static int wc_load_config(struct wc_ctx *, xmlNodePtr);
 static void *wc_handle_conn(void *);
 
 char *name = MODNAME;
+char *version = PACKAGE_VERSION;
 char *deps[] =
 {
 	"jpeg_comp",

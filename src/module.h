@@ -1,4 +1,5 @@
 /* Camsource module interface */
+/* $Id$ */
 
 #ifndef _MODULE_H_
 #define _MODULE_H_
@@ -33,6 +34,10 @@
  * Things common to all kinds of modules:
  * .) The module "name". It must match the filename, e.g. a module
  *    called "libhello.so" would have a name of "hello".
+ * .) A "version" string, containing the version number of the lib.
+ *    Each initialized module will be printed in the log together
+ *    with its version when it's loaded (if the version info is
+ *    present that is; it's optional).
  * .) Dependency list ("deps"). It's a null terminated array of
  *    strings, each giving the name of another module which will
  *    be autoloaded before the current module is activated.
@@ -54,6 +59,7 @@
 struct module_ctx;
 
 extern char *name;
+extern char *version;
 extern char *deps[];
 int init(struct module_ctx *);
 

@@ -26,6 +26,7 @@ struct jpeg_ctx
 };
 
 char *name = "jpeg_comp";
+char *version = PACKAGE_VERSION;
 
 static int defqual;
 

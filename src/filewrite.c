@@ -26,6 +26,7 @@
 static int fw_load_conf(struct fw_ctx *, xmlNodePtr);
 
 char *name = MODNAME;
+char *version = PACKAGE_VERSION;
 char *deps[] =
 {
 	"jpeg_comp",

@@ -1,5 +1,8 @@
 $Id$
 
+Sep 25 2002
+	- Added version information to modules
+
 Sep 24 2002
 	- Added <scale> option to resize filter
 	- Added a rotate image filter

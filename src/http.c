@@ -27,6 +27,7 @@ static void http_err(struct peer *, char *);
 static int http_get_fps(xmlNodePtr);
 
 char *name = MODNAME;
+char *version = PACKAGE_VERSION;
 char *deps[] =
 {
 	"jpeg_comp",

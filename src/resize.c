@@ -14,6 +14,7 @@
 static int resize_get_dim(struct image *, xmlNodePtr);
 
 char *name = MODNAME;
+char *version = PACKAGE_VERSION;
 
 int
 filter(struct image *img, xmlNodePtr node)

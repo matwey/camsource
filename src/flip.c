@@ -9,6 +9,7 @@
 #include "xmlhelp.h"
 
 char *name = "flip";
+char *version = PACKAGE_VERSION;
 
 int
 filter(struct image *img, xmlNodePtr node)
