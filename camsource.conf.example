@@ -110,6 +110,9 @@
 				<width>320</width>
 				<height>240</height>
 			</filter>
+			<filter name="text">
+				<text>Test</text>
+			</filter>
 		</vpath>
 
 		<vpath>
@@ -238,6 +241,7 @@
 	
 	<module name="flip" active="yes"/>
 	<module name="resize" active="yes"/>
+	<module name="text" active="yes"/>
 	
 	<!--
 		Global filters to use. Any filter given here

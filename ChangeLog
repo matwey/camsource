@@ -1,6 +1,7 @@
 $Id$
 
 Sep 20 2002
+	- Started work in text overlay module
 	- Made all (?) socket stuff time out properly and added better
 	  error/condition reporting
 	- Converted all socket stuff to nonblocking sockets
