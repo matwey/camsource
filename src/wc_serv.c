@@ -163,10 +163,10 @@ handle_conn(void *arg)
 		jpeg_compress(&jpegimg, &curimg, 0);
 	
 		snprintf(buf, sizeof(buf) - 1,
-			"HTTP/1.0 200 OK\n"
-			"Content-type: image/jpeg\n"
-			"Content-Length: %i\n"
-			"Connection: close\n\n",
+			"HTTP/1.0 200 OK\r\n"
+			"Content-type: image/jpeg\r\n"
+			"Content-Length: %i\r\n"
+			"Connection: close\r\n\r\n",
 			jpegimg.bufsize);
 		ret = write(peer.peer.fd, buf, strlen(buf));
 		ret = write(peer.peer.fd, jpegimg.buf, jpegimg.bufsize);
