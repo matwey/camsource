@@ -1,5 +1,8 @@
 $Id$
 
+May 1 2003
+	- Released 0.7.0.
+
 Apr 20 2003
 	- Brought back the -c flag with changed behavior to
 	  fit the new modular input plugin design.
