@@ -5,7 +5,6 @@
 
 #define MODULE_FILTER
 #include "module.h"
-#include "resize.h"
 #include "image.h"
 #include "xmlhelp.h"
 #include "log.h"

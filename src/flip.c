@@ -5,7 +5,6 @@
 
 #define MODULE_FILTER
 #include "module.h"
-#include "flip.h"
 #include "image.h"
 #include "xmlhelp.h"
 

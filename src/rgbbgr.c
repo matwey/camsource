@@ -5,7 +5,6 @@
 
 #define MODULE_FILTER
 #include "module.h"
-#include "rgbbgr.h"
 #include "image.h"
 
 char *name = "rgbbgr";
