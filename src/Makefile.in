@@ -490,6 +490,8 @@ uninstall-am: uninstall-binPROGRAMS uninstall-info-am \
 	uninstall-am uninstall-binPROGRAMS uninstall-info-am \
 	uninstall-pkgincludeHEADERS uninstall-pkglibLTLIBRARIES
 
+
+# $Id$
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

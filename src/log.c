@@ -84,9 +84,9 @@ log_log(char *modname, char *format, ...)
 	localtime_r(&now, &tm);
 	strftime(buf, sizeof(buf) - 1, "%b %d %Y %T", &tm);
 	if (modname)
-		printf("[%s / %s] ", buf, modname);
+		fprintf(stderr, "[%s / %s] ", buf, modname);
 	else
-		printf("[%s] ", buf);
+		fprintf(stderr, "[%s] ", buf);
 	
 	va_start(vl, format);
 	vprintf(format, vl);

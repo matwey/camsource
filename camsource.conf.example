@@ -281,6 +281,21 @@
 			  function, so the usual % substitutions are
 			  performed. Check the strftime man page for
 			  details.
+			- cmd and file: Ok, so I lied about "text" being
+			  mandatory. You must specify at least one of
+			  text, cmd or file. "cmd" is the name of a
+			  command to run, and the first line of its
+			  output (on stdout) will be used as text.
+			  Similarily, "file" is a file to open, and its
+			  contents will be used as text. The "~/" prefix
+			  works as expected. The % substitutions are
+			  performed as with the "text" tag, unless you
+			  specify the 'nosubst="yes"' attribute in the
+			  tag. If more than one of these tags is specified,
+			  the last specified will be used (useful for
+			  setting a default <text> in the global section,
+			  and then overriding it with a <cmd> or <file>
+			  in a per-filter config).
 			- color: Text color, in html format. The leading
 			  # sign is optional. No symbolic color names
 			  are accepted. Defaults to white (ffffff).

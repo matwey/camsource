@@ -95,6 +95,12 @@ thread(void *arg)
 		if (fctx->cmd)
 		{
 			cpid = fork();
+			if (cpid < 0)
+			{
+				log_log(MODNAME, "fork() failed: %s\n", strerror(errno));
+				unlink(buf);
+				goto freesleeploop;
+			}
 			if (!cpid)
 			{
 				/* child */

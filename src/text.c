@@ -1,5 +1,13 @@
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <errno.h>
+#include <sys/wait.h>
 #include <libxml/parser.h>
 
 #include "config.h"
@@ -11,22 +19,15 @@
 #include "xmlhelp.h"
 #include "log.h"
 #include "mod_handle.h"
+#include "configfile.h"
 
 #include "font_6x11.h"
-
-struct text_ctx
-{
-	unsigned char *text;
-	unsigned char color[3];
-	unsigned char bgcolor[3];
-	int solid:1,
-	    top:1,
-	    right:1;
-};
 
 static int text_conf(struct text_ctx *, xmlNodePtr);
 static int text_color(unsigned char *, unsigned char *);
 static int text_hexdig(unsigned char);
+static void text_text(struct text_ctx *, xmlNodePtr, int);
+static int text_format(struct text_ctx *);
 
 static struct text_ctx text_gctx;
 
@@ -54,22 +55,32 @@ filter(struct image *img, xmlNodePtr node)
 	int subx, suby;
 	int idx;
 	unsigned char *imgptr;
-	unsigned char buf[1024], *text;
-	struct tm tm;
-	time_t now;
+	unsigned char *text;
 	
 	memcpy(&ctx, &text_gctx, sizeof(ctx));
+	if (text_gctx.text)
+		ctx.text = strdup(text_gctx.text);
 	idx = text_conf(&ctx, node);
 	if (idx || !ctx.text)
+	{
+		free(ctx.text);
 		return -1;
-
-	time(&now);
-	localtime_r(&now, &tm);
-	strftime(buf, sizeof(buf) - 1, ctx.text, &tm);
-	text = buf;
+	}
 	
+	idx = text_format(&ctx);
+	if (idx)
+	{
+		free(ctx.text);
+		return -1;
+	}
+	
+	text = ctx.text;
+
 	if (img->y < 11)
+	{
+		free(ctx.text);
 		return 0;
+	}
 
 	if (ctx.right)
 	{
@@ -111,6 +122,7 @@ filter(struct image *img, xmlNodePtr node)
 		x += 6;
 	}
 	
+	free(ctx.text);
 	return 0;
 }
 
@@ -127,7 +139,11 @@ text_conf(struct text_ctx *ctx, xmlNodePtr node)
 	for (node = node->children; node; node = node->next)
 	{
 		if (xml_isnode(node, "text"))
-			ctx->text = xml_getcontent(node);
+			text_text(ctx, node, 0);
+		else if (xml_isnode(node, "cmd"))
+			text_text(ctx, node, 1);
+		else if (xml_isnode(node, "file"))
+			text_text(ctx, node, 2);
 		else if (xml_isnode(node, "color"))
 		{
 			ret = text_color(ctx->color, xml_getcontent(node));
@@ -212,5 +228,147 @@ text_hexdig(unsigned char c)
 		return c - 'A' + 10;
 	else
 		return -1;
+}
+
+static
+void
+text_text(struct text_ctx *ctx, xmlNodePtr node, int type)
+{
+	char *text;
+	char *attr;
+	
+	text = xml_getcontent(node);
+	if (!text)
+		return;
+
+	free(ctx->text);
+
+	ctx->type = type;
+	if (ctx->type == 0)
+		ctx->text = strdup(text);
+	else
+		ctx->text = config_homedir(text);
+	
+	attr = xml_attrval(node, "nosubst");
+	if (!attr || strcmp(attr, "yes"))
+		ctx->nosubst = 0;
+	else
+		ctx->nosubst = 1;
+}
+
+static
+int
+text_format(struct text_ctx *ctx)
+{
+	unsigned char *text;
+	int fds[2], ret, pid;
+	unsigned char buf[1024], fbuf[1024];
+	unsigned char *p;
+	struct tm tm;
+	time_t now;
+	
+	switch (ctx->type)
+	{
+	case 0:
+		text = ctx->text;
+		break;
+		
+	case 1:
+		ret = pipe(fds);
+		if (ret)
+		{
+			log_log(MODNAME, "pipe() failed: %s\n", strerror(errno));
+			return -1;
+		}
+		pid = fork();
+		if (pid < 0)
+		{
+			log_log(MODNAME, "fork() failed: %s\n", strerror(errno));
+			close(fds[0]);
+			close(fds[1]);
+			return -1;
+		}
+		if (!pid)
+		{
+			/* child */
+			close(STDIN_FILENO);
+			close(fds[0]);
+			dup2(fds[1], STDOUT_FILENO);
+			close(fds[1]);
+			/* stderr goes to log */
+			for (ret = 3; ret < 1024; ret++)
+				close(ret);
+
+			execlp(ctx->text, ctx->text, NULL);
+			
+			/* notreached unless error */
+			log_log(MODNAME, "exec(\"%s\") failed: %s\n", ctx->text, strerror(errno));
+			_exit(0);
+		}
+		
+		close(fds[1]);
+		
+		for (p = buf; p < buf + sizeof(buf) - 1; p++)
+		{
+			ret = read(fds[0], p, 1);
+			if (ret < 0)
+			{
+				log_log(MODNAME, "read error from pipe: %s\n", strerror(errno));
+				close(fds[0]);
+				return -1;
+			}
+			if (ret == 0)
+				break;
+			if (*p == '\n')
+				break;
+		}
+		close(fds[0]);
+
+		*p = '\0';
+		if (p > buf && *--p == '\r')
+			*p = '\0';
+		text = buf;
+		
+		waitpid(pid, NULL, 0);
+
+		break;
+		
+	default: /* 2 */
+		fds[0] = open(ctx->text, O_RDONLY);
+		if (fds[0] < 0)
+		{
+			log_log(MODNAME, "open of %s failed: %s\n", ctx->text, strerror(errno));
+			return -1;
+		}
+		ret = read(fds[0], buf, sizeof(buf) - 1);
+		if (ret < 0)
+		{
+			log_log(MODNAME, "read from %s failed: %s\n", ctx->text, strerror(errno));
+			close(fds[0]);
+			return -1;
+		}
+		close(fds[0]);
+		buf[ret] = '\0';
+		p = strchr(buf, '\n');
+		if (p)
+			*p = '\0';
+		text = buf;
+		break;
+	}
+
+	if (!ctx->nosubst)
+	{
+		time(&now);
+		localtime_r(&now, &tm);
+		strftime(fbuf, sizeof(fbuf) - 1, text, &tm);
+		text = fbuf;
+	}
+	if (text != ctx->text)
+	{
+		free(ctx->text);
+		ctx->text = strdup(text);
+	}
+	
+	return 0;
 }
 

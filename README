@@ -122,6 +122,8 @@ text (filter)
   file, which allow it to have a global config, and then override
   certain options in the per-module filter definition. See the
   example config file for details.
+  The text to display can be set in the config file, or it can be
+  read on demand from a file or from a command's stdout (pipe).
 
 rgbbgr (filter)
   Swaps the red and blue information. Activate it in case your camera
