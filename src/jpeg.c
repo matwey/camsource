@@ -8,6 +8,8 @@
 
 #include "jpeg.h"
 #include "grab.h"
+#define MODULE_GENERIC
+#include "module.h"
 
 struct jpeg_ctx
 {
@@ -19,18 +21,6 @@ struct jpeg_ctx
 char *name = "jpeg_comp";
 char *deps[] = { NULL };
 pthread_t tid;
-
-int
-init()
-{
-	return 0;
-}
-
-void *
-thread(void *arg)
-{
-	return NULL;
-}
 
 void
 j_id(struct jpeg_compress_struct *cinfo)

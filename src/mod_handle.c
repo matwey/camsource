@@ -131,9 +131,9 @@ found:
 	name = dlsym(dlh, "name");
 	deps = dlsym(dlh, "deps");
 	init = dlsym(dlh, "init");
-	if (!name || !deps || !init || !dlsym(dlh, "tid") || !dlsym(dlh, "thread"))
+	if (!name || !deps)
 	{
-		printf("Necessary module symbol not found in %s\n", mod);
+		printf("Necessary module symbol (\"name\" or \"deps\" not found in %s\n", mod);
 		dlclose(dlh);
 		return -1;
 	}
@@ -157,13 +157,16 @@ found:
 		}
 	}
 	
-	ret = init();
-	if (ret)
+	if (init)
 	{
-		printf("Module %s failed to initialize, not loaded.\n", *name);
-		modules[modidx].dlhand = NULL;
-		dlclose(dlh);
-		return -1;
+		ret = init();
+		if (ret)
+		{
+			printf("Module %s failed to initialize, not loaded.\n", *name);
+			modules[modidx].dlhand = NULL;
+			dlclose(dlh);
+			return -1;
+		}
 	}
 
 	return 0;
@@ -185,6 +188,8 @@ mod_start_all()
 			continue;
 		thread = dlsym(modules[i].dlhand, "thread");
 		tid = dlsym(modules[i].dlhand, "tid");
+		if (!thread || !tid)
+			continue;
 		
 		pthread_attr_init(&attr);
 		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);

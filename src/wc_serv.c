@@ -10,6 +10,7 @@
 
 #include "config.h"
 
+#define MODULE_THREAD
 #include "module.h"
 #include "wc_serv.h"
 #include "grab.h"
