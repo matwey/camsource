@@ -18,6 +18,7 @@
 #include "configfile.h"
 #include "rwlock.h"
 #include "jpeg.h"
+#include "filter.h"
 
 char *name = "wc_serv";
 char *deps[] =
@@ -106,7 +107,7 @@ load_config()
 		return -1;
 	}
 	
-	for (; node; node = node->next)
+	for (node = node->children; node; node = node->next)
 	{
 		if (xmlStrEqual(node->name, "port"))
 		{
@@ -171,6 +172,8 @@ handle_conn(void *arg)
 	struct image curimg;
 	struct jpegbuf jpegimg;
 	int first;
+	xmlDocPtr doc;
+	xmlNodePtr node;
 	
 	memcpy(&peer, arg, sizeof(peer));
 	free(arg);
@@ -208,6 +211,18 @@ handle_conn(void *arg)
 			continue;
 		}
 		
+		rwlock_rlock(&configdoc_lock);
+		doc = xmlCopyDoc(configdoc, 1);
+		rwlock_runlock(&configdoc_lock);
+		if (doc)
+		{
+			node = config_find_mod_section(doc, name);
+			if (node)
+				filter_apply(&curimg, node);
+			xmlFreeDoc(doc);
+		}
+		
+	
 		jpeg_compress(&jpegimg, &curimg);
 	
 		snprintf(buf, sizeof(buf) - 1,

@@ -15,6 +15,7 @@
 #include "mod_handle.h"
 #include "image.h"
 #include "unpalette.h"
+#include "filter.h"
 
 struct grabimage current_img;
 pthread_cond_t current_img_cond;
@@ -48,6 +49,7 @@ grab_thread(void *arg)
 	bpf = (camdev.x * camdev.y) * camdev.pal->bpp;
 	imgbuf = malloc(bpf);
 	
+	printf("Camsource ready, grabbing images...\n");
 	for (;;)
 	{
 		ret = read(camdev.fd, imgbuf, bpf);
@@ -73,9 +75,6 @@ grab_glob_filters(struct image *img)
 {
 	xmlDocPtr doc;
 	xmlNodePtr node;
-	xmlAttrPtr filtername;
-	struct module *mod;
-	int (*filter)(struct image *, xmlNodePtr);
 
 	rwlock_rlock(&configdoc_lock);
 	doc = xmlCopyDoc(configdoc, 1);
@@ -87,28 +86,7 @@ grab_glob_filters(struct image *img)
 	}
 	
 	node = xmlDocGetRootElement(doc);
-	for (node = node->children; node; node = node->next)
-	{
-		if (!xmlStrEqual(node->name, "filter"))
-			continue;
-		filtername = xmlHasProp(node, "name");
-		if (!filtername || !filtername->children || !filtername->children->content)
-		{
-			printf("<filter> without name\n");
-			continue;
-		}
-		rwlock_rlock(&modules_lock);
-		mod = mod_find(filtername->children->content);
-		rwlock_runlock(&modules_lock);
-		if (mod)
-		{
-			filter = dlsym(mod->dlhand, "filter");
-			if (filter)
-				filter(img, node);
-			else
-				printf("Module %s has no \"filter\" routine\n", filtername->children->content);
-		}
-	}
+	filter_apply(img, node);
 	xmlFreeDoc(doc);
 }
 

@@ -12,6 +12,17 @@
 	-->
 	<module name="wc_serv" load="yes">
 		<port>8888</port>
+
+		<!--
+			Per-module filter. Works exactly the same as
+			the global filters, only that the per-module
+			filters are called from within the module's
+			worker thread.
+		-->
+		<filter name="resize">
+			<width>320</width>
+			<height>240</height>
+		</filter>
 	</module>
 	
 	<module name="jpeg_comp" load="yes"/>
@@ -29,10 +40,5 @@
 	-->
 	<filter name="flip"/>
 	
-	<filter name="resize">
-		<width>320</width>
-		<height>240</height>
-	</filter>
-
 </camsourceconfig>
 

@@ -100,7 +100,7 @@ config_find_mod_section(xmlDocPtr doc, const char *mod)
 			continue;
 		if (strcmp(modname->children->content, mod))
 			continue;
-		return node->children;
+		return node;
 	}
 	return NULL;
 }
