@@ -1,12 +1,17 @@
 $Id$
 
+Sep 28 2002
+	- Added experimental grayscale palette support
+	- Pumped version to 0.5.0a.
+
 --- 0.4.0 ---
 
 Sep 27 2002
 	- Released camsource 0.4.0.
 
 Sep 26 2002
-	- Fixed various compilation issues, including compatibility with libxml1.
+	- Fixed various compilation issues, including compatibility with
+	  libxml1.
 
 Sep 25 2002
 	- Added version information to modules

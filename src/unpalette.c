@@ -15,6 +15,7 @@ static unpalettizer unpalette_rgb24;
 static unpalettizer unpalette_bgr24;
 static unpalettizer unpalette_rgb32;
 static unpalettizer unpalette_bgr32;
+static unpalettizer unpalette_grey;
 
 struct palette palettes[] =
 {
@@ -26,6 +27,7 @@ struct palette palettes[] =
 	{ VIDEO_PALETTE_YUV422,			unpalette_stub,		2		},
 	{ VIDEO_PALETTE_YUV420,			unpalette_stub,		1.5	},
 	{ VIDEO_PALETTE_YUV420P,		unpalette_yuv420p,	1.5	},
+	{ VIDEO_PALETTE_GREY,			unpalette_grey,		1		},
 	{ -1 }
 };
 
@@ -152,6 +154,22 @@ unpalette_bgr32(struct image *dst, const unsigned char *src)
 		dstbuf[2] = src[0];
 		dstbuf += 3;
 		src += 4;
+	}
+}
+
+static
+void
+unpalette_grey(struct image *dst, const unsigned char *src)
+{
+	unsigned char *dstbuf, *dstend;
+	
+	dstbuf = dst->buf;
+	dstend = dstbuf + dst->bufsize; 
+	while (dstbuf < dstend)
+	{
+		*dstbuf++ = *src;
+		*dstbuf++ = *src;
+		*dstbuf++ = *src++;
 	}
 }
 
