@@ -4,4 +4,4 @@ SUBDIRS = src
 
 sysconf_DATA = camsource.conf.example
 
-EXTRA_DIST = scripts/camsource2bmp.pl
+EXTRA_DIST = scripts/camsource2bmp.pl camsource.conf.example

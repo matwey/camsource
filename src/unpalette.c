@@ -23,17 +23,17 @@ static unpalettizer unpalette_rgb555;
 
 struct palette palettes[] =
 {
-	{ VIDEO_PALETTE_RGB24,			unpalette_bgr24,		3,		24,	"bgr24"							},
-	{ VIDEO_PALETTE_RGB24 | 0x80,	unpalette_rgb24,		3,		24,	"rgb24"							},
-	{ VIDEO_PALETTE_RGB32,			unpalette_bgr32,		4,		32,	"bgr32"							},
-	{ VIDEO_PALETTE_RGB32 | 0x80,	unpalette_rgb32,		4,		32,	"rgb32"							},
-	{ VIDEO_PALETTE_YUYV,			unpalette_yuyv,		2,		24,	"yuyv (16 bpp)"				},
-	{ VIDEO_PALETTE_YUV422,			unpalette_yuyv,		2,		24,	"yuv422 (16 bpp)"				},
-	{ VIDEO_PALETTE_RGB565,			unpalette_rgb565,		2,		16,	"rgb565"							},
-	{ VIDEO_PALETTE_RGB555,			unpalette_rgb555,		2,		15,	"rgb555"							},
-	{ VIDEO_PALETTE_YUV420P,		unpalette_yuv420p,	1.5,	24,	"yuv420 planar (12 bpp)"	},
-	{ VIDEO_PALETTE_YUV420,			unpalette_yuv420,		1.5,	24,	"yuv420 (12 bpp)"				},
-	{ VIDEO_PALETTE_GREY,			unpalette_grey,		1,		8,		"grayscale (8 bpp)"			},
+	{ VIDEO_PALETTE_RGB24,		unpalette_bgr24,	3,	24,	"bgr24"				},
+	{ VIDEO_PALETTE_RGB24 | 0x80,	unpalette_rgb24,	3,	24,	"rgb24"				},
+	{ VIDEO_PALETTE_RGB32,		unpalette_bgr32,	4,	32,	"bgr32"				},
+	{ VIDEO_PALETTE_RGB32 | 0x80,	unpalette_rgb32,	4,	32,	"rgb32"				},
+	{ VIDEO_PALETTE_YUYV,		unpalette_yuyv,		2,	24,	"yuyv (16 bpp)"			},
+	{ VIDEO_PALETTE_YUV422,		unpalette_yuyv,		2,	24,	"yuv422 (16 bpp)"		},
+	{ VIDEO_PALETTE_RGB565,		unpalette_rgb565,	2,	16,	"rgb565"			},
+	{ VIDEO_PALETTE_RGB555,		unpalette_rgb555,	2,	15,	"rgb555"			},
+	{ VIDEO_PALETTE_YUV420P,	unpalette_yuv420p,	1.5,	24,	"yuv420 planar (12 bpp)"	},
+	{ VIDEO_PALETTE_YUV420,		unpalette_yuv420,	1.5,	24,	"yuv420 (12 bpp)"		},
+	{ VIDEO_PALETTE_GREY,		unpalette_grey,		1,	8,	"grayscale (8 bpp)"		},
 	{ -1 }
 };
 
