@@ -18,4 +18,6 @@ filewrite.lo
 libfilewrite.la
 ftpup.lo
 libftpup.la
+libtext.la
+text.lo
 

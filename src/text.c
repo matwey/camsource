@@ -19,8 +19,11 @@ char *name = MODNAME;
 int
 filter(struct image *img, xmlNodePtr node)
 {
-	struct image work;
-	char *text;
+	unsigned char *text;
+	int x, y;
+	int subx, suby;
+	int idx;
+	unsigned char *imgptr;
 	
 	text = NULL;
 
@@ -35,9 +38,36 @@ filter(struct image *img, xmlNodePtr node)
 		return -1;
 	}
 	
-	image_dup(&work, img);
+	x = 0;
+	y = img->y - 11;
 	
-	image_move(img, &work);
+	while (*text)
+	{
+		printf("letter %c\n", *text);
+		idx = *text * 11;
+		printf("index %i\n", idx);
+		printf("fontdata %x\n", fontdata[idx]);
+		for (suby = 0; suby < 11; suby++)
+		{
+			printf("  suby %i\n", suby);
+			imgptr = img->buf + ((y + suby) * img->x + x) * 3;
+			printf("  ptr diff %i\n", imgptr - img->buf);
+			for (subx = 0; subx < 8; subx++)
+			{
+				printf("    subx %i\n", subx);
+				printf("    fontdata %x\n", fontdata[idx + suby]);
+				printf("    comp %x\n", (0x80 >> subx));
+				if (fontdata[idx] & (0x80 >> subx))
+					imgptr[0] = imgptr[1] = imgptr[2] = 0xff;
+				else
+					imgptr[0] = imgptr[1] = imgptr[2] = 0x00;
+				imgptr += 3;
+			}
+			idx++;
+		}
+		text++;
+		x += 8;
+	}
 	
 	return 0;
 }
