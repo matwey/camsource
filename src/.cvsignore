@@ -8,4 +8,6 @@ libjpeg_comp.la
 jpeg.lo
 libflip.la
 flip.lo
+libresize.la
+resize.lo
 

@@ -173,40 +173,64 @@ handle_conn(void *arg)
 	char buf[1024];
 	struct image curimg;
 	struct jpegbuf jpegimg;
+	int first;
 	
 	memcpy(&peer, arg, sizeof(peer));
 	free(arg);
 	
+	first = 1;
 	/* TODO: timeout */
-	ret = read(peer.fd, &c, 1);
-	if (ret != 1)
+	for (;;)
 	{
-		close(peer.fd);
-		return NULL;
+		ret = read(peer.fd, &c, 1);
+		if (ret != 1)
+		{
+			close(peer.fd);
+			return NULL;
+		}
+		if (c == '\n' && first)
+		{
+			/* The webcam_server java applet has a bug in that
+			 * it sends two linefeeds before displaying the first
+			 * image, with the result that the display is always
+			 * one second slow (when using 1 fps). Work around
+			 * that. */
+			first = 0;
+			continue;
+		}
+	
+		rwlock_rlock(&image_lock);
+		image_copy(&curimg, &current_image);
+		rwlock_runlock(&image_lock);
+		
+		if (!curimg.buf)
+		{
+			if (c != '\n')
+				return NULL;
+			sleep(1);	/* TODO: make that better */
+			continue;
+		}
+		
+		jpeg_compress(&jpegimg, &curimg);
+	
+		snprintf(buf, sizeof(buf) - 1,
+			"HTTP/1.0 200 OK\n"
+			"Content-type: image/jpeg\n"
+			"Content-Length: %i\n"
+			"Connection: close\n\n",
+			jpegimg.bufsize);
+		ret = write(peer.fd, buf, strlen(buf));
+		ret = write(peer.fd, jpegimg.buf, jpegimg.bufsize);
+		
+		image_destroy(&curimg);
+		free(jpegimg.buf);
+		if (c != '\n')
+		{
+			sleep(1);
+			close(peer.fd);
+			return NULL;
+		}
 	}
-
-	rwlock_rlock(&image_lock);
-	image_copy(&curimg, &current_image);
-	rwlock_runlock(&image_lock);
-	
-	if (!curimg.buf)
-		return NULL;
-	
-	jpeg_compress(&jpegimg, &curimg);
-
-	snprintf(buf, sizeof(buf) - 1,
-		"HTTP/1.0 200 OK\n"
-		"Content-type: image/jpeg\n"
-		"Content-Length: %i\n"
-		"Connection: close\n\n",
-		jpegimg.bufsize);
-	ret = write(peer.fd, buf, strlen(buf));
-	ret = write(peer.fd, jpegimg.buf, jpegimg.bufsize);
-	
-	sleep(1);
-	close(peer.fd);
-	image_destroy(&curimg);
-	free(jpegimg.buf);
 	
 	return NULL;
 }
