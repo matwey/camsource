@@ -18,6 +18,12 @@
 #include "mod_handle.h"
 #include "log.h"
 
+static int http_load_conf(struct http_ctx *, xmlNodePtr);
+static void *http_conn(void *);
+static int http_path_ismatch(xmlNodePtr, char *);
+static void http_err(int, char *);
+static int http_get_fps(xmlNodePtr);
+
 char *name = "http";
 char *deps[] =
 {
@@ -36,7 +42,7 @@ init(struct module_ctx *mod_ctx)
 		return -1;
 	
 	http_ctx = malloc(sizeof(*http_ctx));
-	ret = load_conf(http_ctx, mod_ctx->node);
+	ret = http_load_conf(http_ctx, mod_ctx->node);
 	if (ret)
 	{
 		free(http_ctx);
@@ -68,7 +74,7 @@ thread(void *mod_ctx)
 	{
 		http_peer = malloc(sizeof(*http_peer));
 		http_peer->mod_ctx = mod_ctx;
-		ret = socket_accept_thread(http_ctx->listen_fd, &http_peer->peer, conn, http_peer);
+		ret = socket_accept_thread(http_ctx->listen_fd, &http_peer->peer, http_conn, http_peer);
 		if (ret)
 		{
 			free(http_peer);
@@ -81,8 +87,9 @@ thread(void *mod_ctx)
 	return NULL;
 }
 
+static
 int
-load_conf(struct http_ctx *ctx, xmlNodePtr node)
+http_load_conf(struct http_ctx *ctx, xmlNodePtr node)
 {
 	memset(ctx, 0, sizeof(*ctx));
 	
@@ -104,8 +111,9 @@ load_conf(struct http_ctx *ctx, xmlNodePtr node)
 	return 0;
 }
 
+static
 void *
-conn(void *peer_p)
+http_conn(void *peer_p)
 {
 	struct http_peer http_peer;
 	char buf[1024];
@@ -166,7 +174,7 @@ conn(void *peer_p)
 	{
 		if (!xml_isnode(subnode, "vpath"))
 			continue;
-		if (!path_ismatch(subnode, url))
+		if (!http_path_ismatch(subnode, url))
 			continue;
 		goto match;
 	}
@@ -183,7 +191,7 @@ match:
 			break;
 	}
 	
-	fps = get_fps(subnode);
+	fps = http_get_fps(subnode);
 	if (fps > 0)
 	{
 		snprintf(buf, sizeof(buf) - 1,
@@ -252,8 +260,9 @@ closenout:
 	return NULL;
 }
 
+static
 int
-path_ismatch(xmlNodePtr node, char *path)
+http_path_ismatch(xmlNodePtr node, char *path)
 {
 	for (node = node->children; node; node = node->next)
 	{
@@ -266,6 +275,7 @@ path_ismatch(xmlNodePtr node, char *path)
 	return 0;
 }
 
+static
 void
 http_err(int fd, char *err)
 {
@@ -285,8 +295,9 @@ http_err(int fd, char *err)
 	write(fd, buf, strlen(buf));
 }
 
+static
 int
-get_fps(xmlNodePtr node)
+http_get_fps(xmlNodePtr node)
 {
 	for (node = node->children; node; node = node->next)
 	{

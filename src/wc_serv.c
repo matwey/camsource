@@ -22,6 +22,9 @@
 #include "socket.h"
 #include "log.h"
 
+static int wc_load_config(struct wc_ctx *, xmlNodePtr);
+static void *wc_handle_conn(void *);
+
 char *name = "wc_serv";
 char *deps[] =
 {
@@ -36,7 +39,7 @@ init(struct module_ctx *ctx)
 	int ret;
 	struct wc_ctx new_ctx, *wc_ctx;
 	
-	ret = load_config(&new_ctx, ctx->node);
+	ret = wc_load_config(&new_ctx, ctx->node);
 	if (ret)
 		return ret;
 	
@@ -66,7 +69,7 @@ thread(void *arg)
 	{
 		peer = malloc(sizeof(*peer));
 		peer->ctx = arg;
-		ret = socket_accept_thread(ctx->listen_fd, &peer->peer, handle_conn, peer);
+		ret = socket_accept_thread(ctx->listen_fd, &peer->peer, wc_handle_conn, peer);
 		if (ret == -1)
 		{
 			printf("accept() error: %s\n", strerror(errno));
@@ -78,8 +81,9 @@ thread(void *arg)
 	}
 }
 
+static
 int
-load_config(struct wc_ctx *ctx, xmlNodePtr node)
+wc_load_config(struct wc_ctx *ctx, xmlNodePtr node)
 {
 	ctx->port = 8888;
 	ctx->listen_fd = -1;
@@ -102,20 +106,9 @@ load_config(struct wc_ctx *ctx, xmlNodePtr node)
 	return 0;
 }
 
-int
-open_socket(struct wc_ctx *ctx)
-{
-	int fd;
-	
-	fd = socket_listen(ctx->port, 0);
-	if (fd == -1)
-		return -1;
-	ctx->listen_fd = fd;
-	return 0;
-}
-
+static
 void *
-handle_conn(void *arg)
+wc_handle_conn(void *arg)
 {
 	struct peer_ctx peer;
 	int ret;

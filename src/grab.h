@@ -46,9 +46,6 @@ void grab_thread_init(void);
 struct camdev *grab_open(void);
 void *grab_thread(void *);
 
-/* Applies global filters (as found in configdoc xml tree) to image in-place */
-void grab_glob_filters(struct image *);
-
 /* Does the necessary locking and checking to get a _new_ frame out of
  * current_img. A copy of the new frame is stored into the first argument
  * (which must be image_destroy()'d by the caller). The second argument

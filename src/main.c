@@ -11,6 +11,8 @@
 #include "camdev.h"
 #include "log.h"
 
+static void main_init(char *);
+
 int
 main(int argc, char **argv)
 {
@@ -40,6 +42,7 @@ main(int argc, char **argv)
 	return 0;
 }
 
+static
 void
 main_init(char *config)
 {

@@ -31,31 +31,11 @@ struct module
 	struct module_ctx ctx;	/* Passed to init() and thread() */
 };
 
-/* Built once on startup, then never modified and readonly */
-extern struct module modules[MAX_MODULES];
-
 /* None of these functions may be used from threads. All module loading/initing
  * must happen before threads are started */
 void mod_init(void);
 /* Loads all "active" modules as given in configdoc */
 void mod_load_all(void);
-/* Loads one module by name, optionally with an xml config */
-int mod_load(char *, xmlNodePtr);
-
-/* Private functions */
-/* Given an xml node, return alias name if present, otherwise module name */
-char *mod_get_aliasname(xmlNodePtr, char *);
-/* Given a module name, try to dlopen its lib. Lib names are created from predefined patterns */
-void *mod_try_dlopen(char *);
-/* Make sure the filename matches the module's built in name. Return -1 on error. */
-int mod_validate(void *, char *);
-/* Look at the module's dep list, and load each mod. Return -1 on error */
-int mod_load_deps(struct module *);
-/* Calls module's init(). Returns init()'s return value (0 == success) */
-int mod_init_mod(struct module *);
-/* Cleans up module struct and dlclose()s lib if not used any more */
-void mod_close(struct module *);
-xmlNodePtr mod_find_config(char *);
 
 void mod_start_all(void);
 

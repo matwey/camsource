@@ -18,6 +18,8 @@
 #include "jpeg.h"
 #include "filter.h"
 
+static int fw_load_conf(struct fw_ctx *, xmlNodePtr);
+
 char *name = "filewrite";
 char *deps[] =
 {
@@ -99,6 +101,7 @@ freesleeploop:
 	}
 }
 
+static
 int
 fw_load_conf(struct fw_ctx *fctx, xmlNodePtr node)
 {

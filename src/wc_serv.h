@@ -19,9 +19,5 @@ struct peer_ctx
 	struct module_ctx *ctx;
 };
 
-int load_config(struct wc_ctx *, xmlNodePtr);
-int open_socket(struct wc_ctx *);
-void *handle_conn(void *);
-
 #endif
 

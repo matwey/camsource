@@ -17,6 +17,8 @@
 #include "filter.h"
 #include "xmlhelp.h"
 
+static void grab_glob_filters(struct image *);
+
 struct grabimage current_img;
 
 void
@@ -95,6 +97,7 @@ grab_thread(void *arg)
 	return 0;
 }
 
+static
 void
 grab_glob_filters(struct image *img)
 {

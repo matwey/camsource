@@ -2,7 +2,6 @@
 #define _MAIN_H_
 
 int main(int, char **);
-void main_init(char *);
 
 #endif
 

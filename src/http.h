@@ -19,11 +19,5 @@ struct http_peer
 	struct module_ctx *mod_ctx;
 };
 
-int load_conf(struct http_ctx *, xmlNodePtr);
-void *conn(void *);
-int path_ismatch(xmlNodePtr, char *);
-void http_err(int, char *);
-int get_fps(xmlNodePtr);
-
 #endif
 

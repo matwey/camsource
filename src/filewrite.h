@@ -10,7 +10,5 @@ struct fw_ctx
 	int chmod;
 };
 
-int fw_load_conf(struct fw_ctx *, xmlNodePtr);
-
 #endif
 

@@ -9,6 +9,8 @@
 #include "image.h"
 #include "xmlhelp.h"
 
+static int resize_get_dim(struct image *, xmlNodePtr);
+
 char *name = "resize";
 
 int
@@ -50,6 +52,7 @@ filter(struct image *img, xmlNodePtr node)
 	return 0;
 }
 
+static
 int
 resize_get_dim(struct image *img, xmlNodePtr node)
 {

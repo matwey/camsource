@@ -10,7 +10,25 @@
 #include "configfile.h"
 #include "xmlhelp.h"
 
-struct module modules[MAX_MODULES];
+/* Given an xml node, return alias name if present, otherwise module name */
+static char *mod_get_aliasname(xmlNodePtr, char *);
+/* Given a module name, try to dlopen its lib. Lib names are created from predefined patterns */
+static void *mod_try_dlopen(char *);
+/* Make sure the filename matches the module's built in name. Return -1 on error. */
+static int mod_validate(void *, char *);
+/* Look at the module's dep list, and load each mod. Return -1 on error */
+static int mod_load_deps(struct module *);
+/* Calls module's init(). Returns init()'s return value (0 == success) */
+static int mod_init_mod(struct module *);
+/* Cleans up module struct and dlclose()s lib if not used any more */
+static void mod_close(struct module *);
+static xmlNodePtr mod_find_config(char *);
+/* Loads one module by name, optionally with an xml config */
+static int mod_load(char *, xmlNodePtr);
+
+
+/* Built once on startup, then never modified and readonly */
+static struct module modules[MAX_MODULES];
 
 void
 mod_init()
@@ -47,6 +65,7 @@ mod_load_all()
 	}
 }
 
+static
 int
 mod_load(char *mod, xmlNodePtr node)
 {
@@ -168,6 +187,7 @@ mod_find(char *mod, char *alias)
 	return NULL;
 }
 
+static
 char *
 mod_get_aliasname(xmlNodePtr node, char *mod)
 {
@@ -181,6 +201,7 @@ mod_get_aliasname(xmlNodePtr node, char *mod)
 	return mod;
 }
 
+static
 void *
 mod_try_dlopen(char *mod)
 {
@@ -217,6 +238,7 @@ mod_try_dlopen(char *mod)
 	return NULL;
 }
 
+static
 int
 mod_validate(void *dlh, char *mod)
 {
@@ -236,6 +258,7 @@ mod_validate(void *dlh, char *mod)
 	return 0;
 }
 
+static
 int
 mod_load_deps(struct module *mod)
 {
@@ -254,6 +277,7 @@ mod_load_deps(struct module *mod)
 	return 0;
 }
 
+static
 void
 mod_close(struct module *mod)
 {
@@ -278,6 +302,7 @@ inuse:
 	}
 }
 
+static
 int
 mod_init_mod(struct module *mod)
 {
@@ -292,6 +317,7 @@ mod_init_mod(struct module *mod)
 	return ret;
 }
 
+static
 xmlNodePtr
 mod_find_config(char *mod)
 {

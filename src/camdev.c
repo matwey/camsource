@@ -14,6 +14,9 @@
 #include "unpalette.h"
 #include "xmlhelp.h"
 
+static int camdev_size_def(xmlNodePtr);
+static int camdev_size_set(int, int, int, char *);
+
 int
 camdev_open(struct camdev *camdev, xmlNodePtr node)
 {
@@ -169,6 +172,7 @@ camdev_capdump(char *dev)
 	printf("    Max: %ix%i\n", vidcap.maxwidth, vidcap.maxheight);
 }
 
+static
 int
 camdev_size_def(xmlNodePtr node)
 {
@@ -183,6 +187,7 @@ camdev_size_def(xmlNodePtr node)
 		return xml_atoi(node, 0);
 }
 
+static
 int
 camdev_size_set(int val, int min, int max, char *s)
 {

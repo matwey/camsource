@@ -6,6 +6,15 @@
 #include "unpalette.h"
 #include "image.h"
 
+static unsigned char citb(int);
+
+static unpalettizer unpalette_stub;
+static unpalettizer unpalette_yuv420p;
+static unpalettizer unpalette_rgb24;
+static unpalettizer unpalette_bgr24;
+static unpalettizer unpalette_rgb32;
+static unpalettizer unpalette_bgr32;
+
 struct palette palettes[] =
 {
 	{ VIDEO_PALETTE_RGB24,			unpalette_bgr24,		3		},
@@ -19,7 +28,8 @@ struct palette palettes[] =
 	{ -1 }
 };
 
-static unsigned char
+static
+unsigned char
 citb(int i)
 {
 	if (i >= 256)
@@ -29,12 +39,14 @@ citb(int i)
 	return i;
 }
 
+static
 void
 unpalette_stub(struct image *dst, const unsigned char *src)
 {
 	printf("palette recognized but not yet supported!\n");
 }
 
+static
 void
 unpalette_yuv420p(struct image *dst, const unsigned char *src)
 {
@@ -82,12 +94,14 @@ unpalette_yuv420p(struct image *dst, const unsigned char *src)
 	}
 }
 
+static
 void
 unpalette_rgb24(struct image *dst, const unsigned char *src)
 {
 	memcpy(dst->buf, src, dst->bufsize);
 }
 
+static
 void
 unpalette_bgr24(struct image *dst, const unsigned char *src)
 {
@@ -105,6 +119,7 @@ unpalette_bgr24(struct image *dst, const unsigned char *src)
 	}
 }
 
+static
 void
 unpalette_rgb32(struct image *dst, const unsigned char *src)
 {
@@ -121,6 +136,7 @@ unpalette_rgb32(struct image *dst, const unsigned char *src)
 	}
 }
 
+static
 void
 unpalette_bgr32(struct image *dst, const unsigned char *src)
 {

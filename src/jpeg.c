@@ -14,6 +14,10 @@
 #include "xmlhelp.h"
 #include "mod_handle.h"
 
+static void j_id(struct jpeg_compress_struct *);
+static boolean j_eob(struct jpeg_compress_struct *);
+static void j_td(struct jpeg_compress_struct *);
+
 struct jpeg_ctx
 {
 	struct jpeg_destination_mgr jdm;
@@ -23,7 +27,7 @@ struct jpeg_ctx
 
 char *name = "jpeg_comp";
 
-int defqual;
+static int defqual;
 
 
 int
@@ -47,11 +51,13 @@ init(struct module_ctx *ctx)
 }
 
 
+static
 void
 j_id(struct jpeg_compress_struct *cinfo)
 {
 }
 
+static
 boolean
 j_eob(struct jpeg_compress_struct *cinfo)
 {
@@ -68,6 +74,7 @@ j_eob(struct jpeg_compress_struct *cinfo)
 	return TRUE;
 }
 
+static
 void
 j_td(struct jpeg_compress_struct *cinfo)
 {
