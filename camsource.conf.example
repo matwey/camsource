@@ -50,10 +50,14 @@
 			the global filters, only that the per-module
 			filters are called from within the module's
 			worker thread.
+			The resize filter can either take a <height>
+			and a <width> option, to resize the image
+			to a fixed size, or a <scale> option to
+			resize the image to a certain percentage of
+			the original size.
 		-->
 		<filter name="resize">
-			<width>320</width>
-			<height>240</height>
+			<scale>50</scale>
 		</filter>
 		
 		<!--
@@ -132,8 +136,7 @@
 			<path>/small</path>
 			
 			<filter name="resize">
-				<width>320</width>
-				<height>240</height>
+				<scale>50</scale>
 			</filter>
 
 			<filter name="text"/>
@@ -149,8 +152,7 @@
 			<path>/multipart</path>
 			<fps>2</fps>
 			<filter name="resize">
-				<width>320</width>
-				<height>240</height>
+				<scale>50</scale>
 			</filter>
 
 			<filter name="text"/>

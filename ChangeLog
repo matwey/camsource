@@ -1,6 +1,7 @@
 $Id$
 
 Sep 24 2002
+	- Added <scale> option to resize filter
 	- Added a rotate image filter
 	- Per request, added feature to filewrite and ftpup module to allow
 	  grabbing of a single frame, then exit.

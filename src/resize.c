@@ -58,12 +58,22 @@ static
 int
 resize_get_dim(struct image *img, xmlNodePtr node)
 {
+	int scale;
+	
 	for (node = node->children; node; node = node->next)
 	{
 		if (xml_isnode(node, "width"))
 			img->x = xml_atoi(node, img->x);
 		else if (xml_isnode(node, "height"))
 			img->y = xml_atoi(node, img->y);
+		else if (xml_isnode(node, "scale"))
+		{
+			scale = xml_atoi(node, 0);
+			if (scale <= 0)
+				continue;
+			img->x = (img->x * scale) / 100;
+			img->y = (img->y * scale) / 100;
+		}
 	}
 	
 	if (img->x == 0 || img->y == 0)
