@@ -1,12 +1,35 @@
 <?xml version="1.0"?>
 <camsourceconfig>
 
+	<!-- Global config options -->
+	<!-- <logfile>~/.camsource.log</logfile> -->
+
+	<!--
+		Available modules. A module will only be loaded
+		if its "load" attribute is set to "yes", or if
+		it's a dependency of another module. In any case,
+		any module config given here is used.
+	-->
 	<module name="wc_serv" load="yes">
 		<port>8888</port>
 	</module>
 	
 	<module name="jpeg_comp" load="yes">
 	</module>
+	
+	<module name="flip" load="yes">
+	</module>
+	
+	<!--
+		Global filters to use. Any filter given here
+		will be applied to every grabbed frame. If
+		a given filter module is not loaded, the filter
+		will be ignored silently. (TODO: is that a good idea?)
+		Filters are always applied in order. You can
+		give the same filter multiple times to apply
+		it to the image several times.
+	-->
+	<filter name="flip"/>
 
 </camsourceconfig>
 

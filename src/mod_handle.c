@@ -123,7 +123,7 @@ mod_try_load(const char *mod, const char *file)
 			continue;
 		goto found;
 	}
-	printf("Max num of modules exceeded when trying to load %s\n", mod);
+	printf("Max num of modules exceeded when trying to load module %s.\n", mod);
 	dlclose(dlh);
 	return -1;
 	
@@ -133,7 +133,7 @@ found:
 	init = dlsym(dlh, "init");
 	if (!name || !deps)
 	{
-		printf("Necessary module symbol (\"name\" or \"deps\" not found in %s\n", mod);
+		printf("Necessary module symbol (\"name\" or \"deps\") not found in module %s.\n", mod);
 		dlclose(dlh);
 		return -1;
 	}
@@ -150,7 +150,7 @@ found:
 	{
 		if (mod_load(*deps))
 		{
-			printf("Module %s depends on %s, which failed to load. %s not loaded.\n", *name, *deps, *name);
+			printf("Module %s depends on module %s, which failed to load. %s not loaded.\n", *name, *deps, *name);
 			modules[modidx].dlhand = NULL;
 			dlclose(dlh);
 			return -1;
@@ -198,5 +198,21 @@ mod_start_all()
 	}
 
 	rwlock_runlock(&modules_lock);
+}
+
+struct module *
+mod_find(const char *mod)
+{
+	int i;
+	
+	for (i = 0; i < MAX_MODULES; i++)
+	{
+		if (!modules[i].dlhand)
+			continue;
+		if (!strcmp(modules[i].name, mod))
+			return &modules[i];
+	}
+	
+	return NULL;
 }
 

@@ -23,7 +23,12 @@ void mod_load_all(void);
 int mod_load(const char *);
 int mod_try_load(const char *, const char *);
 /* . */
+
 void mod_start_all(void);
+
+/* caller must hold module_lock r for: */
+struct module *mod_find(const char *);
+/* . */
 
 #endif
 

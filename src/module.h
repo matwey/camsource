@@ -11,6 +11,7 @@
  *    is filled in by camsource with the thread's id.
  * .) MODULE_FILTER is an image filter module. It provides a filter()
  *    function that takes an image as input and outputs another one.
+ *    The destination image's buffer will be allocated by filter().
  * .) MODULE_GENERIC is a module which doesn't do anything by itself,
  *    but provides special functionality for other modules. It is
  *    usually listed as dependency in other modules.

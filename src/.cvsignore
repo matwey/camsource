@@ -6,4 +6,6 @@ libwc_serv.la
 wc_serv.lo
 libjpeg_comp.la
 jpeg.lo
+libflip.la
+flip.lo
 
