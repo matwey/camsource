@@ -1,5 +1,8 @@
 $Id$
 
+Sep 26 2003
+	- Sleeping 10 seconds in grabbing thread on error.
+
 Sep 1 2003
 	- Added "persistant" option to ftpup module.
 

@@ -288,7 +288,8 @@ grab_thread(void *arg)
 		
 		rawimg = thread->input(&thread->gcamdev);
 		if (!rawimg) {
-			printf("Device '%s' returned no image\n", thread->name);
+			printf("Device '%s' returned no image. Sleeping 10 seconds before trying again.\n", thread->name);
+			sleep(10);
 			continue;
 		}
 		
