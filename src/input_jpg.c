@@ -41,6 +41,7 @@ struct jpg_ctx {
 	char *file;
 	unsigned long delay;
 	struct timeval nextimg;
+	void *freebuf;
 };
 
 
@@ -95,6 +96,8 @@ input(struct grab_camdev *gcamdev)
 	unsigned long delay;
 
 	ctx = gcamdev->custom;
+
+	free(ctx->freebuf);
 
 	gettimeofday(&now, NULL);
 	if (!ctx->nextimg.tv_sec)
@@ -153,6 +156,8 @@ input(struct grab_camdev *gcamdev)
 	gcamdev->y = img.y;
 
 	free(buf);
+	ctx->freebuf = img.buf;
+
 	return img.buf;
 
 outerr2:
