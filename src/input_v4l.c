@@ -1,27 +1,57 @@
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <linux/videodev.h>
+#include <unistd.h>
+#include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <unistd.h>
 #include <libxml/parser.h>
+#include <linux/videodev.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
 
 #include "config.h"
 
-#include "camdev.h"
-#include "unpalette.h"
+#define MODULE_INPUT
+#include "module.h"
 #include "xmlhelp.h"
-#include "configfile.h"
+#include "grab.h"
+#include "unpalette.h"
+
+#define MODNAME "input_v4l"
+
+/* $Id$ */
+
+
+char *name = MODNAME;
+char *version = VERSION;
+char *deps[] = { NULL };
+
+
 
 static int camdev_size_def(xmlNodePtr);
 static int camdev_size_set(int, int, int, char *);
 
-int
-camdev_open(struct camdev *camdev, xmlNodePtr node)
+
+
+struct v4l_camdev
 {
-	struct camdev newcamdev;
+	int fd;
+	struct video_capability vidcap;
+	struct video_picture vidpic;
+	int usemmap;
+	unsigned char *mbufp;
+	int mbufframe;
+	unsigned char *imgbuf;
+	unsigned int bpf;
+	struct video_mbuf mbuf;
+};
+
+
+
+
+int
+opendev(xmlNodePtr node, struct grab_camdev *gcamdev)
+{
+	struct v4l_camdev newcamdev;
 	int ret;
 	struct video_window vidwin;
 	char *path;
@@ -30,6 +60,7 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 	int norm;
 	struct video_channel vidchan;
 	int brightness, hue, colour, contrast, whiteness;
+	struct palette *pal;
 	
 	memset(&newcamdev, 0, sizeof(newcamdev));
 	
@@ -75,10 +106,6 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 				else
 					printf("Invalid video norm \"%s\" specified, ignoring\n", s);
 			}
-			else if (xml_isnode(node, "cmd"))
-				newcamdev.cmd = config_homedir(xml_getcontent(node));
-			else if (xml_isnode(node, "cmdtimeout"))
-				newcamdev.cmdtimeout = xml_atoi(node, 0) * 1000000;
 		}
 	}
 	
@@ -152,8 +179,6 @@ closenerr:
 		if (!ret)
 			ioctl(newcamdev.fd, VIDIOCSWIN, &vidwin);
 	}
-	newcamdev.x = vidwin.width;
-	newcamdev.y = vidwin.height;
 	
 	ret = ioctl(newcamdev.fd, VIDIOCGPICT, &newcamdev.vidpic);
 	if (ret != 0)
@@ -161,10 +186,10 @@ closenerr:
 		printf("ioctl \"get pict props\" failed: %s\n", strerror(errno));
 		goto closenerr;
 	}
-	for (newcamdev.pal = palettes; newcamdev.pal->val >= 0; newcamdev.pal++)
+	for (pal = palettes; pal->val >= 0; pal++)
 	{
-		newcamdev.vidpic.palette = newcamdev.pal->val;
-		newcamdev.vidpic.depth = newcamdev.pal->depth;
+		newcamdev.vidpic.palette = pal->val;
+		newcamdev.vidpic.depth = pal->depth;
 		if (brightness >= 0)
 			newcamdev.vidpic.brightness = brightness;
 		if (hue >= 0)
@@ -177,96 +202,109 @@ closenerr:
 			newcamdev.vidpic.whiteness = whiteness;
 		ioctl(newcamdev.fd, VIDIOCSPICT, &newcamdev.vidpic);
 		ioctl(newcamdev.fd, VIDIOCGPICT, &newcamdev.vidpic);
-		if (newcamdev.vidpic.palette == newcamdev.pal->val)
+		if (newcamdev.vidpic.palette == pal->val)
 			goto palfound;	/* break */
 	}
 	printf("No common supported palette found\n");
 	goto closenerr;
 	
 palfound:
-	newcamdev.devicepath = strdup(path);
-	memcpy(camdev, &newcamdev, sizeof(*camdev));
+	newcamdev.usemmap = -1;
+	newcamdev.mbufp = NULL;
+	newcamdev.mbufframe = 0;
+	newcamdev.bpf = (vidwin.width * vidwin.height) * pal->bpp;
+	newcamdev.imgbuf = malloc(newcamdev.bpf);
+
+	gcamdev->name = strdup(path);
+	gcamdev->pal = pal;
+	gcamdev->x = vidwin.width;
+	gcamdev->y = vidwin.height;
+
+	gcamdev->custom = malloc(sizeof(newcamdev));
+	memcpy(gcamdev->custom, &newcamdev, sizeof(newcamdev));
 	
 	return 0;
 }
 
-void
-camdev_capdump(char *dev)
+unsigned char *
+input(struct grab_camdev *gcamdev)
 {
-	int fd, ret;
-	struct video_capability vidcap;
-	struct video_picture vidpic;
-	struct palette *pal;
+	int ret;
+	struct v4l_camdev *camdev;
+	struct video_mmap mmapctx;
+	unsigned char *retbuf;
+
+	camdev = gcamdev->custom;
 	
-	if (!dev)
-		dev = "/dev/video0";
-	
-	fd = open(dev, O_RDONLY);
-	if (fd < 0)
+	if (camdev->usemmap)
 	{
-		printf("Unable to open %s (%s)\n", dev, strerror(errno));
-		return;
+		if (camdev->usemmap < 0)
+		{
+			do
+				ret = ioctl(camdev->fd, VIDIOCGMBUF, &camdev->mbuf);
+			while (ret < 0 && errno == EINTR);
+			if (ret < 0)
+			{
+nommap:
+				printf("Not using mmap interface, falling back to read() (%s)\n", gcamdev->name);
+				camdev->usemmap = 0;
+				goto sysread;
+			}
+			camdev->mbufp = mmap(NULL, camdev->mbuf.size, PROT_READ, MAP_PRIVATE, camdev->fd, 0);
+			if (camdev->mbufp == MAP_FAILED)
+				goto nommap;
+			camdev->usemmap = 1;
+			camdev->mbufframe = 0;
+		}
+		memset(&mmapctx, 0, sizeof(mmapctx));
+		mmapctx.frame = camdev->mbufframe;
+		mmapctx.width = gcamdev->x;
+		mmapctx.height = gcamdev->y;
+		mmapctx.format = gcamdev->pal->val;
+		do
+			ret = ioctl(camdev->fd, VIDIOCMCAPTURE, &mmapctx);
+		while (ret < 0 && errno == EINTR);
+		if (ret < 0)
+		{
+unmap:
+			munmap(camdev->mbufp, camdev->mbuf.size);
+			goto nommap;
+		}
+		ret = camdev->mbufframe;
+		do
+			ret = ioctl(camdev->fd, VIDIOCSYNC, &ret);
+		while (ret < 0 && errno == EINTR);
+		if (ret < 0)
+			goto unmap;
+		
+		retbuf = camdev->mbufp + camdev->mbuf.offsets[camdev->mbufframe];
+			
+		camdev->mbufframe++;
+		if (camdev->mbufframe >= camdev->mbuf.frames)
+			camdev->mbufframe = 0;
+		
+		return retbuf;
 	}
 
-	ret = ioctl(fd, VIDIOCGCAP, &vidcap);
+sysread:
+	do
+		ret = read(camdev->fd, camdev->imgbuf, camdev->bpf);
+	while (ret < 0 && errno == EINTR);
 	if (ret < 0)
 	{
-		printf("ioctl(VIDIOCGCAP) (get video capabilites) failed: %s\n", strerror(errno));
-		goto closenout;
+		printf("Error while reading from device '%s': %s\n", gcamdev->name, strerror(errno));
+		return NULL;
 	}
-	
-	printf("Capability info for %s:\n", dev);
-	printf("  Name: %s\n", vidcap.name);
-	printf("    Can %scapture to memory\n", (vidcap.type & VID_TYPE_CAPTURE) ? "" : "not ");
-	printf("    %s a tuner\n", (vidcap.type & VID_TYPE_TUNER) ? "Has" : "Doesn't have");
-	printf("    Can%s receive teletext\n", (vidcap.type & VID_TYPE_TELETEXT) ? "" : "not");
-	printf("    Overlay is %schromakeyed\n", (vidcap.type & VID_TYPE_CHROMAKEY) ? "" : "not ");
-	printf("    Overlay clipping is %ssupported\n", (vidcap.type & VID_TYPE_CLIPPING) ? "" : "not ");
-	printf("    Overlay %s frame buffer mem\n", (vidcap.type & VID_TYPE_FRAMERAM) ? "overwrites" : "doesn't overwrite");
-	printf("    Hardware image scaling %ssupported\n", (vidcap.type & VID_TYPE_SCALES) ? "" : "not ");
-	printf("    Captures in %s\n", (vidcap.type & VID_TYPE_MONOCHROME) ? "grayscale only" : "color");
-	printf("    Can capture %s image\n", (vidcap.type & VID_TYPE_SUBCAPTURE) ? "only part of the" : "the complete");
-	printf("  Number of channels: %i\n", vidcap.channels);
-	printf("  Number of audio devices: %i\n", vidcap.audios);
-	printf("  Grabbing frame size:\n");
-	printf("    Min: %ix%i\n", vidcap.minwidth, vidcap.minheight);
-	printf("    Max: %ix%i\n", vidcap.maxwidth, vidcap.maxheight);
-	
-	ret = ioctl(fd, VIDIOCGPICT, &vidpic);
-	if (ret != 0)
+	if (ret == 0)
 	{
-		printf("ioctl(VIDIOCGPICT) (get picture properties) failed: %s\n", strerror(errno));
-		goto closenout;
+		printf("EOF while reading from device '%s'\n", gcamdev->name);
+		return NULL;
 	}
+	if (ret < camdev->bpf)
+		printf("Short read while reading from device '%s' (%i < %i), continuing anyway\n",
+		gcamdev->name, ret, camdev->bpf);
 	
-	printf("\n");
-	printf("Palette information:\n");
-	for (pal = palettes; pal->val >= 0; pal++)
-	{
-		if (pal->val == vidpic.palette)
-		{
-			printf("  Currenctly active palette: %s with depth %u\n", pal->name, vidpic.depth);
-			goto palfound;
-		}
-	}
-	printf("  Currenctly active palette: not found/supported? (value %u, depth %u)\n", vidpic.palette, vidpic.depth);
-	
-palfound:
-	printf("  Probing for supported palettes:\n");
-	for (pal = palettes; pal->val >= 0; pal++)
-	{
-		vidpic.palette = pal->val;
-		vidpic.depth = pal->depth;
-		ioctl(fd, VIDIOCSPICT, &vidpic);
-		ioctl(fd, VIDIOCGPICT, &vidpic);
-		if (vidpic.palette == pal->val)
-			printf("    Palette \"%s\" supported: Yes, with depth %u\n", pal->name, vidpic.depth);
-		else
-			printf("    Palette \"%s\" supported: No\n", pal->name);
-	}	
-
-closenout:
-	close(fd);
+	return camdev->imgbuf;
 }
 
 static

@@ -34,3 +34,5 @@ libregrab.la
 regrab.lo
 libinvert.la
 invert.lo
+libinput_v4l.la
+input_v4l.lo

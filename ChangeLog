@@ -1,6 +1,9 @@
 $Id$
 
 Jan 26 2003
+	- Modularized the video input code, removed camdev.* files.
+	  Their functionality was moved to libinput_v4l. The
+	  '-c' command line switch doesn't work now. Will fix.
 	- Libfilewrite and libftpup now have the capability of
 	  timestamping filenames.
 

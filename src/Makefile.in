@@ -83,17 +83,19 @@ pkglib_LTLIBRARIES = libwc_serv.la libjpeg_comp.la libflip.la \
 	libresize.la libsocket.la libhttp.la libfilewrite.la \
 	libftpup.la libtext.la librgbbgr.la librotate.la \
 	libbw.la libvloopback.la libmotiondetect.la libregrab.la \
-	libinvert.la
+	libinvert.la libinput_v4l.la
 
 
-pkginclude_HEADERS = camdev.h configfile.h filter.h grab.h \
+pkginclude_HEADERS = configfile.h filter.h grab.h \
 	image.h jpeg.h mod_handle.h module.h unpalette.h xmlhelp.h \
 	socket.h log.h
 
 
-camsource_SOURCES = main.c grab.c camdev.c unpalette.c configfile.c \
+camsource_SOURCES = main.c grab.c unpalette.c configfile.c \
 	mod_handle.c image.c filter.c xmlhelp.c log.c main.h
 
+
+libinput_v4l_la_SOURCES = input_v4l.c
 
 libwc_serv_la_SOURCES = wc_serv.c wc_serv.h
 
@@ -140,6 +142,10 @@ libhttp_la_LDFLAGS =
 libhttp_la_LIBADD =
 am_libhttp_la_OBJECTS = http.lo
 libhttp_la_OBJECTS = $(am_libhttp_la_OBJECTS)
+libinput_v4l_la_LDFLAGS =
+libinput_v4l_la_LIBADD =
+am_libinput_v4l_la_OBJECTS = input_v4l.lo
+libinput_v4l_la_OBJECTS = $(am_libinput_v4l_la_OBJECTS)
 libinvert_la_LDFLAGS =
 libinvert_la_LIBADD =
 am_libinvert_la_OBJECTS = invert.lo
@@ -186,10 +192,9 @@ libwc_serv_la_OBJECTS = $(am_libwc_serv_la_OBJECTS)
 bin_PROGRAMS = camsource$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
-am_camsource_OBJECTS = main.$(OBJEXT) grab.$(OBJEXT) camdev.$(OBJEXT) \
-	unpalette.$(OBJEXT) configfile.$(OBJEXT) mod_handle.$(OBJEXT) \
-	image.$(OBJEXT) filter.$(OBJEXT) xmlhelp.$(OBJEXT) \
-	log.$(OBJEXT)
+am_camsource_OBJECTS = main.$(OBJEXT) grab.$(OBJEXT) unpalette.$(OBJEXT) \
+	configfile.$(OBJEXT) mod_handle.$(OBJEXT) image.$(OBJEXT) \
+	filter.$(OBJEXT) xmlhelp.$(OBJEXT) log.$(OBJEXT)
 camsource_OBJECTS = $(am_camsource_OBJECTS)
 camsource_LDADD = $(LDADD)
 camsource_DEPENDENCIES =
@@ -201,11 +206,11 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
-@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/bw.Plo $(DEPDIR)/camdev.Po \
-@AMDEP_TRUE@	$(DEPDIR)/configfile.Po $(DEPDIR)/filewrite.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/filter.Po $(DEPDIR)/flip.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/ftpup.Plo $(DEPDIR)/grab.Po \
-@AMDEP_TRUE@	$(DEPDIR)/http.Plo $(DEPDIR)/image.Po \
+@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/bw.Plo $(DEPDIR)/configfile.Po \
+@AMDEP_TRUE@	$(DEPDIR)/filewrite.Plo $(DEPDIR)/filter.Po \
+@AMDEP_TRUE@	$(DEPDIR)/flip.Plo $(DEPDIR)/ftpup.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/grab.Po $(DEPDIR)/http.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/image.Po $(DEPDIR)/input_v4l.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/invert.Plo $(DEPDIR)/jpeg.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/log.Po $(DEPDIR)/main.Po \
 @AMDEP_TRUE@	$(DEPDIR)/mod_handle.Po $(DEPDIR)/motiondetect.Plo \
@@ -224,17 +229,17 @@ LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 CFLAGS = @CFLAGS@
 DIST_SOURCES = $(libbw_la_SOURCES) $(libfilewrite_la_SOURCES) \
 	$(libflip_la_SOURCES) $(libftpup_la_SOURCES) \
-	$(libhttp_la_SOURCES) $(libinvert_la_SOURCES) \
-	$(libjpeg_comp_la_SOURCES) $(libmotiondetect_la_SOURCES) \
-	$(libregrab_la_SOURCES) $(libresize_la_SOURCES) \
-	$(librgbbgr_la_SOURCES) $(librotate_la_SOURCES) \
-	$(libsocket_la_SOURCES) $(libtext_la_SOURCES) \
-	$(libvloopback_la_SOURCES) $(libwc_serv_la_SOURCES) \
-	$(camsource_SOURCES)
+	$(libhttp_la_SOURCES) $(libinput_v4l_la_SOURCES) \
+	$(libinvert_la_SOURCES) $(libjpeg_comp_la_SOURCES) \
+	$(libmotiondetect_la_SOURCES) $(libregrab_la_SOURCES) \
+	$(libresize_la_SOURCES) $(librgbbgr_la_SOURCES) \
+	$(librotate_la_SOURCES) $(libsocket_la_SOURCES) \
+	$(libtext_la_SOURCES) $(libvloopback_la_SOURCES) \
+	$(libwc_serv_la_SOURCES) $(camsource_SOURCES)
 HEADERS = $(pkginclude_HEADERS)
 
 DIST_COMMON = $(pkginclude_HEADERS) Makefile.am Makefile.in
-SOURCES = $(libbw_la_SOURCES) $(libfilewrite_la_SOURCES) $(libflip_la_SOURCES) $(libftpup_la_SOURCES) $(libhttp_la_SOURCES) $(libinvert_la_SOURCES) $(libjpeg_comp_la_SOURCES) $(libmotiondetect_la_SOURCES) $(libregrab_la_SOURCES) $(libresize_la_SOURCES) $(librgbbgr_la_SOURCES) $(librotate_la_SOURCES) $(libsocket_la_SOURCES) $(libtext_la_SOURCES) $(libvloopback_la_SOURCES) $(libwc_serv_la_SOURCES) $(camsource_SOURCES)
+SOURCES = $(libbw_la_SOURCES) $(libfilewrite_la_SOURCES) $(libflip_la_SOURCES) $(libftpup_la_SOURCES) $(libhttp_la_SOURCES) $(libinput_v4l_la_SOURCES) $(libinvert_la_SOURCES) $(libjpeg_comp_la_SOURCES) $(libmotiondetect_la_SOURCES) $(libregrab_la_SOURCES) $(libresize_la_SOURCES) $(librgbbgr_la_SOURCES) $(librotate_la_SOURCES) $(libsocket_la_SOURCES) $(libtext_la_SOURCES) $(libvloopback_la_SOURCES) $(libwc_serv_la_SOURCES) $(camsource_SOURCES)
 
 all: all-am
 
@@ -285,6 +290,8 @@ libftpup.la: $(libftpup_la_OBJECTS) $(libftpup_la_DEPENDENCIES)
 	$(LINK) -rpath $(pkglibdir) $(libftpup_la_LDFLAGS) $(libftpup_la_OBJECTS) $(libftpup_la_LIBADD) $(LIBS)
 libhttp.la: $(libhttp_la_OBJECTS) $(libhttp_la_DEPENDENCIES) 
 	$(LINK) -rpath $(pkglibdir) $(libhttp_la_LDFLAGS) $(libhttp_la_OBJECTS) $(libhttp_la_LIBADD) $(LIBS)
+libinput_v4l.la: $(libinput_v4l_la_OBJECTS) $(libinput_v4l_la_DEPENDENCIES) 
+	$(LINK) -rpath $(pkglibdir) $(libinput_v4l_la_LDFLAGS) $(libinput_v4l_la_OBJECTS) $(libinput_v4l_la_LIBADD) $(LIBS)
 libinvert.la: $(libinvert_la_OBJECTS) $(libinvert_la_DEPENDENCIES) 
 	$(LINK) -rpath $(pkglibdir) $(libinvert_la_LDFLAGS) $(libinvert_la_OBJECTS) $(libinvert_la_LIBADD) $(LIBS)
 libjpeg_comp.la: $(libjpeg_comp_la_OBJECTS) $(libjpeg_comp_la_DEPENDENCIES) 
@@ -342,7 +349,6 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/bw.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/camdev.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/configfile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/filewrite.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/filter.Po@am__quote@
@@ -351,6 +357,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/grab.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/http.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/image.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/input_v4l.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/invert.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/jpeg.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/log.Po@am__quote@

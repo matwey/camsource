@@ -24,6 +24,12 @@
 			see a warning message if any of the settings here
 			are incorrect.
 			
+			- The "plugin" tag defines which module should be
+			  used for this device entry. See below for
+			  for the <module> entries for the input plugins.
+			  Most of the other options given here are specific
+			  to a certain plugin type and will be different
+			  for other input plugins.
 			- Path defaults to /dev/video0.
 			- Width and height default to the maximum size
 			  as reported by the driver. You can specify
@@ -46,6 +52,9 @@
 			  meaningful in all cases (for example 'whiteness'
 			  is normally only used for grayscale images).
 		-->
+		
+		<plugin>input_v4l</plugin>
+		
 		<path>/dev/video0</path>
 		<width>max</width>
 		<height>max</height>
@@ -67,7 +76,9 @@
 			no request for a frame for a certain time period, which
 			you can specify with the <cmdtimeout> tag, in seconds.
 			Note that the command will be run asynchronously in the
-			background.
+			background. Also note that these two tags are not
+			specific to a certain input plugin, but can be used with
+			every input plugin universally.
 			The command gets the following arguments:
 			- Event type, either 'start' or 'end'.
 			- Camdev device name, either "default" or whatever name
@@ -89,6 +100,7 @@
 		one of the wc_serv module definitions below for examples.
 		
 		<camdev name="second">
+			<plugin>input_v4l</plugin>
 			<path>/dev/video1</path>
 			<width>max</width>
 			<height>max</height>
@@ -108,6 +120,11 @@
 		it's a dependency of another module. In any case,
 		any module config given here is used.
 	-->
+
+	<!-- This is the default video4linux input plugin. It has no
+	     global config options. -->	
+	<module name="input_v4l" active="yes"/>
+	
 	<module name="wc_serv" active="yes">
 		<port>8888</port>
 

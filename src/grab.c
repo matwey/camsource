@@ -8,19 +8,19 @@
 #include <libxml/parser.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
-#include <sys/mman.h>
 #include <sys/wait.h>
 
 #include "config.h"
 
 #include "grab.h"
-#include "camdev.h"
 #include "configfile.h"
 #include "mod_handle.h"
 #include "image.h"
 #include "unpalette.h"
 #include "filter.h"
 #include "xmlhelp.h"
+
+/* $Id$ */
 
 static void grab_glob_filters(struct image *);
 static struct grabthread *find_thread(const char *);
@@ -66,8 +66,13 @@ struct grabthread {
 	struct grabthread *next;
 	char *name;
 	struct grabimage curimg;
-	struct camdev camdev;
+	struct grab_camdev gcamdev;
 	xmlNodePtr node;
+	int (*opendev)(xmlNodePtr, struct grab_camdev *);
+	unsigned char *(*input)(struct grab_camdev *);
+	char *cmd;
+	int cmdtimeout;
+	int cmdfired;
 };
 static struct grabthread *grabthreadshead;
 
@@ -78,6 +83,11 @@ grab_threads_init()
 	char *name;
 	struct grabthread *newthread;
 	int ret = 0;
+	struct module *mod;
+	char *plugin, *cmd;
+	void *opendev, *input;
+	xmlNodePtr subnode;
+	int cmdtimeout;
 	
 	node = xml_root(configdoc);
 	for (node = node->xml_children; node; node = node->next) {
@@ -91,10 +101,37 @@ grab_threads_init()
 			continue;
 		}
 		
+		plugin = cmd = NULL;
+		cmdtimeout = 0;
+		for (subnode = node->xml_children; subnode; subnode = subnode->next) {
+			if (xml_isnode(subnode, "plugin"))
+				plugin = xml_getcontent(subnode);
+			else if (xml_isnode(subnode, "cmd"))
+				cmd = config_homedir(xml_getcontent(subnode));
+			else if (xml_isnode(subnode, "cmdtimeout"))
+				cmdtimeout = xml_atoi(subnode, 0) * 1000000;
+		}
+		
+		if (!plugin || !(mod = mod_find(plugin, NULL))) {
+			printf("Invalid or missing \"plugin\" attribute for '%s'\n", name);
+			continue;
+		}
+		
+		opendev = dlsym(mod->dlhand, "opendev");
+		input = dlsym(mod->dlhand, "input");
+		if (!opendev || !input) {
+			printf("Module \"%s\" has no \"opendev\" or \"input\" routine\n", plugin);
+			continue;
+		}
+		
 		newthread = malloc(sizeof(*newthread));
 		memset(newthread, 0, sizeof(*newthread));
 		newthread->name = name;
 		newthread->node = node;
+		newthread->opendev = opendev;
+		newthread->input = input;
+		newthread->cmd = cmd;
+		newthread->cmdtimeout = cmdtimeout;
 
 		pthread_mutex_init(&newthread->curimg.mutex, NULL);
 		pthread_cond_init(&newthread->curimg.request_cond, NULL);
@@ -130,9 +167,9 @@ grab_open_all()
 	struct grabthread *thread;
 	
 	for (thread = grabthreadshead; thread; thread = thread->next) {
-		ret = camdev_open(&thread->camdev, thread->node);
+		ret = thread->opendev(thread->node, &thread->gcamdev);
 		if (ret == -1) {
-			printf("Failed to open v4l device for <camdev name=\"%s\">\n", thread->name);
+			printf("Failed to open device for <camdev name=\"%s\">\n", thread->name);
 			return -1;
 		}
 	}
@@ -161,11 +198,11 @@ firecmd(struct grabthread *thread, int onoff)
 {
 	int ret;
 	
-	if (!thread->camdev.cmd	|| thread->camdev.cmdtimeout <= 0)
+	if (!thread->cmd || thread->cmdtimeout <= 0)
 		return;
-	if (thread->camdev.cmdfired && onoff)
+	if (thread->cmdfired && onoff)
 		return;
-	if (!thread->camdev.cmdfired && !onoff)
+	if (!thread->cmdfired && !onoff)
 		return;
 
 	ret = fork();
@@ -176,15 +213,15 @@ firecmd(struct grabthread *thread, int onoff)
 		close(STDIN_FILENO);
 		for (ret = 3; ret < 1024; ret++)
 			close(ret);
-		execlp(thread->camdev.cmd, thread->camdev.cmd,
-			onoff ? "start" : "end", thread->name, thread->camdev.devicepath,
+		execlp(thread->cmd, thread->cmd,
+			onoff ? "start" : "end", thread->name, thread->gcamdev.name,
 			NULL);
-		printf("exec(\"%s\") failed: %s\n", thread->camdev.cmd, strerror(errno));
+		printf("exec(\"%s\") failed: %s\n", thread->cmd, strerror(errno));
 		_exit(0);
 	}
 	
 	waitpid(ret, NULL, 0);
-	thread->camdev.cmdfired = onoff;
+	thread->cmdfired = onoff;
 }
 
 static
@@ -193,26 +230,14 @@ grab_thread(void *arg)
 {
 	int ret;
 	struct grabthread *thread;
-	unsigned int bpf;
-	unsigned char *imgbuf;
+	unsigned char *rawimg;
 	struct image newimg;
-	int usemmap;
-	struct video_mbuf mbuf;
-	unsigned char *mbufp;
-	struct video_mmap mmapctx;
-	int mbufframe;
 	struct timeval tvnow;
 	struct timespec abstime;
 	
 	thread = arg;
-	
-	bpf = (thread->camdev.x * thread->camdev.y) * thread->camdev.pal->bpp;
-	imgbuf = malloc(bpf);
-	
 	printf("Camsource " VERSION " ready to grab images for device '%s'...\n", thread->name);
-	usemmap = -1;
-	mbufp = NULL;
-	mbufframe = 0;
+	
 	for (;;)
 	{
 		pthread_mutex_lock(&thread->curimg.mutex);
@@ -227,7 +252,7 @@ grab_thread(void *arg)
 			
 			if (ret == ETIMEDOUT) {
 				gettimeofday(&tvnow, NULL);
-				if (timeval_diff(&tvnow, &thread->curimg.ctx.tv) > thread->camdev.cmdtimeout)
+				if (timeval_diff(&tvnow, &thread->curimg.ctx.tv) > thread->cmdtimeout)
 					firecmd(thread, 0);
 			}
 			
@@ -237,73 +262,9 @@ grab_thread(void *arg)
 		
 		firecmd(thread, 1);
 		
-		image_new(&newimg, thread->camdev.x, thread->camdev.y);
-		if (usemmap)
-		{
-			if (usemmap < 0)
-			{
-				do
-					ret = ioctl(thread->camdev.fd, VIDIOCGMBUF, &mbuf);
-				while (ret < 0 && errno == EINTR);
-				if (ret < 0)
-				{
-nommap:
-					printf("Not using mmap interface, falling back to read() (dev '%s')\n", thread->name);
-					usemmap = 0;
-					goto sysread;
-				}
-				mbufp = mmap(NULL, mbuf.size, PROT_READ, MAP_PRIVATE, thread->camdev.fd, 0);
-				if (mbufp == MAP_FAILED)
-					goto nommap;
-				usemmap = 1;
-				mbufframe = 0;
-			}
-			memset(&mmapctx, 0, sizeof(mmapctx));
-			mmapctx.frame = mbufframe;
-			mmapctx.width = thread->camdev.x;
-			mmapctx.height = thread->camdev.y;
-			mmapctx.format = thread->camdev.pal->val;
-			do
-				ret = ioctl(thread->camdev.fd, VIDIOCMCAPTURE, &mmapctx);
-			while (ret < 0 && errno == EINTR);
-			if (ret < 0)
-			{
-unmap:
-				munmap(mbufp, mbuf.size);
-				goto nommap;
-			}
-			ret = mbufframe;
-			do
-				ret = ioctl(thread->camdev.fd, VIDIOCSYNC, &ret);
-			while (ret < 0 && errno == EINTR);
-			if (ret < 0)
-				goto unmap;
-			thread->camdev.pal->routine(&newimg, mbufp + mbuf.offsets[mbufframe]);
-			mbufframe++;
-			if (mbufframe >= mbuf.frames)
-				mbufframe = 0;
-		}
-		else
-		{
-sysread:
-			do
-				ret = read(thread->camdev.fd, imgbuf, bpf);
-			while (ret < 0 && errno == EINTR);
-			if (ret < 0)
-			{
-				printf("Error while reading from device '%s': %s\n", thread->name, strerror(errno));
-				exit(1);
-			}
-			if (ret == 0)
-			{
-				printf("EOF while reading from device '%s'\n", thread->name);
-				exit(1);
-			}
-			if (ret < bpf)
-				printf("Short read while reading from device '%s' (%i < %i), continuing anyway\n",
-				thread->name, ret, bpf);
-			thread->camdev.pal->routine(&newimg, imgbuf);
-		}
+		image_new(&newimg, thread->gcamdev.x, thread->gcamdev.y);
+		rawimg = thread->input(&thread->gcamdev);
+		thread->gcamdev.pal->routine(&newimg, rawimg);
 		
 		grab_glob_filters(&newimg);
 

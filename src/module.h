@@ -8,7 +8,7 @@
 #include <libxml/parser.h>
 
 /*
- * There are three kinds of modules:
+ * There are several kinds of modules:
  * .) MODULE_THREAD is a worker module which runs in its own thread.
  *    A thread module has a thread() function which will be run
  *    in its own thread. The thread() function will get a pointer
@@ -34,6 +34,15 @@
  * .) MODULE_GENERIC is a module which doesn't do anything by itself,
  *    but provides special functionality for other modules. It is
  *    usually listed as dependency in other modules.
+ * .) MODULE_INPUT is an input plugin, which does the low-level work
+ *    of grabbing images from a certain device. Each <camdev> section
+ *    given in the config file is associated with a certain input
+ *    plugin. When camsource starts up, one thread is created per
+ *    active <camdev> section, which will call the input() routine
+ *    of the associated input plugin to get frames. The init()
+ *    function will still get a pointer to its <module> structure,
+ *    while the opendev() function will get a pointer to the <camdev>
+ *    config structure.
  * You must define at least one of the above before including this
  * file (module.h). The brave can even define multiple of them,
  * for example a module that has both its own thread and provides
@@ -89,9 +98,20 @@ int filter(struct image *, xmlNodePtr, void **);
 
 
 
+#ifdef MODULE_INPUT
+
+struct grab_camdev;
+int opendev(xmlNodePtr, struct grab_camdev *);
+unsigned char *input(struct grab_camdev *);
+
+#endif	/* MODULE_INPUT */
 
 
-#if !defined(MODULE_THREAD) && !defined(MODULE_FILTER) && !defined(MODULE_GENERIC) && !defined(MODULE_NONE)
+
+
+
+#if !defined(MODULE_THREAD) && !defined(MODULE_FILTER) \
+	&& !defined(MODULE_GENERIC) && !defined(MODULE_INPUT) && !defined(MODULE_NONE)
 # error "Must define the module type prior to including module.h"
 #endif	/* !def && !def && !def */
 

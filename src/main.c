@@ -14,8 +14,9 @@
 #include "grab.h"
 #include "configfile.h"
 #include "mod_handle.h"
-#include "camdev.h"
 #include "log.h"
+
+/* $Id$ */
 
 static void main_init(char *);
 static int kill_camsource(struct stat *);
@@ -25,7 +26,7 @@ main(int argc, char **argv)
 {
 	if (argc >= 2 && *argv[1] == '-') {
 		if (!strcmp(argv[1], "-c")) {
-			camdev_capdump(argv[2]);
+			/*camdev_capdump(argv[2]);*/
 			exit(0);
 		}
 		
@@ -127,13 +128,13 @@ main_init(char *config)
 	
 	logfd = log_open();
 	
+	mod_load_all();
+
 	ret = grab_threads_init();
 	if (!ret) {
 		printf("No valid <camdev> sections found, exit\n");
 		exit(1);
 	}
-
-	mod_load_all();
 	
 	ret = grab_open_all();
 	if (ret)

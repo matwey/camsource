@@ -12,6 +12,8 @@
 #include "xmlhelp.h"
 #include "grab.h"
 
+/* $Id$ */
+
 static void preparsefilters(xmlNodePtr);
 
 int
@@ -25,7 +27,7 @@ filter_apply(struct image *img, xmlNodePtr node)
 	
 	preparsefilters(node);
 	
-	privdata = node->_private;
+	privdata = xml_privdata(node);
 	
 	for (node = privdata->filterlist; node; node = node->next)
 	{

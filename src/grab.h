@@ -4,12 +4,23 @@
 #include <pthread.h>
 #include <sys/time.h>
 
+/* $Id$ */
+
 struct image;
+struct palette;
 
 struct grab_ctx
 {
 	unsigned int idx;
 	struct timeval tv;
+};
+
+struct grab_camdev
+{
+	char *name;
+	unsigned int x, y;
+	struct palette *pal;
+	void *custom;
 };
 
 
