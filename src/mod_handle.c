@@ -248,11 +248,25 @@ mod_load_deps(struct module *mod)
 void
 mod_close(struct module *mod)
 {
-	if (mod->dlhand)
-		dlclose(mod->dlhand);
+	void *dlh;
+	int i;
+	
+	dlh = mod->dlhand;
+	
 	free(mod->name);
 	free(mod->alias);
 	memset(mod, 0, sizeof(*mod));
+	
+	if (dlh)
+	{
+		for (i = 0; i < MAX_MODULES; i++)
+		{
+			if (modules[i].dlhand == dlh)
+				goto inuse;	/* break */
+		}
+		dlclose(dlh);
+inuse:
+	}
 }
 
 int
