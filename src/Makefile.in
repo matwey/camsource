@@ -85,7 +85,7 @@ pkglib_LTLIBRARIES = libwc_serv.la libjpeg_comp.la libflip.la \
 
 pkginclude_HEADERS = camdev.h configfile.h filter.h flip.h grab.h \
 	image.h jpeg.h main.h mod_handle.h module.h resize.h \
-	unpalette.h wc_serv.h xmlhelp.h socket.h
+	unpalette.h wc_serv.h xmlhelp.h socket.h http.h
 
 
 camsource_SOURCES = main.c grab.c camdev.c unpalette.c configfile.c \
