@@ -57,6 +57,7 @@ socket_accept(int fd, struct peer *peer)
 	newfd = accept(fd, (struct sockaddr *) &sin, &socklen);
 	if (newfd == -1)
 		return -1;
+	memset(peer, 0, sizeof(*peer));
 	peer->fd = newfd;
 	memcpy(&peer->sin, &sin, sizeof(peer->sin));
 	return 0;
@@ -108,20 +109,21 @@ socket_readline(int fd, char *buf, unsigned int bufsize)
 	return 0;
 }
 
-void
-socket_print_ip(struct peer *peer)
+char *
+socket_ip(struct peer *peer)
 {
-	printf("%u.%u.%u.%u",
+	snprintf(peer->tbuf, sizeof(peer->tbuf) - 1,
+		"%u.%u.%u.%u",
 		(peer->sin.sin_addr.s_addr >>  0) & 0xff,
 		(peer->sin.sin_addr.s_addr >>  8) & 0xff,
 		(peer->sin.sin_addr.s_addr >> 16) & 0xff,
 		(peer->sin.sin_addr.s_addr >> 24) & 0xff);
+	return peer->tbuf;
 }
 
-void
-socket_print_ipport(struct peer *peer)
+unsigned int
+socket_port(struct peer *peer)
 {
-	socket_print_ip(peer);
-	printf(":%u", ntohs(peer->sin.sin_port));
+	return (unsigned int) ntohs(peer->sin.sin_port);
 }
 

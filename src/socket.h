@@ -10,6 +10,7 @@ struct peer
 {
 	int fd;
 	struct sockaddr_in sin;
+	char tbuf[32];
 };
 
 /* Opens listening socket on specified port and ip (may be 0) and returns
@@ -45,10 +46,10 @@ int socket_accept_thread(int, struct peer *, void *(*)(void *), void *);
 /* Reads one line from fd into buf of given size. Returns -1 on error (such as eof) */
 int socket_readline(int, char *, unsigned int);
 
-/* Prints the ip (1.2.3.4) from the peer struct to stdout */
-void socket_print_ip(struct peer *);
-/* Same as above, but includes port (1.2.3.4:1234) */
-void socket_print_ipport(struct peer *);
+/* Returns the ip (1.2.3.4) from the peer struct. It is stored in peer->tbuf */
+char *socket_ip(struct peer *);
+/* Returns port number */
+unsigned int socket_port(struct peer *);
 
 #endif
 

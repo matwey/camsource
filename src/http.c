@@ -18,13 +18,15 @@
 #include "mod_handle.h"
 #include "log.h"
 
+#define MODNAME "http"
+
 static int http_load_conf(struct http_ctx *, xmlNodePtr);
 static void *http_conn(void *);
 static int http_path_ismatch(xmlNodePtr, char *);
 static void http_err(int, char *);
 static int http_get_fps(xmlNodePtr);
 
-char *name = "http";
+char *name = MODNAME;
 char *deps[] =
 {
 	"jpeg_comp",
@@ -130,10 +132,8 @@ http_conn(void *peer_p)
 	memcpy(&http_peer, peer_p, sizeof(http_peer));
 	free(peer_p);
 	
-	log_timebanner("http");
-	printf("New connection from ");
-	socket_print_ipport(&http_peer.peer);
-	printf("\n");
+	log_log(MODNAME, "New connection from %s:%i\n",
+		socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
 	
 	count = 0;
 	
@@ -165,10 +165,8 @@ http_conn(void *peer_p)
 	if (!*url || !httpver)
 		goto closenout;
 	
-	log_timebanner("http");
-	printf("Request for %s from ", url);
-	socket_print_ipport(&http_peer.peer);
-	printf("\n");
+	log_log(MODNAME, "Request for %s from %s:%i\n",
+		url, socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
 
 	for (subnode = http_peer.mod_ctx->node->children; subnode; subnode = subnode->next)
 	{
@@ -250,10 +248,9 @@ match:
 	while (fps > 0 && ret > 0);
 
 closenout:
-	log_timebanner("http");
-	printf("Closing connection from ");
-	socket_print_ipport(&http_peer.peer);
-	printf(", %i frame(s) served\n", count);
+	log_log(MODNAME, "Closing connection from %s:%i, %i frame(s) served\n",
+		socket_ip(&http_peer.peer), socket_port(&http_peer.peer),
+		count);
 
 	sleep(1);
 	close(http_peer.peer.fd);

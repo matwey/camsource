@@ -22,10 +22,12 @@
 #include "socket.h"
 #include "log.h"
 
+#define MODNAME "wc_serv"
+
 static int wc_load_config(struct wc_ctx *, xmlNodePtr);
 static void *wc_handle_conn(void *);
 
-char *name = "wc_serv";
+char *name = MODNAME;
 char *deps[] =
 {
 	"jpeg_comp",
@@ -123,10 +125,7 @@ wc_handle_conn(void *arg)
 	memcpy(&peer, arg, sizeof(peer));
 	free(arg);
 	
-	log_timebanner("wc_serv");
-	printf("New connection from ");
-	socket_print_ipport(&peer.peer);
-	printf("\n");
+	log_log(MODNAME, "New connection from %s:%i\n", socket_ip(&peer.peer), socket_port(&peer.peer));
 	
 	first = 1;
 	last_idx = count = 0;
@@ -184,10 +183,9 @@ wc_handle_conn(void *arg)
 closenout:
 	close(peer.peer.fd);
 
-	log_timebanner("wc_serv");
-	printf("Connection from ");
-	socket_print_ipport(&peer.peer);
-	printf(" closed, %i frame(s) served\n", count);
+	log_log(MODNAME, "Connection from %s:%i closed, %i frame(s) served\n",
+		socket_ip(&peer.peer), socket_port(&peer.peer),
+		count);
 	
 	return NULL;
 }

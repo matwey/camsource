@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <libxml/parser.h>
+#include <stdarg.h>
 
 #include "config.h"
 
@@ -81,15 +82,23 @@ log_replace_bg(int fd)
 }
 
 void
-log_timebanner(char *name)
+log_log(char *modname, char *format, ...)
 {
-	char buf[256];
+	va_list vl;
+	char buf[64];
 	struct tm tm;
 	time_t now;
-
+	
 	time(&now);
 	localtime_r(&now, &tm);
 	strftime(buf, sizeof(buf) - 1, "%b %d %Y %T", &tm);
-	printf("[%s @ %s] ", name, buf);
+	if (modname)
+		printf("[%s / %s] ", buf, modname);
+	else
+		printf("[%s] ", buf);
+	
+	va_start(vl, format);
+	vprintf(format, vl);
+	va_end(vl);
 }
 

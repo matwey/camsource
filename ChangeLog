@@ -1,4 +1,5 @@
 Sep 18 2002
+   - Improved logging facilities
 	- Converted lots of functions to static to prevent global symbol /
 	  namespace clashes
 
