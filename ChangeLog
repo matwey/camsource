@@ -1,5 +1,11 @@
 $Id$
 
+Nov 29 2003
+	- I'm still alive... added VIDIOCCAPTURE ioctl for testing
+	  purposes.
+	- Now works with the java applet from webcam_server 0.40 and
+	  0.50.
+
 Sep 26 2003
 	- Sleeping 10 seconds in grabbing thread on error.
 

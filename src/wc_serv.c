@@ -116,13 +116,13 @@ wc_handle_conn(void *arg)
 {
 	struct peer_ctx peer;
 	int ret;
-	char c;
 	char buf[1024];
 	struct image curimg;
 	struct jpegbuf jpegimg;
 	int first;
 	struct grab_ctx last_idx;
 	int count;
+	int protocol;
 	
 	memcpy(&peer, arg, sizeof(peer));
 	free(arg);
@@ -134,32 +134,45 @@ wc_handle_conn(void *arg)
 	memset(&last_idx, 0, sizeof(last_idx));
 	for (;;)
 	{
-		do
-		{
-			ret = socket_read(&peer.peer, &c, 1, 20000);
-			if (ret != 1)
-			{
-				if (ret == -2)
-					log_log(MODNAME, "Timeout on connection from %s:%i\n",
-						socket_ip(&peer.peer), socket_port(&peer.peer));
-				else if (ret == -1)
-					log_log(MODNAME, "Error on connection from %s:%i\n",
-						socket_ip(&peer.peer), socket_port(&peer.peer));
-				goto closenout;	/* break; break; */
-			}
+		ret = socket_readline(&peer.peer, buf, sizeof(buf), 20000);
+		switch (ret) {
+			case -1:
+				log_log(MODNAME, "Error on connection from %s:%i\n",
+					socket_ip(&peer.peer), socket_port(&peer.peer));
+				goto closenout;
+
+			case -2:
+				log_log(MODNAME, "Timeout on connection from %s:%i\n",
+					socket_ip(&peer.peer), socket_port(&peer.peer));
+				goto closenout;
+
+			case -3:
+				goto closenout;
+
+			case 0:
+				break;
+
+			default:
+				goto closenout;
 		}
-		while (c == '\r');
-		
-		if (c != '\n')
-			break;
-		
-		if (first)
+
+		if (strstr(buf, "WCS/"))
+			protocol = 1;
+		else if (!*buf)
+			protocol = 0;
+		else
+			continue;	/* garbage? */
+
+		if (first && !protocol)
 		{
 			/* The webcam_server java applet has a bug in that
 			 * it sends two linefeeds before displaying the first
 			 * image, with the result that the display is always
 			 * one second slow (when using 1 fps). Work around
-			 * that. */
+			 * that.
+			 * Note: only applies to "old" protocol of wc_serv
+			 * applet (<= 0.30).
+			 */
 			first = 0;
 			continue;
 		}

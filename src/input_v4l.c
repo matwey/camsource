@@ -215,6 +215,9 @@ closenerr:
 	goto closenerr;
 	
 palfound:
+	ret = 1;
+	ioctl(newcamdev.fd, VIDIOCCAPTURE, &ret);
+
 	newcamdev.usemmap = -1;
 	newcamdev.mbufp = NULL;
 	newcamdev.mbufframe = 0;
