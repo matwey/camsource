@@ -1,5 +1,9 @@
 $Id$
 
+Jan 14 2003
+	- Added capability of handling multiple input v4l devices
+	  at the same time.
+
 Jan 5 2003
 	- Added motiondetect custom config. Filter works better
 	  now too.

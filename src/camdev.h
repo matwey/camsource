@@ -10,6 +10,7 @@ struct palette;
 struct camdev
 {
 	int fd;
+	char *devicepath;
 	struct video_capability vidcap;
 	struct video_picture vidpic;
 	struct palette *pal;

@@ -61,6 +61,23 @@
 	</camdev>
 	
 	<!--
+		It is possible to have more than one input device active
+		at the same time. Below is an example for how to grab
+		from a second v4l device. The specified "name" attribute
+		is used to uniquely identify this device; no two <camdev>
+		sections can have the same name. The name defaults to
+		"default". Use this name in the module configs to specify
+		which device to grab images from. See the http module and
+		one of the wc_serv module definitions below for examples.
+		
+		<camdev name="second">
+			<path>/dev/video1</path>
+			<width>max</width>
+			<height>max</height>
+		</camdev>
+	-->
+	
+	<!--
 		If no logfile is given (or tag is empty), camsource
 		will log to stdout only and not go into background.
 		The prefix "~/" has the usual meaning.
@@ -135,6 +152,16 @@
 		</filter>
 	</module>
 	
+	<module name="wc_serv" alias="seconddev" active="no">
+		<!--
+			This instance of wc_serv would grab images not
+			from the "default" device, but from another.
+			The <grabdev> tag can be used universally.
+		-->
+		<grabdev>second</grabdev>
+		<port>8890</port>
+	</module>
+	
 	<!--
 		The http module. It lets you create virtual paths to
 		serve various variants of the current image. The main
@@ -200,6 +227,16 @@
 			<fps>1</fps>
 			<filter name="text"/>
 		</vpath>
+		
+		<vpath>
+			<!-- You can use the <grabdev> tag here too -->
+			<grabdev>second</grabdev>
+			<path>/othercam</path>
+			<!-- This example also shows how to deactivate
+			     one vpath: -->
+			<disable>yes</disable>
+		</vpath>
+		-->
 	</module>
 	
 	<!--

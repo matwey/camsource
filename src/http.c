@@ -17,6 +17,7 @@
 #include "jpeg.h"
 #include "mod_handle.h"
 #include "log.h"
+#include "image.h"
 
 #define MODNAME "http"
 
@@ -55,6 +56,7 @@ init(struct module_ctx *mod_ctx)
 	http_ctx->listen_fd = socket_listen(http_ctx->port, 0);
 	if (http_ctx->listen_fd == -1)
 	{
+		log_log(MODNAME, "Failed to open listen socket: %s\n", strerror(errno));
 		free(http_ctx);
 		return -1;
 	}
@@ -129,6 +131,7 @@ http_conn(void *peer_p)
 	struct grab_ctx idx;
 	struct jpegbuf jpegbuf;
 	int fps, count;
+	char *error;
 	
 	memcpy(&http_peer, peer_p, sizeof(http_peer));
 	free(peer_p);
@@ -195,6 +198,7 @@ readlineerr:
 	log_log(MODNAME, "Request for %s from %s:%i\n",
 		url, socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
 
+	error = NULL;
 	for (subnode = http_peer.mod_ctx->node->xml_children; subnode; subnode = subnode->next)
 	{
 		if (!xml_isnode(subnode, "vpath"))
@@ -203,8 +207,7 @@ readlineerr:
 			continue;
 		goto match;
 	}
-	http_err(&http_peer.peer, "404 Not found");
-	goto closenout;
+	error = "404 Not found";
 	
 match:
 	for (;;)
@@ -214,6 +217,11 @@ match:
 			goto readlineerr;
 		if (!*buf)
 			break;
+	}
+	
+	if (error) {
+		http_err(&http_peer.peer, error);
+		goto closenout;
 	}
 	
 	fps = http_get_fps(subnode);
@@ -283,15 +291,22 @@ static
 int
 http_path_ismatch(xmlNodePtr node, char *path)
 {
+	int ret = 0;
+	
 	for (node = node->xml_children; node; node = node->next)
 	{
+		if (xml_isnode(node, "disable")) {
+			if (!strcmp("yes", xml_getcontent_def(node, "")))
+				return 0;
+		}
+		
 		if (!xml_isnode(node, "path"))
 			continue;
 		if (!strcmp(path, xml_getcontent_def(node, "")))
-			return 1;
+			ret = 1;
 	}
 	
-	return 0;
+	return ret;
 }
 
 static

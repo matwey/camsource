@@ -4,9 +4,7 @@
 #include <pthread.h>
 #include <sys/time.h>
 
-#include "image.h"
-
-struct camdev;
+struct image;
 
 struct grab_ctx
 {
@@ -16,9 +14,9 @@ struct grab_ctx
 
 
 
-void grab_thread_init(void);
-struct camdev *grab_open(void);
-void *grab_thread(void *);
+int grab_threads_init(void);
+int grab_open_all(void);
+void grab_start_all(void);
 
 /* Does the necessary locking and checking to get a _new_ frame out of
  * current_img. A copy of the new frame is stored into the first argument
@@ -44,7 +42,7 @@ void *grab_thread(void *);
  * If you only want a single image (after which the thread exits), pass
  * NULL as the second argument.
  */
-void grab_get_image(struct image *, struct grab_ctx *);
+void grab_get_image(struct image *, struct grab_ctx *, const char *);
 
 #endif
 

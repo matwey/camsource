@@ -69,9 +69,27 @@ filter_get_image(struct image *img, struct grab_ctx *ctx, ...)
 	int ret;
 	xmlNodePtr node;
 	va_list val;
+	char *threadname;
 	
+	threadname = NULL;
+	
+	va_start(val, ctx);
+	while ((node = va_arg(val, xmlNodePtr))) {
+		for (node = node->xml_children; node; node = node->next) {
+			if (!xml_isnode(node, "grabdev"))
+				continue;
+			threadname = xml_getcontent(node);
+			goto donefind;
+		}
+	}
+donefind:
+	va_end(val);
+	
+	if (!threadname)
+		threadname = "default";
+
 	for (;;) {
-		grab_get_image(img, ctx);
+		grab_get_image(img, ctx, threadname);
 		
 		ret = 0;
 		va_start(val, ctx);

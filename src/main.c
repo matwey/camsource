@@ -47,10 +47,7 @@ void
 main_init(char *config)
 {
 	int ret;
-	pthread_t grab_tid;
-	pthread_attr_t attr;
 	int logfd;
-	struct camdev *camdev;
 	
 	signal(SIGPIPE, SIG_IGN);
 	
@@ -77,22 +74,22 @@ main_init(char *config)
 	
 	logfd = log_open();
 	
-	grab_thread_init();
+	ret = grab_threads_init();
+	if (!ret) {
+		printf("No valid <camdev> sections found, exit\n");
+		exit(1);
+	}
 
 	mod_load_all();
 	
-	camdev = grab_open();
-	if (!camdev)
+	ret = grab_open_all();
+	if (ret)
 		exit(1);
 	
 	if (logfd >= 0)
 		log_replace_bg(logfd);
 	
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-	pthread_create(&grab_tid, &attr, grab_thread, camdev);
-	pthread_attr_destroy(&attr);
-
+	grab_start_all();
 	mod_start_all();
 }
 

@@ -177,6 +177,7 @@ closenerr:
 	goto closenerr;
 	
 palfound:
+	newcamdev.devicepath = strdup(path);
 	memcpy(camdev, &newcamdev, sizeof(*camdev));
 	
 	return 0;

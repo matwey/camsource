@@ -22,6 +22,8 @@
 #include "xmlhelp.h"
 
 static void grab_glob_filters(struct image *);
+static struct grabthread *find_thread(const char *);
+static void *grab_thread(void *);
 
 /* The grabimage struct and its only instance current_img.
  * (Private data now, not directly accessible by threads.)
@@ -57,47 +59,106 @@ struct grabimage
 	pthread_cond_t request_cond;
 	pthread_cond_t ready_cond;
 };
-static struct grabimage current_img;
 
-void
-grab_thread_init()
+struct grabthread {
+	struct grabthread *next;
+	char *name;
+	struct grabimage curimg;
+	struct camdev camdev;
+	xmlNodePtr node;
+};
+static struct grabthread *grabthreadshead;
+
+int
+grab_threads_init()
 {
-	pthread_mutex_init(&current_img.mutex, NULL);
-	pthread_cond_init(&current_img.request_cond, NULL);
-	pthread_cond_init(&current_img.ready_cond, NULL);
+	xmlNodePtr node;
+	char *name;
+	struct grabthread *newthread;
+	int ret = 0;
+	
+	node = xml_root(configdoc);
+	for (node = node->xml_children; node; node = node->next) {
+		if (!xml_isnode(node, "camdev"))
+			continue;
+		name = xml_attrval(node, "name");
+		if (!name)
+			name = "default";
+		if (find_thread(name)) {
+			printf("Duplicate <camdev> name '%s', skipping\n", name);
+			continue;
+		}
+		
+		newthread = malloc(sizeof(*newthread));
+		memset(newthread, 0, sizeof(*newthread));
+		newthread->name = name;
+		newthread->node = node;
+
+		pthread_mutex_init(&newthread->curimg.mutex, NULL);
+		pthread_cond_init(&newthread->curimg.request_cond, NULL);
+		pthread_cond_init(&newthread->curimg.ready_cond, NULL);
+		
+		newthread->next = grabthreadshead;
+		grabthreadshead = newthread;
+		
+		ret++;
+	}
+	
+	return ret;
 }
 
-struct camdev *
-grab_open()
+static
+struct grabthread *
+find_thread(const char *name)
+{
+	struct grabthread *thread;
+	
+	for (thread = grabthreadshead; thread; thread = thread->next) {
+		if (!strcmp(name, thread->name))
+			return thread;
+	}
+	
+	return NULL;
+}
+
+int
+grab_open_all()
 {
 	int ret;
-	struct camdev *camdev;
-	xmlNodePtr node;
+	struct grabthread *thread;
 	
-	camdev = malloc(sizeof(*camdev));
-
-	node = xml_root(configdoc);
-	for (node = node->xml_children; node; node = node->next)
-	{
-		if (xml_isnode(node, "camdev"))
-		{
-			ret = camdev_open(camdev, node);
-			goto camdevopened;
+	for (thread = grabthreadshead; thread; thread = thread->next) {
+		ret = camdev_open(&thread->camdev, thread->node);
+		if (ret == -1) {
+			printf("Failed to open v4l device for <camdev name=\"%s\">\n", thread->name);
+			return -1;
 		}
 	}
-	ret = camdev_open(camdev, NULL);
-camdevopened:
-	if (ret == -1)
-		return NULL;
 	
-	return camdev;
+	return 0;
 }
 
+void
+grab_start_all(void)
+{
+	struct grabthread *thread;
+	pthread_t grab_tid;
+	pthread_attr_t attr;
+
+	for (thread = grabthreadshead; thread; thread = thread->next) {
+		pthread_attr_init(&attr);
+		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+		pthread_create(&grab_tid, &attr, grab_thread, thread);
+		pthread_attr_destroy(&attr);
+	}
+}
+
+static
 void *
 grab_thread(void *arg)
 {
 	int ret;
-	struct camdev camdev;
+	struct grabthread *thread;
 	unsigned int bpf;
 	unsigned char *imgbuf;
 	struct image newimg;
@@ -107,37 +168,36 @@ grab_thread(void *arg)
 	struct video_mmap mmapctx;
 	int mbufframe;
 	
-	memcpy(&camdev, arg, sizeof(camdev));
-	free(arg);
+	thread = arg;
 	
-	bpf = (camdev.x * camdev.y) * camdev.pal->bpp;
+	bpf = (thread->camdev.x * thread->camdev.y) * thread->camdev.pal->bpp;
 	imgbuf = malloc(bpf);
 	
-	printf("Camsource " VERSION " ready to grab images...\n");
+	printf("Camsource " VERSION " ready to grab images for device '%s'...\n", thread->name);
 	usemmap = -1;
 	mbufp = NULL;
 	mbufframe = 0;
 	for (;;)
 	{
-		pthread_mutex_lock(&current_img.mutex);
-		if (!current_img.request)
-			pthread_cond_wait(&current_img.request_cond, &current_img.mutex);
-		pthread_mutex_unlock(&current_img.mutex);
+		pthread_mutex_lock(&thread->curimg.mutex);
+		if (!thread->curimg.request)
+			pthread_cond_wait(&thread->curimg.request_cond, &thread->curimg.mutex);
+		pthread_mutex_unlock(&thread->curimg.mutex);
 		
-		image_new(&newimg, camdev.x, camdev.y);
+		image_new(&newimg, thread->camdev.x, thread->camdev.y);
 		if (usemmap)
 		{
 			if (usemmap < 0)
 			{
-				ret = ioctl(camdev.fd, VIDIOCGMBUF, &mbuf);
+				ret = ioctl(thread->camdev.fd, VIDIOCGMBUF, &mbuf);
 				if (ret < 0)
 				{
 nommap:
-					printf("Not using mmap interface, falling back to read()\n");
+					printf("Not using mmap interface, falling back to read() (dev '%s')\n", thread->name);
 					usemmap = 0;
 					goto sysread;
 				}
-				mbufp = mmap(NULL, mbuf.size, PROT_READ, MAP_PRIVATE, camdev.fd, 0);
+				mbufp = mmap(NULL, mbuf.size, PROT_READ, MAP_PRIVATE, thread->camdev.fd, 0);
 				if (mbufp == MAP_FAILED)
 					goto nommap;
 				usemmap = 1;
@@ -145,10 +205,10 @@ nommap:
 			}
 			memset(&mmapctx, 0, sizeof(mmapctx));
 			mmapctx.frame = mbufframe;
-			mmapctx.width = camdev.x;
-			mmapctx.height = camdev.y;
-			mmapctx.format = camdev.pal->val;
-			ret = ioctl(camdev.fd, VIDIOCMCAPTURE, &mmapctx);
+			mmapctx.width = thread->camdev.x;
+			mmapctx.height = thread->camdev.y;
+			mmapctx.format = thread->camdev.pal->val;
+			ret = ioctl(thread->camdev.fd, VIDIOCMCAPTURE, &mmapctx);
 			if (ret < 0)
 			{
 unmap:
@@ -156,10 +216,10 @@ unmap:
 				goto nommap;
 			}
 			ret = mbufframe;
-			ret = ioctl(camdev.fd, VIDIOCSYNC, &ret);
+			ret = ioctl(thread->camdev.fd, VIDIOCSYNC, &ret);
 			if (ret < 0)
 				goto unmap;
-			camdev.pal->routine(&newimg, mbufp + mbuf.offsets[mbufframe]);
+			thread->camdev.pal->routine(&newimg, mbufp + mbuf.offsets[mbufframe]);
 			mbufframe++;
 			if (mbufframe >= mbuf.frames)
 				mbufframe = 0;
@@ -167,35 +227,36 @@ unmap:
 		else
 		{
 sysread:
-			ret = read(camdev.fd, imgbuf, bpf);
+			ret = read(thread->camdev.fd, imgbuf, bpf);
 			if (ret < 0)
 			{
-				printf("Error while reading from device: %s\n", strerror(errno));
+				printf("Error while reading from device '%s': %s\n", thread->name, strerror(errno));
 				exit(1);
 			}
 			if (ret == 0)
 			{
-				printf("EOF while reading from device\n");
+				printf("EOF while reading from device '%s'\n", thread->name);
 				exit(1);
 			}
 			if (ret < bpf)
-				printf("Short read while reading from device (%i < %i), continuing anyway\n", ret, bpf);
-			camdev.pal->routine(&newimg, imgbuf);
+				printf("Short read while reading from device '%s' (%i < %i), continuing anyway\n",
+				thread->name, ret, bpf);
+			thread->camdev.pal->routine(&newimg, imgbuf);
 		}
 		
 		grab_glob_filters(&newimg);
 
-		pthread_mutex_lock(&current_img.mutex);
-		image_move(&current_img.img, &newimg);
+		pthread_mutex_lock(&thread->curimg.mutex);
+		image_move(&thread->curimg.img, &newimg);
 		
-		current_img.ctx.idx++;
-		if (current_img.ctx.idx == 0)
-			current_img.ctx.idx++;
-		gettimeofday(&current_img.ctx.tv, NULL);
+		thread->curimg.ctx.idx++;
+		if (thread->curimg.ctx.idx == 0)
+			thread->curimg.ctx.idx++;
+		gettimeofday(&thread->curimg.ctx.tv, NULL);
 		
-		current_img.request = 0;
-		pthread_cond_broadcast(&current_img.ready_cond);
-		pthread_mutex_unlock(&current_img.mutex);
+		thread->curimg.request = 0;
+		pthread_cond_broadcast(&thread->curimg.ready_cond);
+		pthread_mutex_unlock(&thread->curimg.mutex);
 	}
 
 	return 0;
@@ -212,24 +273,33 @@ grab_glob_filters(struct image *img)
 }
 
 void
-grab_get_image(struct image *img, struct grab_ctx *ctx)
+grab_get_image(struct image *img, struct grab_ctx *ctx, const char *name)
 {
 	struct timeval now;
 	int diff;
+	struct grabthread *thread;
 	
 	if (!img)
 		return;
 	
-	pthread_mutex_lock(&current_img.mutex);
+	thread = find_thread(name);
+	if (!thread) {
+		printf("Warning: trying to grab from non-existant device '%s'\n", name);
+		/* dont crash */
+		image_new(img, 320, 240);
+		return;
+	}
+	
+	pthread_mutex_lock(&thread->curimg.mutex);
 	
 	if (ctx)
 	{
-		if (!ctx->idx || ctx->idx == current_img.ctx.idx)
+		if (!ctx->idx || ctx->idx == thread->curimg.ctx.idx)
 		{
 request:
-			current_img.request = 1;
-			pthread_cond_signal(&current_img.request_cond);
-			pthread_cond_wait(&current_img.ready_cond, &current_img.mutex);
+			thread->curimg.request = 1;
+			pthread_cond_signal(&thread->curimg.request_cond);
+			pthread_cond_wait(&thread->curimg.ready_cond, &thread->curimg.mutex);
 		}
 		else
 		{
@@ -243,10 +313,10 @@ request:
 				goto request;
 		}
 
-		memcpy(ctx, &current_img.ctx, sizeof(*ctx));
+		memcpy(ctx, &thread->curimg.ctx, sizeof(*ctx));
 	}
 	
-	image_copy(img, &current_img.img);
-	pthread_mutex_unlock(&current_img.mutex);
+	image_copy(img, &thread->curimg.img);
+	pthread_mutex_unlock(&thread->curimg.mutex);
 }
 
