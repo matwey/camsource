@@ -5,6 +5,7 @@ Sep 17 2002
 	- Video device is opened before going to background, so errors show up
 	  on console.
 	- Pumped development version number  to 0.1.1
+	- Added filewrite module
 
 Sep 16 2002
 	- Released version 0.1.0

@@ -135,7 +135,7 @@
 		first be written to a temporary file, and then moved
 		over the real destination file.
 	-->
-	<module name="filewrite" active="yes">
+	<module name="filewrite" active="no">
 		<!--
 			Supported options:
 			
@@ -147,7 +147,9 @@
 			  Default is "sec". The meaning should be obvious.
 			- chmod: Unix file mode to give the new file, in
 			  octal numeric notation. Don't forget the leading
-			  zero.
+			  zero. If not specified, no chmod will be done
+			  (meaning the file will have mode 0666 minus umask).
+			- Of course you can add filters here too.
 		-->
 		<path>~/tmp/camera.jpg</path>
 		<interval unit="sec">30</interval>
