@@ -61,6 +61,21 @@
 		<port>8889</port>
 	</module>
 	
+	<!--
+		The http module. It lets you create virtual paths to
+		serve verious variants of the current image. The main
+		section includes global config options (such as the
+		port to listen on), and can also include filter definitions.
+		Those global filters will be applied to every image
+		served.
+		In the main section, there should be one or more <vpath>
+		sections. Each of these sections describes another
+		variation of the image, with different properties,
+		using different filters.
+		Each vpath definition should contain one or more <path>
+		tags, each of which can be used to access this image
+		variant (those paths can be thought of as aliases).
+	-->
 	<module name="http" active="yes">
 		<port>9192</port>
 		
