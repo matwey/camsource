@@ -266,7 +266,7 @@
 			-->
 			<path>/raw</path>
 			<raw>yes</raw>
-			<disable>yes</disable>
+			<disable>no</disable>
 		</vpath>
 	</module>
 	
@@ -528,6 +528,9 @@
 	<!-- See the ftpup module config for a description of regrab -->
 	<module name="regrab" active="no"/>
 	
+	<!-- A simple invert filter -->
+	<module name="invert" active="no"/>
+	
 	<!--
 		Global filters to use. Any filter given here
 		will be applied to every grabbed frame. If
@@ -556,6 +559,9 @@
 	
 	<!-- Also not active by default -->
 	<filter name="bw"/>
+	
+	<!-- Ditto -->
+	<filter name="invert"/>
 	
 </camsourceconfig>
 

@@ -2,7 +2,8 @@ bin_PROGRAMS = camsource
 pkglib_LTLIBRARIES = libwc_serv.la libjpeg_comp.la libflip.la \
 	libresize.la libsocket.la libhttp.la libfilewrite.la \
 	libftpup.la libtext.la librgbbgr.la librotate.la \
-	libbw.la libvloopback.la libmotiondetect.la libregrab.la
+	libbw.la libvloopback.la libmotiondetect.la libregrab.la \
+	libinvert.la
 
 pkginclude_HEADERS = camdev.h configfile.h filter.h grab.h \
 	image.h jpeg.h mod_handle.h module.h unpalette.h xmlhelp.h \
@@ -29,6 +30,7 @@ libbw_la_SOURCES = bw.c
 libvloopback_la_SOURCES = vloopback.c
 libmotiondetect_la_SOURCES = motiondetect.c
 libregrab_la_SOURCES = regrab.c
+libinvert_la_SOURCES = invert.c
 
 # $Id$
 

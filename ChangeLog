@@ -1,6 +1,8 @@
 $Id$
 
 Jan 18 2003
+	- Added scripts/camsource2bmp.pl example script.
+	- Added the smallest filter ever: color inverting.
 	- Implemented -r and -s/-k command line switches to restart
 	  and shut down camsource.
 

@@ -32,3 +32,5 @@ libmotiondetect.la
 motiondetect.lo
 libregrab.la
 regrab.lo
+libinvert.la
+invert.lo
