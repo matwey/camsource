@@ -1,5 +1,5 @@
-AC_INIT(camsource, 0.1)
-AM_INIT_AUTOMAKE(camsource, 0.1)
+AC_INIT(camsource, 0.1.0)
+AM_INIT_AUTOMAKE(camsource, 0.1.0)
 AC_CONFIG_SRCDIR(src/grab.c)
 AC_CONFIG_FILES([Makefile src/Makefile])
 AM_CONFIG_HEADER(config.h)
