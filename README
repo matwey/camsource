@@ -55,8 +55,8 @@ http://host:8889/
   animate the images. Note that even though webcam_server allows you to
   get a snapshot image when you point a browser at its url, the
   camsource module doesn't do this; point your browser at one of the
-  above urls instead. You can find webcam_server and the java applet at
-  <http://donn.dyndns.org/portalofnnod/webcam_server.html>.
+  other urls above instead. You can find webcam_server and the java
+  applet at <http://donn.dyndns.org/portalofnnod/webcam_server.html>.
 
 
 
