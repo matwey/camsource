@@ -26,7 +26,11 @@
  *    number on error (which will be more or less ignore), or a
  *    positive number to "swallow" the image, in which case the
  *    number is the number of microseconds to sleep before grabbing
- *    another image.
+ *    another image. As an additional argument, the function gets
+ *    a pointer to a void pointer, which is a pointer to instance-
+ *    specific data. As the same filter may be specified multiple
+ *    times in the config, this pointer is the place to store context
+ *    info across calls. The pointer will be initialized to NULL.
  * .) MODULE_GENERIC is a module which doesn't do anything by itself,
  *    but provides special functionality for other modules. It is
  *    usually listed as dependency in other modules.
@@ -79,7 +83,7 @@ void *thread(void *);
 #ifdef MODULE_FILTER
 
 struct image;
-int filter(struct image *, xmlNodePtr);
+int filter(struct image *, xmlNodePtr, void **);
 
 #endif	/* MODULE_FILTER */
 

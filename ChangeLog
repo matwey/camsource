@@ -1,6 +1,14 @@
 $Id$
 
-Jan 4 2002
+Jan 5 2003
+	- Added motiondetect custom config. Filter works better
+	  now too.
+	- Added regrab filter.
+	- Added per-instance context storage for filters.
+	- Modified a few filters to make use of the new per-
+	  instance storage space to save a bit cpu (?)
+
+Jan 4 2003
 	- Added a preliminary motiondetect filter. More to do.
 	- Changed the filter handling a bit, to make it possble
 	  to have filters which "swallow" the image.

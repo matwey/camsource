@@ -14,81 +14,96 @@
 char *name = MODNAME;
 char *version = VERSION;
 
-static struct {
-	xmlNodePtr node;
+struct mdetectctx {
+	int pixeldiff;
+	int minthres, maxthres;
+	int delay;
 	struct image img;
-} refimages[16];
+};
 
-int
-init(struct module_ctx *mctx)
+static
+struct mdetectctx *
+ctx_init(xmlNodePtr node, struct image *img)
 {
-	return 0;
+	struct mdetectctx *ctx;
+	
+	ctx = malloc(sizeof(*ctx));
+	memset(ctx, 0, sizeof(*ctx));
+	
+	for (node = node->xml_children; node; node = node->next) {
+		if (xml_isnode(node, "pixeldiff"))
+			ctx->pixeldiff = (xml_atof(node, 0) * 768) / 100;
+		else if (xml_isnode(node, "minthres"))
+			ctx->minthres = (xml_atof(node, 0) * img->bufsize) / 100;
+		else if (xml_isnode(node, "maxthres"))
+			ctx->maxthres = (xml_atof(node, 0) * img->bufsize) / 100;
+		else if (xml_isnode(node, "delay"))
+			ctx->delay = xml_atoi(node, 0) * 1000;
+	}
+	
+	return ctx;
+}
+
+static
+int
+pixeldiff(unsigned char a, unsigned char b)
+{
+	int diff;
+	
+	diff = a - b;
+	if (diff < 0)
+		diff *= -1;
+	return diff;
 }
 
 int
-filter(struct image *img, xmlNodePtr node)
+filter(struct image *img, xmlNodePtr node, void **instctx)
 {
-	int i, firstfree;
+	struct mdetectctx *ctx;
 	unsigned char *curbuf, *refbuf;
 	int togo;
 	int diff, diffs;
 	
-	if (!node) {
-		log_log(MODNAME, "Can't do motion detection without referenced xml node\n");
-		return -1;
+	if (!*instctx) {
+		ctx = ctx_init(node, img);
+		*instctx = ctx;
+	}
+	else
+		ctx = *instctx;
+	
+	if (!ctx->img.buf) {
+		image_copy(&ctx->img, img);
+		return ctx->delay;
 	}
 	
-	firstfree = -1;
-	for (i = 0; i < (sizeof(refimages) / sizeof(*refimages)); i++) {
-		if (!refimages[i].node) {
-			if (firstfree < 0)
-				firstfree = i;
-			continue;
-		}
-		if (refimages[i].node == node)
-			goto found;
-	}
-	
-	if (firstfree < 0) {
-		log_log(MODNAME, "Maximum number of motion detection instanced exceeded\n");
-		return -1;
-	}
-	
-	i = firstfree;
-	refimages[i].node = node;
-	
-found:
-	if (!refimages[i].img.buf) {
-		image_copy(&refimages[i].img, img);
-		return 1000000;
-	}
-	
-	if (refimages[i].img.bufsize != img->bufsize) {
+	if (ctx->img.bufsize != img->bufsize) {
 		log_log(MODNAME, "Motion detect buffer size mismatch!?\n");
 		return -1;
 	}
 	
 	curbuf = img->buf;
-	refbuf = refimages[i].img.buf;
+	refbuf = ctx->img.buf;
 	togo = img->bufsize;
 	diffs = 0;
 	while (togo > 0) {
-		diff = *curbuf - *refbuf;
-		if (diff < 0)
-			diff *= -1;
-		if (diff > 50)
+		diff = pixeldiff(curbuf[0], refbuf[0]);
+		diff += pixeldiff(curbuf[1], refbuf[1]);
+		diff += pixeldiff(curbuf[2], refbuf[2]);
+		
+		if (diff > ctx->pixeldiff)
 			diffs++;
-		togo--;
-		curbuf++;
-		refbuf++;
+			
+		refbuf[0] = (curbuf[0] + refbuf[0]) / 2;
+		refbuf[1] = (curbuf[1] + refbuf[1]) / 2;
+		refbuf[2] = (curbuf[2] + refbuf[2]) / 2;
+
+		togo -= 3;
+		curbuf += 3;
+		refbuf += 3;
 	}
 	
-	log_log(MODNAME, "diffs %i\n", diffs);
-	if (diffs < 200)
-		return 1000000;
-	
-	image_destroy(&refimages[i].img);
-	image_copy(&refimages[i].img, img);
+	if (diffs < ctx->minthres || diffs > ctx->maxthres)
+		return ctx->delay;
 	
 	return 0;
 }

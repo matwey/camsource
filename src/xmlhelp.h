@@ -11,6 +11,8 @@ char *xml_getcontent(xmlNodePtr);
 char *xml_getcontent_def(xmlNodePtr, char *);
 /* Returns the content of a node as int, or the given default on error */
 int xml_atoi(xmlNodePtr, int);
+/* Ditto for doubles */
+double xml_atof(xmlNodePtr, double);
 
 /* Returns the value of the given attribute of the given node */
 char *xml_attrval(xmlNodePtr, char *);

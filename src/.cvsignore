@@ -30,3 +30,5 @@ libvloopback.la
 vloopback.lo
 libmotiondetect.la
 motiondetect.lo
+libregrab.la
+regrab.lo

@@ -49,7 +49,7 @@ init(struct module_ctx *mctx)
 }
 
 int
-filter(struct image *img, xmlNodePtr node)
+filter(struct image *img, xmlNodePtr node, void **instctx)
 {
 	struct text_ctx ctx;
 	int x, y;

@@ -11,27 +11,29 @@
 
 #define MODNAME "resize"
 
-static int resize_get_dim(struct image *, xmlNodePtr);
+static struct image *resize_get_dim(struct image *, xmlNodePtr);
 
 char *name = MODNAME;
 char *version = VERSION;
 
 int
-filter(struct image *img, xmlNodePtr node)
+filter(struct image *img, xmlNodePtr node, void **ctx)
 {
-	int ret;
 	struct image work;
 	double xratio, yratio;
 	unsigned int x, y, rx, ry;
 	unsigned char *r, *rline, *w;
 	
-	memcpy(&work, img, sizeof(work));
-	ret = resize_get_dim(&work, node);
-	if (ret)
-	{
-		log_log(MODNAME, "Invalid/missing resize parameters\n");
-		return -1;
+	if (!*ctx) {
+		*ctx = resize_get_dim(img, node);
+		if (!*ctx)
+		{
+			log_log(MODNAME, "Invalid/missing resize parameters\n");
+			return -1;
+		}
 	}
+	memcpy(&work, *ctx, sizeof(work));
+	image_new(&work, work.x, work.y);
 	
 	w = work.buf;
 	xratio = (double) img->x / work.x;
@@ -56,31 +58,37 @@ filter(struct image *img, xmlNodePtr node)
 }
 
 static
-int
-resize_get_dim(struct image *img, xmlNodePtr node)
+struct image *
+resize_get_dim(struct image *oriimg, xmlNodePtr node)
 {
-	int scale;
+	double scale;
+	struct image ret;
+	struct image *retptr;
+	
+	memcpy(&ret, oriimg, sizeof(ret));
 	
 	for (node = node->xml_children; node; node = node->next)
 	{
 		if (xml_isnode(node, "width"))
-			img->x = xml_atoi(node, img->x);
+			ret.x = xml_atoi(node, ret.x);
 		else if (xml_isnode(node, "height"))
-			img->y = xml_atoi(node, img->y);
+			ret.y = xml_atoi(node, ret.y);
 		else if (xml_isnode(node, "scale"))
 		{
-			scale = xml_atoi(node, 0);
+			scale = xml_atof(node, 0);
 			if (scale <= 0)
 				continue;
-			img->x = (img->x * scale) / 100;
-			img->y = (img->y * scale) / 100;
+			ret.x = (ret.x * scale) / 100;
+			ret.y = (ret.y * scale) / 100;
 		}
 	}
 	
-	if (img->x == 0 || img->y == 0)
-		return -1;
+	if (ret.x == 0 || ret.y == 0)
+		return NULL;
 		
-	image_new(img, img->x, img->y);
-	return 0;
+	retptr = malloc(sizeof(*retptr));
+	memcpy(retptr, &ret, sizeof(*retptr));
+	
+	return retptr;
 }
 

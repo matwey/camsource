@@ -11,16 +11,19 @@
 char *name = "flip";
 char *version = VERSION;
 
-int
-filter(struct image *img, xmlNodePtr node)
-{
-	struct image work;
-	unsigned int x, y, vy;
-	unsigned char *r, *w;
+struct flipctx {
 	int h, v;
+};
+
+static
+struct flipctx *
+ctx_init(xmlNodePtr node)
+{
+	struct flipctx *ctx;
 	char *cont;
-	
-	h = v = 0;
+
+	ctx = malloc(sizeof(*ctx));
+	memset(ctx, 0, sizeof(*ctx));
 	
 	for (node = node->xml_children; node; node = node->next)
 	{
@@ -31,7 +34,7 @@ filter(struct image *img, xmlNodePtr node)
 				&& (!strcmp(cont, "yes")
 					|| !strcmp(cont, "on")
 					|| !strcmp(cont, "1")))
-			h = 1;
+			ctx->h = 1;
 		}
 		else if (xml_isnode(node, "vert"))
 		{
@@ -40,11 +43,29 @@ filter(struct image *img, xmlNodePtr node)
 				&& (!strcmp(cont, "yes")
 					|| !strcmp(cont, "on")
 					|| !strcmp(cont, "1")))
-			v = 1;
+			ctx->v = 1;
 		}
 	}
 	
-	if (!h && !v)
+	return ctx;
+}
+
+int
+filter(struct image *img, xmlNodePtr node, void **instctx)
+{
+	struct image work;
+	struct flipctx *ctx;
+	unsigned int x, y, vy;
+	unsigned char *r, *w;
+	
+	if (!*instctx) {
+		ctx = ctx_init(node);
+		*instctx = ctx;
+	}
+	else
+		ctx = *instctx;
+	
+	if (!ctx->h && !ctx->v)
 		return 0;
 	
 	image_dup(&work, img);
@@ -57,12 +78,12 @@ filter(struct image *img, xmlNodePtr node)
 	r = img->buf;
 	for (y = 0; y < img->y; y++)
 	{
-		if (v)
+		if (ctx->v)
 			vy = img->y - y - 1;
 		else
 			vy = y;
 			
-		if (h)
+		if (ctx->h)
 			w = work.buf + (vy + 1) * work.x * 3 - 3;
 		else
 			w = work.buf + vy * work.x * 3;
@@ -72,7 +93,7 @@ filter(struct image *img, xmlNodePtr node)
 			w[0] = *r++;
 			w[1] = *r++;
 			w[2] = *r++;
-			if (h)
+			if (ctx->h)
 				w -= 3;
 			else
 				w += 3;

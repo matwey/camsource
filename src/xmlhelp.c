@@ -57,6 +57,23 @@ xml_atoi(xmlNodePtr node, int def)
 	return i;
 }
 
+double
+xml_atof(xmlNodePtr node, double def)
+{
+	double i;
+	char *ret;
+	char *end;
+	
+	ret = xml_getcontent(node);
+	if (!ret)
+		return def;
+	
+	i = strtod(ret, &end);
+	if (!i && end == ret)
+		return def;
+	return i;
+}
+
 char *
 xml_attrval(xmlNodePtr node, char *attr)
 {

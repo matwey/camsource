@@ -255,8 +255,44 @@
 		<!-- For a description of the <jpegqual> tag, see
 			the jpeg_comp module entry -->
 		
-		<!-- The motiondetect filter is not active by default -->
-		<filter name="motiondetect"/>
+		<!--
+			A simple motion detection filter (not active by
+			default), which simply swallows the frame if
+			no motion was detected, making the receiving
+			module wait for a more interesting picture.
+			Useful for filewrite of ftpup uses, and not so
+			useful for live viewing modules.
+			
+			"Pixeldiff" is the value which is used to decide
+			whether one pixel of the new image is different
+			from the same pixel of the previous image. The
+			value is a tolerance value in percent. 0 means
+			the pixel will only be considered equal if it
+			is indeed exactly equal, otherwise it will be
+			considered different. 100 means	the pixel will
+			always be considered equal. Raise this value if
+			your camera produces a lot of noise.
+			
+			"Minthres" and "maxthres" specify how many
+			percent of the pixels of the image must be
+			different to trigger the motion detection. If
+			the percentage is outside this range, the
+			detection won't trigger. There's an upper limit
+			to tag massive image changes (such as the light
+			being switched on or off) as uninteresting.
+			Raise maxthres to 100 to disable this behavior.
+			
+			If no motion is detected, the filter will wait
+			"delay" milliseconds (1/1000 seconds) before
+			grabbing another image and checking it for
+			motion.
+		-->
+		<filter name="motiondetect">
+			<pixeldiff>10.0</pixeldiff>
+			<minthres>0.1</minthres>
+			<maxthres>45.0</maxthres>
+			<delay>1000</delay>
+		</filter>
 		
 		<filter name="text"/>
 	</module>
@@ -304,7 +340,22 @@
 		<interval unit="sec">30</interval>
 
 		<jpegqual>75</jpegqual>
-		<filter name="motiondetect"/>
+		
+		<!--
+			The regrab filter (not active by default) takes the
+			grabbed image, throws it away, waits "delay"
+			milliseconds (1/1000 seconds) and then grabs
+			another image. It does this "times" times. After
+			that, the receiving thread finally gets an image
+			to use. This is useful to give the camera time to
+			do brightness auto-adjusting before actually using
+			the grabbed image.
+		-->
+		<filter name="regrab">
+			<times>3</times>
+			<delay>1000</delay>
+		</filter>
+		
 		<filter name="text"/>
 	</module>
 	
@@ -403,14 +454,11 @@
 	<!-- This filter converts the image into bw (grayscale) -->
 	<module name="bw" active="no"/>
 	
-	<!-- 
-		A simple motion detection filter, which simply swallows
-		the frame if no motion was detected, making the
-		receiving module wait for a more interesting picture.
-		Useful for filewrite of ftpup uses, and not so
-		useful for live viewing modules.
-	-->
+	<!-- See the filewrite module config for a description of regrab -->
 	<module name="motiondetect" active="no"/>
+	
+	<!-- See the ftpup module config for a description of regrab -->
+	<module name="regrab" active="no"/>
 	
 	<!--
 		Global filters to use. Any filter given here

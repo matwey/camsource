@@ -14,7 +14,7 @@ char *name = MODNAME;
 char *version = VERSION;
 
 int
-filter(struct image *img, xmlNodePtr node)
+filter(struct image *img, xmlNodePtr node, void **ctx)
 {
 	unsigned char *s, *e;
 	int y;
