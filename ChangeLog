@@ -1,6 +1,9 @@
 $Id$
 
+--- 0.3.0 ---
+
 Sep 22 2002
+	- Released 0.3.0
 	- Fixed small typo bug in http logging
 
 Sep 21 2002
