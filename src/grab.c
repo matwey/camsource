@@ -71,6 +71,8 @@ camdevopened:
 		pthread_mutex_lock(&current_img.mutex);
 		image_move(&current_img.img, &newimg);
 		current_img.idx++;
+		if (current_img.idx == 0)
+			current_img.idx++;
 		current_img.request = 0;
 		pthread_cond_broadcast(&current_img.ready_cond);
 		pthread_mutex_unlock(&current_img.mutex);
@@ -92,7 +94,7 @@ void
 grab_get_image(struct image *img, unsigned int *idx)
 {
 	pthread_mutex_lock(&current_img.mutex);
-	if (*idx <= current_img.idx)
+	if (*idx == 0 || *idx == current_img.idx)
 	{
 		current_img.request = 1;
 		pthread_cond_signal(&current_img.request_cond);
