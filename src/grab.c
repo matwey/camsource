@@ -37,17 +37,12 @@ grab_thread(void *arg)
 	unsigned int bpf;
 	unsigned char *imgbuf;
 	struct image newimg;
-	xmlDocPtr doc;
-	xmlNodePtr node;
-	char *prop;
-	struct module *mod;
-	int (*filter)(struct image *);
 	
 	ret = camdev_open(&camdev, "/dev/video0");
 	if (ret == -1)
 	{
 		printf("Error opening video device: %s\n", strerror(errno));
-		return 0;
+		return NULL;
 	}
 	
 	bpf = (camdev.x * camdev.y) * camdev.pal->bpp;
@@ -56,43 +51,10 @@ grab_thread(void *arg)
 	for (;;)
 	{
 		ret = read(camdev.fd, imgbuf, bpf);
-		printf("image\n");
 		image_new(&newimg, camdev.x, camdev.y);
 		camdev.pal->routine(&newimg, imgbuf);
 		
-		rwlock_rlock(&configdoc_lock);
-		doc = xmlCopyDoc(configdoc, 1);
-		rwlock_runlock(&configdoc_lock);
-		if (doc)
-		{
-			node = xmlDocGetRootElement(doc);
-			for (node = node->children; node; node = node->next)
-			{
-				if (!xmlStrEqual(node->name, "filter"))
-					continue;
-				prop = xmlGetProp(node, "name");
-				if (!prop)
-				{
-					printf("<filter> without name\n");
-					continue;
-				}
-				rwlock_rlock(&modules_lock);
-				mod = mod_find(prop);
-				rwlock_runlock(&modules_lock);
-				if (mod)
-				{
-					filter = dlsym(mod->dlhand, "filter");
-					if (filter)
-						filter(&newimg);
-					else
-						printf("Module %s has no \"filter\" routine\n", prop);
-				}
-				free(prop);
-			}
-			xmlFreeDoc(doc);
-		}
-		else
-			printf("xmlCopyDoc failed\n");
+		grab_glob_filters(&newimg);
 		
 		rwlock_wlock(&image_lock);
 		image_move(&current_image, &newimg);
@@ -103,5 +65,50 @@ grab_thread(void *arg)
 	}
 
 	return 0;
+}
+
+void
+grab_glob_filters(struct image *img)
+{
+	xmlDocPtr doc;
+	xmlNodePtr node;
+	char *prop;
+	struct module *mod;
+	int (*filter)(struct image *);
+
+	rwlock_rlock(&configdoc_lock);
+	doc = xmlCopyDoc(configdoc, 1);
+	rwlock_runlock(&configdoc_lock);
+	if (!doc)
+	{
+		printf("xmlCopyDoc failed\n");
+		return;
+	}
+	
+	node = xmlDocGetRootElement(doc);
+	for (node = node->children; node; node = node->next)
+	{
+		if (!xmlStrEqual(node->name, "filter"))
+			continue;
+		prop = xmlGetProp(node, "name");
+		if (!prop)
+		{
+			printf("<filter> without name\n");
+			continue;
+		}
+		rwlock_rlock(&modules_lock);
+		mod = mod_find(prop);
+		rwlock_runlock(&modules_lock);
+		if (mod)
+		{
+			filter = dlsym(mod->dlhand, "filter");
+			if (filter)
+				filter(img);
+			else
+				printf("Module %s has no \"filter\" routine\n", prop);
+		}
+		free(prop);
+	}
+	xmlFreeDoc(doc);
 }
 

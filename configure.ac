@@ -13,7 +13,8 @@ AC_C_CONST
 AC_C_BIGENDIAN
 
 AC_HEADER_STDC
-AC_CHECK_HEADER(linux/videodev.h)
+AC_CHECK_HEADER(linux/videodev.h,, [AC_MSG_ERROR([Could not find linux/videodev.h])])
+AC_CHECK_HEADER(jpeglib.h,, [AC_MSG_ERROR([Could not find jpeglib.h])])
 
 AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
