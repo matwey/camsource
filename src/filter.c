@@ -12,8 +12,6 @@
 #include "xmlhelp.h"
 #include "grab.h"
 
-static struct instance_ctx instances[MAX_INSTANCES];
-
 int
 filter_apply(struct image *img, xmlNodePtr node)
 {
@@ -21,7 +19,6 @@ filter_apply(struct image *img, xmlNodePtr node)
 	char *filtername;
 	int (*filter)(struct image *, xmlNodePtr, void **);
 	int ret;
-	int i;
 	
 	for (node = node->xml_children; node; node = node->next)
 	{
@@ -38,20 +35,7 @@ filter_apply(struct image *img, xmlNodePtr node)
 		{
 			filter = dlsym(mod->dlhand, "filter");
 			if (filter) {
-				for (i = 0; i < MAX_INSTANCES; i++) {
-					if (!instances[i].node)
-						goto foundfree;
-					if (instances[i].node == node)
-						goto found;
-				}
-				
-				printf("Out of filter instance storage slots (%s)\n", filtername);
-				return -1;
-				
-foundfree:
-				instances[i].node = node;
-found:
-				ret = filter(img, node, &instances[i].ctx);
+				ret = filter(img, node, &node->_private);
 				if (ret > 0)
 					return ret;
 			}

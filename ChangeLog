@@ -1,5 +1,9 @@
 $Id$
 
+Jan 16 2003
+	- Simplyfied per-instance filter storage to make use of
+	  libxml's _private struct member.
+
 Jan 15 2003
 	- Added <cmd> option to camdev section to support external
 	  trigger for capture on/off events.

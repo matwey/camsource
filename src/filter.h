@@ -6,13 +6,6 @@
 struct image;
 struct grab_ctx;
 
-struct instance_ctx {
-	xmlNodePtr node;
-	void *ctx;
-};
-
-#define MAX_INSTANCES 64
-
 /* Modifies an image in-place by applying all filters found under the xml tree.
  * May print error messages. Returns 0 if everything ok, or non-zero if the
  * image was "swallowed" by a filter. */
