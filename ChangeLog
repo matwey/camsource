@@ -1,3 +1,7 @@
+Sep 19 2002
+	- Finished ftpup functionality with adding safemode
+	- Lots of code cleanups and improvements in ftpup
+
 Sep 18 2002
 	- Started work on ftpup module
 	- Added a few socket functions

@@ -196,13 +196,14 @@
 			  meaning the snapshot will first be uploaded
 			  to a temporary file, which will then be
 			  renamed to final destination file. Defaults
-			  to "no".
+			  to "no". The ftp server must support the
+			  renaming commands RNFR and RNTO.
 			- interval: Same as filewrite's interval.
 		-->
-		<host>malloc.heap</host>
-		<port>21212</port>
-		<user>pics</user>
-		<pass>pics</pass>
+		<host>some.host.name</host>
+		<port>21</port>
+		<user>snapshot</user>
+		<pass>snapup</pass>
 		<dir>incoming</dir>
 		<file>snapshot.jpg</file>
 		<passive>no</passive>

@@ -212,17 +212,27 @@ socket_close(struct peer *peer)
 int
 socket_printf(struct peer *peer, char *format, ...)
 {
-	char buf[1024];
 	va_list vl;
+	int ret;
+	
+	va_start(vl, format);
+	ret = socket_vprintf(peer, format, vl);
+	va_end(vl);
+	
+	return ret;
+}
+
+int
+socket_vprintf(struct peer *peer, char *format, va_list vl)
+{
+	char buf[1024];
 	int ret, len;
 
 	if (peer->fd < 0)
 		return -1;
 	
-	va_start(vl, format);
 	vsnprintf(buf, sizeof(buf) - 1, format, vl);
-	va_end(vl);
-	
+
 	len = strlen(buf);
 	ret = write(peer->fd, buf, len);
 	if (ret != len)

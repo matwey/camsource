@@ -3,6 +3,7 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <stdarg.h>
 
 #include "config.h"
 
@@ -31,6 +32,7 @@ int socket_connect(struct peer *, char *, int);
 /* Printf's to a socket. Auto-closes it on error and returns -1. */
 int socket_printf(struct peer *, char *, ...)
 	__attribute__ ((format (printf, 2, 3)));
+int socket_vprintf(struct peer *, char *, va_list);
 
 /* Self descriptive */
 void socket_close(struct peer *);
