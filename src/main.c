@@ -14,9 +14,8 @@ main(int argc, char **argv)
 {
 	main_init();
 	
-	/* TODO: find something to do, or thread_exit */
-	for (;;)
-		pause();
+	/* nothing to do, so exit */
+	pthread_exit(NULL);
 	
 	return 0;
 }
