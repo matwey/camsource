@@ -69,6 +69,7 @@ thread(void *mctx)
 	int ret;
 	long usecs;
 	char tsfnbuf[1024];
+	char genbuf[1024];
 	struct tm tm;
 	
 	fctx = ((struct module_ctx *) mctx)->custom;
@@ -124,7 +125,15 @@ thread(void *mctx)
 			goto closenstuff;
 		
 		localtime_r(&tstart.tv_sec, &tm);
-		strftime(tsfnbuf, sizeof(tsfnbuf) - 1, fctx->file, &tm);
+		fctx->seqnum++;
+		if (!fctx->dontdostrftime)
+			strftime(genbuf, sizeof(genbuf) - 1, fctx->file, &tm);
+		else
+			snprintf(genbuf, sizeof(genbuf) - 1, "%s", fctx->file);
+		if (fctx->dosprintf)
+			snprintf(tsfnbuf, sizeof(tsfnbuf) - 1, genbuf, fctx->seqnum);
+		else
+			snprintf(tsfnbuf, sizeof(tsfnbuf) - 1, "%s", genbuf);
 		
 		if (!fctx->safemode)
 			ftpup_cmd(fctx, "STOR %s\r\n", tsfnbuf);
@@ -216,8 +225,15 @@ ftpup_load_conf(struct ftpup_ctx *fctx, xmlNodePtr node)
 			fctx->pass = xml_getcontent_def(node, fctx->pass);
 		else if (xml_isnode(node, "dir"))
 			fctx->dir = xml_getcontent(node);
-		else if (xml_isnode(node, "file"))
+		else if (xml_isnode(node, "file")) {
 			fctx->file = xml_getcontent(node);
+			s = xml_attrval(node, "sprintf");
+			if (s && !strcmp(s, "yes"))
+				fctx->dosprintf = 1;
+			s = xml_attrval(node, "strftime");
+			if (s && !strcmp(s, "no"))
+				fctx->dontdostrftime = 1;
+		}
 		else if (xml_isnode(node, "passive"))
 		{
 			s = xml_getcontent_def(node, "no");

@@ -9,6 +9,9 @@ struct fw_ctx
 	int interval;
 	int chmod;
 	char *cmd;
+	int seqnum;
+	int dosprintf:1;
+	int dontdostrftime:1;
 };
 
 #endif

@@ -73,7 +73,15 @@ thread(void *arg)
 	{
 		time(&now);
 		localtime_r(&now, &tm);
-		strftime(tsfnbuf, sizeof(tsfnbuf) - 1, fctx->path, &tm);
+		fctx->seqnum++;
+		if (!fctx->dontdostrftime)
+			strftime(buf, sizeof(buf) - 1, fctx->path, &tm);
+		else
+			snprintf(buf, sizeof(buf) - 1, "%s", fctx->path);
+		if (fctx->dosprintf)
+			snprintf(tsfnbuf, sizeof(tsfnbuf) - 1, buf, fctx->seqnum);
+		else
+			snprintf(tsfnbuf, sizeof(tsfnbuf) - 1, "%s", buf);
 		snprintf(buf, sizeof(buf) - 1, "%s.tmp", tsfnbuf);
 
 		filter_get_image(&curimg, &idx, ((struct module_ctx *) arg)->node, NULL);
@@ -171,8 +179,15 @@ fw_load_conf(struct fw_ctx *fctx, xmlNodePtr node)
 	
 	for (node = node->xml_children; node; node = node->next)
 	{
-		if (xml_isnode(node, "path"))
+		if (xml_isnode(node, "path")) {
 			fctx->path = xml_getcontent(node);
+			s = xml_attrval(node, "sprintf");
+			if (s && !strcmp(s, "yes"))
+				fctx->dosprintf = 1;
+			s = xml_attrval(node, "strftime");
+			if (s && !strcmp(s, "no"))
+				fctx->dontdostrftime = 1;
+		}
 		else if (xml_isnode(node, "cmd"))
 			fctx->cmd = xml_getcontent(node);
 		else if (xml_isnode(node, "interval"))

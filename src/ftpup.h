@@ -33,9 +33,12 @@ struct ftpup_ctx
 	char *user, *pass;
 	char *dir, *file;
 	int interval;
+	int seqnum;
 	
-	int passive:1,
-	    safemode:1;
+	int passive:1;
+	int safemode:1;
+	int dosprintf:1;
+	int dontdostrftime:1;
 };
 
 #endif

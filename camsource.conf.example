@@ -406,10 +406,26 @@
 			Supported options:
 			
 			- path: Destination filename. The prefix "~/" has
-			  the usual meaning. The filename is passed to
-			  strftime(), so you can include a timestamp in
-			  the filename. Check your strftime man page for
-			  a list of % substitutions you can do.
+			  the usual meaning. The tag takes the attributes
+			  "strftime" and "sprintf", both of which are
+			  "yes"/"no" switches and specify whether the name
+			  is being passed to the respective functions.
+			  The "strftime" tag defaults to "yes" while the
+			  "sprintf" tag defaults to "no". With "strftime",
+			  you can insert a current timestamp into the
+			  filename. See your strftime(3) man page for
+			  possible % conversions. With "sprintf", you can
+			  insert one %i or %d into the name, which will
+			  be replaced with a sequential number, starting
+			  with 1 and increased by one with each captured
+			  image. You can use any sprintf-like modified
+			  here, like %06i to get "000001" and so on. If
+			  _both_ strftime and sprintf are enabled, the name
+			  is first passed to strftime and then to sprintf.
+			  Make sure you escape the % you want sprintf to
+			  see properly from strftime by doubling them. For
+			  example, to get filenames like "snap-0001-May-25-03.jpg",
+			  you would put "snap-%%04i-%b-%d-%y.jpg".
 			- interval: Delay between writing snapshot files.
 			  This tag can take an attribute "unit" which
 			  can be one of "sec", "min", "hour" or "day".
@@ -508,9 +524,9 @@
 			  can be an absolute or relative pathname. If
 			  not specified, the file will be put into
 			  whatever dir is the current dir after login.
-			- file: Destination filename. As in the filewrite
-			  module, you can put % format specifiers here,
-			  which will be interpreted by strftime().
+			- file: Destination filename. You can play 
+			  tricks with sprintf and strftime here too,
+			  just as with the filewrite module.
 			- passive: A yes/no option, whether to use
 			  passive or active mode. Defaults to active
 			  mode ("no").

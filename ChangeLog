@@ -1,6 +1,9 @@
 $Id$
 
 May 25 2003
+	- Implemented increasing sequence numbers in filenames for
+	  filewrite.so and ftup.so. See the "sprintf" attribute
+	  of the filename tags.
 	- Added libinput_jpg plugin.
 
 --- 0.7.0 ---
