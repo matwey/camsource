@@ -30,34 +30,35 @@
  *    be unloaded.
  */
 
-#ifdef MODULE_THREAD
-# include <pthread.h>
-#endif
-#ifdef MODULE_FILTER
-# include <libxml/parser.h>
-# include "grab.h"
-#endif
-
 extern char *name;
 extern char *deps[];
+int init(void);
 
 #ifdef MODULE_THREAD
-extern pthread_t tid;	/* Thread id/handle, filled in by camsource */
-#endif
 
-int init(void);			/* On-load (pre-thread) init (optional) */
-
-#ifdef MODULE_THREAD
+#include <pthread.h>
+extern pthread_t tid;
 void *thread(void *);
-#endif
+
+#endif	/* MODULE_THREAD */
+
+
 
 #ifdef MODULE_FILTER
-int filter(struct image *, xmlNodePtr);	/* Returns 0 on success */
-#endif
+
+#include <libxml/parser.h>
+#include "grab.h"
+int filter(struct image *, xmlNodePtr);
+
+#endif	/* MODULE_FILTER */
+
+
+
+
 
 #if !defined(MODULE_THREAD) && !defined(MODULE_FILTER) && !defined(MODULE_GENERIC)
 # error "Must define the module type prior to including module.h"
-#endif
+#endif	/* !def && !def && !def */
 
 #endif
 
