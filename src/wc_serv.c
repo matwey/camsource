@@ -130,14 +130,21 @@ wc_handle_conn(void *arg)
 	first = 1;
 	count = 0;
 	memset(&last_idx, 0, sizeof(last_idx));
-	/* TODO: timeout */
 	for (;;)
 	{
 		do
 		{
-			ret = read(peer.peer.fd, &c, 1);
+			ret = socket_read(&peer.peer, &c, 1, 20000);
 			if (ret != 1)
+			{
+				if (ret == -2)
+					log_log(MODNAME, "Timeout on connection from %s:%i\n",
+						socket_ip(&peer.peer), socket_port(&peer.peer));
+				else if (ret == -1)
+					log_log(MODNAME, "Error on connection from %s:%i\n",
+						socket_ip(&peer.peer), socket_port(&peer.peer));
 				goto closenout;	/* break; break; */
+			}
 		}
 		while (c == '\r');
 		
@@ -168,15 +175,19 @@ wc_handle_conn(void *arg)
 			"Content-Length: %i\n"
 			"Connection: close\n\n",
 			jpegimg.bufsize);
-		ret = write(peer.peer.fd, buf, strlen(buf));
+		ret = socket_write(&peer.peer, buf, strlen(buf), 20000);
 		if (ret > 0)
-			ret = write(peer.peer.fd, jpegimg.buf, jpegimg.bufsize);
+			ret = socket_write(&peer.peer, jpegimg.buf, jpegimg.bufsize, 20000);
 		
 		image_destroy(&curimg);
 		free(jpegimg.buf);
 		
 		if (ret <= 0)
+		{
+			log_log(MODNAME, "Write error on connection from %s:%i\n",
+				socket_ip(&peer.peer), socket_port(&peer.peer));
 			break;
+		}
 		
 		count++;
 	}

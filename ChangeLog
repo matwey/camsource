@@ -1,6 +1,9 @@
 $Id$
 
 Sep 20 2002
+	- Made all (?) socket stuff time out properly and added better
+	  error/condition reporting
+	- Converted all socket stuff to nonblocking sockets
 	- Made custom jpeg compression quality levels possible (<jpegqual>)
 	- Pumped devel version number to 0.2.1
 

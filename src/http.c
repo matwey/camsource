@@ -23,7 +23,7 @@
 static int http_load_conf(struct http_ctx *, xmlNodePtr);
 static void *http_conn(void *);
 static int http_path_ismatch(xmlNodePtr, char *);
-static void http_err(int, char *);
+static void http_err(struct peer *, char *);
 static int http_get_fps(xmlNodePtr);
 
 char *name = MODNAME;
@@ -137,12 +137,34 @@ http_conn(void *peer_p)
 	
 	count = 0;
 	
-	ret = socket_readline(&http_peer.peer, buf, sizeof(buf));
+	ret = socket_readline(&http_peer.peer, buf, sizeof(buf), 20000);
 	if (ret)
+	{
+readlineerr:
+		switch (ret)
+		{
+		case -1:
+			log_log("Read error on connection from %s:%i (%s)\n",
+				socket_ip(&http_peer.peer), socket_port(&http_peer.peer), strerror(errno));
+			break;
+		case -2:
+			log_log("Timeout on connection from %s:%i\n",
+				socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
+			break;
+		case -3:
+			log_log("EOF on connection from %s:%i before full HTTP request was received\n",
+				socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
+			break;
+		}
 		goto closenout;
+	}
 	
 	if (strncmp("GET ", buf, 4))
+	{
+		log_log("Invalid HTTP request (not GET) from %s:%i\n",
+			socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
 		goto closenout;
+	}
 	
 	url = buf + 4;
 	
@@ -163,7 +185,11 @@ http_conn(void *peer_p)
 	}
 	
 	if (!*url || !httpver)
+	{
+		log_log(MODNAME, "Invalid HTTP request or version from %s:%i\n",
+			socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
 		goto closenout;
+	}
 	
 	log_log(MODNAME, "Request for %s from %s:%i\n",
 		url, socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
@@ -176,15 +202,15 @@ http_conn(void *peer_p)
 			continue;
 		goto match;
 	}
-	http_err(http_peer.peer.fd, "404 Not found");
+	http_err(&http_peer.peer, "404 Not found");
 	goto closenout;
 	
 match:
 	for (;;)
 	{
-		ret = socket_readline(&http_peer.peer, buf, sizeof(buf));
+		ret = socket_readline(&http_peer.peer, buf, sizeof(buf), 20000);
 		if (ret)
-			goto closenout;
+			goto readlineerr;
 		if (!*buf)
 			break;
 	}
@@ -200,7 +226,7 @@ match:
 			"Content-Type: multipart/x-mixed-replace;boundary=Juigt9G7bb7sfdgsdZGIDFsjhn\r\n"
 			"\r\n"
 			"--Juigt9G7bb7sfdgsdZGIDFsjhn\r\n");
-		write(http_peer.peer.fd, buf, strlen(buf));
+		socket_write(&http_peer.peer, buf, strlen(buf), 20000);
 	}
 	
 	memset(&idx, 0, sizeof(idx));
@@ -228,17 +254,15 @@ match:
 				"Content-Type: image/jpeg\r\n"
 				"\r\n",
 				jpegbuf.bufsize);
-		ret = write(http_peer.peer.fd, buf, strlen(buf));
+		ret = socket_write(&http_peer.peer, buf, strlen(buf), 20000);
 		if (ret > 0)
-			ret = write(http_peer.peer.fd, jpegbuf.buf, jpegbuf.bufsize);
+			ret = socket_write(&http_peer.peer, jpegbuf.buf, jpegbuf.bufsize, 20000);
 
 		count++;
 
 		if (fps && ret > 0)
 		{
-			snprintf(buf, sizeof(buf) - 1,
-				"\r\n--Juigt9G7bb7sfdgsdZGIDFsjhn\r\n");
-			ret = write(http_peer.peer.fd, buf, strlen(buf));
+			ret = socket_write(&http_peer.peer, "\r\n--Juigt9G7bb7sfdgsdZGIDFsjhn\r\n", 32, 20000);
 			usleep(1000000 / fps);
 		}
 		
@@ -274,7 +298,7 @@ http_path_ismatch(xmlNodePtr node, char *path)
 
 static
 void
-http_err(int fd, char *err)
+http_err(struct peer *peer, char *err)
 {
 	char buf[1024];
 	
@@ -289,7 +313,7 @@ http_err(int fd, char *err)
 		"\r\n"
 		"<html><body>%s</body></html>\r\n",
 		err, strlen(err) + 28, err);
-	write(fd, buf, strlen(buf));
+	socket_write(peer, buf, strlen(buf), 20000);
 }
 
 static

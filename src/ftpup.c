@@ -73,7 +73,7 @@ thread(void *mctx)
 		filter_apply(&img, ((struct module_ctx *) mctx)->node);
 		jpeg_compress(&jbuf, &img, ((struct module_ctx *) mctx)->node);
 		
-		ret = socket_connect(&peer, fctx->host, fctx->port);
+		ret = socket_connect(&peer, fctx->host, fctx->port, 20000);
 		if (ret)
 		{
 			log_log(MODNAME, "Connect to %s:%i failed (code %i, errno: %s)\n",
@@ -129,7 +129,7 @@ thread(void *mctx)
 			goto closenstuff;
 		}
 		
-		ret = write(fctx->datapeer.fd, jbuf.buf, jbuf.bufsize);
+		ret = socket_write(&fctx->datapeer, jbuf.buf, jbuf.bufsize, 20000);
 		if (ret != jbuf.bufsize)
 		{
 			log_log(MODNAME, "Write error while uploading: %s\n", strerror(errno));
@@ -273,7 +273,7 @@ ftpup_read_ftp_resp(struct ftpup_ctx *fctx, int expect)
 	
 	for (;;)
 	{
-		ret = socket_readline(fctx->peer, buf, sizeof(buf));
+		ret = socket_readline(fctx->peer, buf, sizeof(buf), 20000);
 		if (ret)
 		{
 			log_log(MODNAME, "Connection error or eof on ftp control connection (last command: \"%s\")\n",
@@ -364,7 +364,7 @@ ftpup_setup_data_conn(struct ftpup_ctx *fctx)
 	}
 
 	ftpup_cmd(fctx, "PASV\r\n");
-	ret = socket_readline(fctx->peer, buf, sizeof(buf));
+	ret = socket_readline(fctx->peer, buf, sizeof(buf), 20000);
 	if (ret || strncasecmp(buf, "227 Entering Passive Mode (", 27))
 	{
 		log_log(MODNAME, "Unrecognized response to PASV command: %s\n", buf);
@@ -391,7 +391,7 @@ ftpup_create_data_conn(struct ftpup_ctx *fctx)
 	
 	if (!fctx->passive)
 	{
-		ret = socket_accept(fctx->actpasv.act.listen_fd, &fctx->datapeer, 10000);
+		ret = socket_accept(fctx->actpasv.act.listen_fd, &fctx->datapeer, 20000);
 		if (ret)
 		{
 			log_log(MODNAME, "Accept() error or timeout: %s\n", strerror(errno));
@@ -403,7 +403,7 @@ ftpup_create_data_conn(struct ftpup_ctx *fctx)
 		return 0;
 	}
 
-	ret = socket_connect(&fctx->datapeer, fctx->actpasv.pasv.ip, fctx->actpasv.pasv.port);
+	ret = socket_connect(&fctx->datapeer, fctx->actpasv.pasv.ip, fctx->actpasv.pasv.port, 20000);
 	if (ret)
 	{
 		log_log(MODNAME, "Could not connect to %s:%i in passive mode\n",

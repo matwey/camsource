@@ -54,6 +54,9 @@ main_init(char *config)
 	
 	signal(SIGPIPE, SIG_IGN);
 	
+	printf("Camsource " VERSION " starting up...\n");
+	fflush(stdout);
+	
 	mod_init();
 	
 	ret = config_init(config);
