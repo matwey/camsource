@@ -1,5 +1,9 @@
 $Id$
 
+Jan 15 2003
+	- Added <cmd> option to camdev section to support external
+	  trigger for capture on/off events.
+
 Jan 14 2003
 	- The http module can now server raw image data, plus it now
 	  supports 'connection: keep-alive'. Combining those two

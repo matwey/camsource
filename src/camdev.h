@@ -15,6 +15,9 @@ struct camdev
 	struct video_picture vidpic;
 	struct palette *pal;
 	unsigned int x, y;	/* grabbing width and height being used */
+	char *cmd;
+	int cmdtimeout;
+	int cmdfired;
 };
 
 /* Opens v4l device and fills struct with context info. Second arg

@@ -9,6 +9,7 @@
 #include <sys/time.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <sys/wait.h>
 
 #include "config.h"
 
@@ -24,6 +25,7 @@
 static void grab_glob_filters(struct image *);
 static struct grabthread *find_thread(const char *);
 static void *grab_thread(void *);
+static void firecmd(struct grabthread *, int);
 
 /* The grabimage struct and its only instance current_img.
  * (Private data now, not directly accessible by threads.)
@@ -154,6 +156,38 @@ grab_start_all(void)
 }
 
 static
+void
+firecmd(struct grabthread *thread, int onoff)
+{
+	int ret;
+	
+	if (!thread->camdev.cmd	|| thread->camdev.cmdtimeout <= 0)
+		return;
+	if (thread->camdev.cmdfired && onoff)
+		return;
+	if (!thread->camdev.cmdfired && !onoff)
+		return;
+
+	ret = fork();
+	if (!ret) {
+		ret = fork();
+		if (ret)
+			_exit(0);
+		close(STDIN_FILENO);
+		for (ret = 3; ret < 1024; ret++)
+			close(ret);
+		execlp(thread->camdev.cmd, thread->camdev.cmd,
+			onoff ? "start" : "end", thread->name, thread->camdev.devicepath,
+			NULL);
+		printf("exec(\"%s\") failed: %s\n", thread->camdev.cmd, strerror(errno));
+		_exit(0);
+	}
+	
+	waitpid(ret, NULL, 0);
+	thread->camdev.cmdfired = onoff;
+}
+
+static
 void *
 grab_thread(void *arg)
 {
@@ -167,6 +201,8 @@ grab_thread(void *arg)
 	unsigned char *mbufp;
 	struct video_mmap mmapctx;
 	int mbufframe;
+	struct timeval tvnow;
+	struct timespec abstime;
 	
 	thread = arg;
 	
@@ -180,16 +216,35 @@ grab_thread(void *arg)
 	for (;;)
 	{
 		pthread_mutex_lock(&thread->curimg.mutex);
-		if (!thread->curimg.request)
-			pthread_cond_wait(&thread->curimg.request_cond, &thread->curimg.mutex);
+		while (!thread->curimg.request) {
+			gettimeofday(&tvnow, NULL);
+			abstime.tv_sec = tvnow.tv_sec + 1;
+			abstime.tv_nsec = tvnow.tv_usec;
+			
+			ret = pthread_cond_timedwait(&thread->curimg.request_cond, &thread->curimg.mutex, &abstime);
+			
+			pthread_mutex_unlock(&thread->curimg.mutex);
+			
+			if (ret == ETIMEDOUT) {
+				gettimeofday(&tvnow, NULL);
+				if (timeval_diff(&tvnow, &thread->curimg.ctx.tv) > thread->camdev.cmdtimeout)
+					firecmd(thread, 0);
+			}
+			
+			pthread_mutex_lock(&thread->curimg.mutex);
+		}
 		pthread_mutex_unlock(&thread->curimg.mutex);
+		
+		firecmd(thread, 1);
 		
 		image_new(&newimg, thread->camdev.x, thread->camdev.y);
 		if (usemmap)
 		{
 			if (usemmap < 0)
 			{
-				ret = ioctl(thread->camdev.fd, VIDIOCGMBUF, &mbuf);
+				do
+					ret = ioctl(thread->camdev.fd, VIDIOCGMBUF, &mbuf);
+				while (ret < 0 && errno == EINTR);
 				if (ret < 0)
 				{
 nommap:
@@ -208,7 +263,9 @@ nommap:
 			mmapctx.width = thread->camdev.x;
 			mmapctx.height = thread->camdev.y;
 			mmapctx.format = thread->camdev.pal->val;
-			ret = ioctl(thread->camdev.fd, VIDIOCMCAPTURE, &mmapctx);
+			do
+				ret = ioctl(thread->camdev.fd, VIDIOCMCAPTURE, &mmapctx);
+			while (ret < 0 && errno == EINTR);
 			if (ret < 0)
 			{
 unmap:
@@ -216,7 +273,9 @@ unmap:
 				goto nommap;
 			}
 			ret = mbufframe;
-			ret = ioctl(thread->camdev.fd, VIDIOCSYNC, &ret);
+			do
+				ret = ioctl(thread->camdev.fd, VIDIOCSYNC, &ret);
+			while (ret < 0 && errno == EINTR);
 			if (ret < 0)
 				goto unmap;
 			thread->camdev.pal->routine(&newimg, mbufp + mbuf.offsets[mbufframe]);
@@ -227,7 +286,9 @@ unmap:
 		else
 		{
 sysread:
-			ret = read(thread->camdev.fd, imgbuf, bpf);
+			do
+				ret = read(thread->camdev.fd, imgbuf, bpf);
+			while (ret < 0 && errno == EINTR);
 			if (ret < 0)
 			{
 				printf("Error while reading from device '%s': %s\n", thread->name, strerror(errno));
@@ -276,7 +337,7 @@ void
 grab_get_image(struct image *img, struct grab_ctx *ctx, const char *name)
 {
 	struct timeval now;
-	int diff;
+	long diff;
 	struct grabthread *thread;
 	
 	if (!img)
@@ -304,13 +365,9 @@ request:
 		else
 		{
 			gettimeofday(&now, NULL);
-			diff = now.tv_sec - ctx->tv.tv_sec;
-			if (diff < 0 || diff >= 2)
-				goto request;	/* considered harmful (!) */
-			diff *= 1000000;
-			diff += now.tv_usec - ctx->tv.tv_usec;
+			diff = timeval_diff(&now, &ctx->tv);
 			if (diff < 0 || diff >= 500000)
-				goto request;
+				goto request;	/* considered harmful (!) */
 		}
 
 		memcpy(ctx, &thread->curimg.ctx, sizeof(*ctx));
@@ -318,5 +375,17 @@ request:
 	
 	image_copy(img, &thread->curimg.img);
 	pthread_mutex_unlock(&thread->curimg.mutex);
+}
+
+long
+timeval_diff(struct timeval *a, struct timeval *b)
+{
+	long ret;
+	
+	ret = a->tv_sec - b->tv_sec;
+	ret *= 1000000;
+	ret += a->tv_usec - b->tv_usec;
+	
+	return ret;
 }
 

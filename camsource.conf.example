@@ -58,6 +58,24 @@
 		<!-- <colour>32767</colour> -->
 		<!-- <contrast>32767</contrast> -->
 		<!-- <whiteness>32767</whiteness> -->
+		
+		<!--
+			You can define a command to be run when something or
+			someone is requesting frames from this device. The first
+			time a frame is requested, the program will get a 'start'
+			event. The 'end' event will be fired after there has been
+			no request for a frame for a certain time period, which
+			you can specify with the <cmdtimeout> tag, in seconds.
+			Note that the command will be run asynchronously in the
+			background.
+			The command gets the following arguments:
+			- Event type, either 'start' or 'end'.
+			- Camdev device name, either "default" or whatever name
+			  you gave it.
+			- The name of the /dev/videoX device file.
+		-->
+		<!-- <cmd>~/bin/grabevent.sh</cmd>
+		<cmdtimeout>5</cmdtimeout> -->
 	</camdev>
 	
 	<!--
@@ -83,7 +101,7 @@
 		The prefix "~/" has the usual meaning.
 	-->
 	<logfile>~/.camsource.log</logfile>
-
+	
 	<!--
 		Available modules. A module will only be loaded
 		if its "active" attribute is set to "yes", or if

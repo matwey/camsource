@@ -13,6 +13,7 @@
 #include "camdev.h"
 #include "unpalette.h"
 #include "xmlhelp.h"
+#include "configfile.h"
 
 static int camdev_size_def(xmlNodePtr);
 static int camdev_size_set(int, int, int, char *);
@@ -29,6 +30,8 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 	int norm;
 	struct video_channel vidchan;
 	int brightness, hue, colour, contrast, whiteness;
+	
+	memset(&newcamdev, 0, sizeof(newcamdev));
 	
 	path = "/dev/video0";
 	x = y = fps = 0;
@@ -72,6 +75,10 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 				else
 					printf("Invalid video norm \"%s\" specified, ignoring\n", s);
 			}
+			else if (xml_isnode(node, "cmd"))
+				newcamdev.cmd = config_homedir(xml_getcontent(node));
+			else if (xml_isnode(node, "cmdtimeout"))
+				newcamdev.cmdtimeout = xml_atoi(node, 0) * 1000000;
 		}
 	}
 	

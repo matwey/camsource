@@ -17,6 +17,7 @@ struct grab_ctx
 int grab_threads_init(void);
 int grab_open_all(void);
 void grab_start_all(void);
+long timeval_diff(struct timeval *, struct timeval *);
 
 /* Does the necessary locking and checking to get a _new_ frame out of
  * current_img. A copy of the new frame is stored into the first argument
