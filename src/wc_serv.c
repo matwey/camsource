@@ -169,10 +169,14 @@ handle_conn(void *arg)
 			"Connection: close\n\n",
 			jpegimg.bufsize);
 		ret = write(peer.peer.fd, buf, strlen(buf));
-		ret = write(peer.peer.fd, jpegimg.buf, jpegimg.bufsize);
+		if (ret > 0)
+			ret = write(peer.peer.fd, jpegimg.buf, jpegimg.bufsize);
 		
 		image_destroy(&curimg);
 		free(jpegimg.buf);
+		
+		if (ret <= 0)
+			break;
 	}
 
 closenout:
