@@ -115,18 +115,13 @@ conn(void *peer_p)
 	struct image img;
 	unsigned int idx;
 	struct jpegbuf jpegbuf;
-	char outbuf[1024];
 	
 	memcpy(&http_peer, peer_p, sizeof(http_peer));
 	free(peer_p);
 	
 	ret = socket_readline(http_peer.peer.fd, buf, sizeof(buf));
 	if (ret)
-	{
-closenout:
-		close(http_peer.peer.fd);
-		return NULL;
-	}
+		goto closenout;
 	
 	if (strncmp("GET ", buf, 4))
 		goto closenout;
@@ -164,13 +159,22 @@ closenout:
 	goto closenout;
 	
 match:
+	for (;;)
+	{
+		ret = socket_readline(http_peer.peer.fd, buf, sizeof(buf));
+		if (ret)
+			goto closenout;
+		if (!*buf)
+			break;
+	}
+	
 	idx = 0;
 	grab_get_image(&img, &idx);
 	filter_apply(&img, http_peer.mod_ctx->node);
 	filter_apply(&img, subnode);
 	jpeg_compress(&jpegbuf, &img, 0);
 	
-	snprintf(outbuf, sizeof(outbuf) - 1,
+	snprintf(buf, sizeof(buf) - 1,
 		"HTTP/1.0 200 OK\r\n"
 		"Server: " PACKAGE_STRING "\r\n"
 		"Content-Length: %i\r\n"
@@ -178,12 +182,14 @@ match:
 		"Content-Type: image/jpeg\r\n"
 		"\r\n",
 		jpegbuf.bufsize);
-	write(http_peer.peer.fd, outbuf, strlen(outbuf));
+	write(http_peer.peer.fd, buf, strlen(buf));
 	write(http_peer.peer.fd, jpegbuf.buf, jpegbuf.bufsize);
 	
 	image_destroy(&img);
 	free(jpegbuf.buf);
 
+closenout:
+	close(http_peer.peer.fd);
 	return NULL;
 }
 
