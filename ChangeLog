@@ -1,5 +1,8 @@
 $Id$
 
+Sep 22 2002
+	- Fixed small typo bug in http logging
+
 Sep 21 2002
 	- Removed unnecessary headers from make install
 	- libtext can now read text from a file and from a pipe/command.

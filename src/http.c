@@ -144,15 +144,15 @@ readlineerr:
 		switch (ret)
 		{
 		case -1:
-			log_log("Read error on connection from %s:%i (%s)\n",
+			log_log(MODNAME, "Read error on connection from %s:%i (%s)\n",
 				socket_ip(&http_peer.peer), socket_port(&http_peer.peer), strerror(errno));
 			break;
 		case -2:
-			log_log("Timeout on connection from %s:%i\n",
+			log_log(MODNAME, "Timeout on connection from %s:%i\n",
 				socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
 			break;
 		case -3:
-			log_log("EOF on connection from %s:%i before full HTTP request was received\n",
+			log_log(MODNAME, "EOF on connection from %s:%i before full HTTP request was received\n",
 				socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
 			break;
 		}
@@ -161,7 +161,7 @@ readlineerr:
 	
 	if (strncmp("GET ", buf, 4))
 	{
-		log_log("Invalid HTTP request (not GET) from %s:%i\n",
+		log_log(MODNAME, "Invalid HTTP request (not GET) from %s:%i\n",
 			socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
 		goto closenout;
 	}
