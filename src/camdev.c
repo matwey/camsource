@@ -115,23 +115,36 @@ closenerr:
 		goto closenerr;
 	vidwin.width = x;
 	vidwin.height = y;
-		
+
 	vidwin.flags |= (fps & 0x3f) << 16;
-	
+
 	ret = ioctl(newcamdev.fd, VIDIOCSWIN, &vidwin);
 	if (ret != 0)
 	{
 		printf("ioctl \"set grab window\" failed: %s\n", strerror(errno));
-		printf("Check your <camdev> config section for width/height and fps settings\n");
-		goto closenerr;
+		printf("Trying again without the fps option...\n");
+		
+		vidwin.flags &= ~(0x3f << 16);
+		ret = ioctl(newcamdev.fd, VIDIOCSWIN, &vidwin);
+		
+		if (!ret) {
+			printf("ioctl \"set grab window\" succeeded without fps option.\n");
+			printf("This probably means that your driver doesn't support setting");
+			printf("the fps, and you should remove the <fps> tag from your");
+			printf("config file.\n");
+		}
+		else {
+			printf("ioctl \"set grab window\" failed again: %s\n", strerror(errno));
+			printf("Check your <camdev> config section for width/height and fps settings.\n");
+			printf("In case your driver simply doesn't support overlaying (e.g. meye),\n");
+			printf("we will continue anyway and hope that everything goes ok.\n");
+		}
 	}
-	ret = ioctl(newcamdev.fd, VIDIOCGWIN, &vidwin);
-	if (ret != 0)
-	{
-		printf("ioctl \"get grab window\" failed: %s\n", strerror(errno));
-		goto closenerr;
+	else {
+		ret = ioctl(newcamdev.fd, VIDIOCGWIN, &vidwin);
+		if (!ret)
+			ioctl(newcamdev.fd, VIDIOCSWIN, &vidwin);
 	}
-	ioctl(newcamdev.fd, VIDIOCSWIN, &vidwin);
 	newcamdev.x = vidwin.width;
 	newcamdev.y = vidwin.height;
 	

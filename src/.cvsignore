@@ -26,4 +26,5 @@ rotate.lo
 librotate.la
 bw.lo
 libbw.la
-
+libvloopback.la
+vloopback.lo

@@ -82,7 +82,7 @@ bin_PROGRAMS = camsource
 pkglib_LTLIBRARIES = libwc_serv.la libjpeg_comp.la libflip.la \
 	libresize.la libsocket.la libhttp.la libfilewrite.la \
 	libftpup.la libtext.la librgbbgr.la librotate.la \
-	libbw.la
+	libbw.la libvloopback.la
 
 
 pkginclude_HEADERS = camdev.h configfile.h filter.h grab.h \
@@ -109,6 +109,7 @@ libtext_la_SOURCES = text.c text.h font_6x11.h
 librgbbgr_la_SOURCES = rgbbgr.c
 librotate_la_SOURCES = rotate.c
 libbw_la_SOURCES = bw.c
+libvloopback_la_SOURCES = vloopback.c
 subdir = src
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
@@ -158,6 +159,10 @@ libtext_la_LDFLAGS =
 libtext_la_LIBADD =
 am_libtext_la_OBJECTS = text.lo
 libtext_la_OBJECTS = $(am_libtext_la_OBJECTS)
+libvloopback_la_LDFLAGS =
+libvloopback_la_LIBADD =
+am_libvloopback_la_OBJECTS = vloopback.lo
+libvloopback_la_OBJECTS = $(am_libvloopback_la_OBJECTS)
 libwc_serv_la_LDFLAGS =
 libwc_serv_la_LIBADD =
 am_libwc_serv_la_OBJECTS = wc_serv.lo
@@ -190,7 +195,8 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/resize.Plo $(DEPDIR)/rgbbgr.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/rotate.Plo $(DEPDIR)/socket.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/text.Plo $(DEPDIR)/unpalette.Po \
-@AMDEP_TRUE@	$(DEPDIR)/wc_serv.Plo $(DEPDIR)/xmlhelp.Po
+@AMDEP_TRUE@	$(DEPDIR)/vloopback.Plo $(DEPDIR)/wc_serv.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/xmlhelp.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
@@ -204,12 +210,12 @@ DIST_SOURCES = $(libbw_la_SOURCES) $(libfilewrite_la_SOURCES) \
 	$(libhttp_la_SOURCES) $(libjpeg_comp_la_SOURCES) \
 	$(libresize_la_SOURCES) $(librgbbgr_la_SOURCES) \
 	$(librotate_la_SOURCES) $(libsocket_la_SOURCES) \
-	$(libtext_la_SOURCES) $(libwc_serv_la_SOURCES) \
-	$(camsource_SOURCES)
+	$(libtext_la_SOURCES) $(libvloopback_la_SOURCES) \
+	$(libwc_serv_la_SOURCES) $(camsource_SOURCES)
 HEADERS = $(pkginclude_HEADERS)
 
 DIST_COMMON = $(pkginclude_HEADERS) Makefile.am Makefile.in
-SOURCES = $(libbw_la_SOURCES) $(libfilewrite_la_SOURCES) $(libflip_la_SOURCES) $(libftpup_la_SOURCES) $(libhttp_la_SOURCES) $(libjpeg_comp_la_SOURCES) $(libresize_la_SOURCES) $(librgbbgr_la_SOURCES) $(librotate_la_SOURCES) $(libsocket_la_SOURCES) $(libtext_la_SOURCES) $(libwc_serv_la_SOURCES) $(camsource_SOURCES)
+SOURCES = $(libbw_la_SOURCES) $(libfilewrite_la_SOURCES) $(libflip_la_SOURCES) $(libftpup_la_SOURCES) $(libhttp_la_SOURCES) $(libjpeg_comp_la_SOURCES) $(libresize_la_SOURCES) $(librgbbgr_la_SOURCES) $(librotate_la_SOURCES) $(libsocket_la_SOURCES) $(libtext_la_SOURCES) $(libvloopback_la_SOURCES) $(libwc_serv_la_SOURCES) $(camsource_SOURCES)
 
 all: all-am
 
@@ -272,6 +278,8 @@ libsocket.la: $(libsocket_la_OBJECTS) $(libsocket_la_DEPENDENCIES)
 	$(LINK) -rpath $(pkglibdir) $(libsocket_la_LDFLAGS) $(libsocket_la_OBJECTS) $(libsocket_la_LIBADD) $(LIBS)
 libtext.la: $(libtext_la_OBJECTS) $(libtext_la_DEPENDENCIES) 
 	$(LINK) -rpath $(pkglibdir) $(libtext_la_LDFLAGS) $(libtext_la_OBJECTS) $(libtext_la_LIBADD) $(LIBS)
+libvloopback.la: $(libvloopback_la_OBJECTS) $(libvloopback_la_DEPENDENCIES) 
+	$(LINK) -rpath $(pkglibdir) $(libvloopback_la_LDFLAGS) $(libvloopback_la_OBJECTS) $(libvloopback_la_LIBADD) $(LIBS)
 libwc_serv.la: $(libwc_serv_la_OBJECTS) $(libwc_serv_la_DEPENDENCIES) 
 	$(LINK) -rpath $(pkglibdir) $(libwc_serv_la_LDFLAGS) $(libwc_serv_la_OBJECTS) $(libwc_serv_la_LIBADD) $(LIBS)
 install-binPROGRAMS: $(bin_PROGRAMS)
@@ -328,6 +336,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/socket.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/text.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/unpalette.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/vloopback.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/wc_serv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/xmlhelp.Po@am__quote@
 

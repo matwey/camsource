@@ -1,5 +1,13 @@
 <?xml version="1.0"?>
 <!-- $Id$ -->
+
+<!--
+	As there isn't any real documentation, this file is how to find out
+	how to configure and use camsource. Most of it is module and filter
+	config, but the first part (<camdev>) is crucial if you're having
+	any kind of problems, so be sure you read it carefully.
+-->
+
 <camsourceconfig>
 
 	<!-- Global config options -->
@@ -12,7 +20,9 @@
 			channel. Note that not all hardware supports
 			every frame size, and not all hardware supports
 			setting the frame rate (and if it does, not
-			all frame rates are supported either).
+			all frame rates are supported either). You will
+			see a warning message if any of the settings here
+			are incorrect.
 			
 			- Path defaults to /dev/video0.
 			- Width and height default to the maximum size
@@ -290,6 +300,22 @@
 		<interval unit="sec">30</interval>
 
 		<jpegqual>75</jpegqual>
+		<filter name="text"/>
+	</module>
+	
+	<module name="vloopback" active="no">
+		<!--
+			This module is able to act as an input channel
+			for the kernel video loopback device driver,
+			available from <http://tibit.org/video/>. This
+			lets you run camsource on your "real" video device
+			and at the same time other v4l programs on the
+			looped back device.
+		-->
+		<width>640</width>
+		<height>480</height>
+		<device>/dev/video1</device>
+		
 		<filter name="text"/>
 	</module>
 
