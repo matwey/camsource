@@ -137,14 +137,14 @@ handle_conn(void *arg)
 		{
 			ret = read(peer.peer.fd, &c, 1);
 			if (ret != 1)
-			{
-				close(peer.peer.fd);
-				return NULL;
-			}
+				goto closenout;	/* break; break; */
 		}
 		while (c == '\r');
 		
-		if (c == '\n' && first)
+		if (c != '\n')
+			break;
+		
+		if (first)
 		{
 			/* The webcam_server java applet has a bug in that
 			 * it sends two linefeeds before displaying the first
@@ -173,14 +173,10 @@ handle_conn(void *arg)
 		
 		image_destroy(&curimg);
 		free(jpegimg.buf);
-		if (c != '\n')
-		{
-			sleep(1);
-			close(peer.peer.fd);
-			return NULL;
-		}
 	}
-	
+
+closenout:
+	close(peer.peer.fd);
 	return NULL;
 }
 
