@@ -267,11 +267,12 @@ grab_thread(void *arg)
 		
 		firecmd(thread, 1);
 		
-		image_new(&newimg, thread->gcamdev.x, thread->gcamdev.y);
 		rawimg = thread->input(&thread->gcamdev);
+		image_new(&newimg, thread->gcamdev.x, thread->gcamdev.y);
 		thread->gcamdev.pal->routine(&newimg, rawimg);
 		
 		grab_glob_filters(&newimg);
+		filter_apply(&newimg, thread->node);
 
 		pthread_mutex_lock(&thread->curimg.mutex);
 		image_move(&thread->curimg.img, &newimg);

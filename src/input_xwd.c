@@ -76,7 +76,7 @@ struct xwdheader {
 
 
 
-static int xwd_grab(char *, unsigned char *);
+static int xwd_grab(struct grab_camdev *, unsigned char *);
 
 
 
@@ -94,10 +94,6 @@ opendev(xmlNodePtr node, struct grab_camdev *gcamdev)
 		return -1;
 	}
 	
-	gcamdev->pal = palettes + 1;
-	gcamdev->x = 1280;
-	gcamdev->y = 960;
-	
 	return 0;
 }
 
@@ -106,14 +102,14 @@ input(struct grab_camdev *gcamdev)
 {
 	static unsigned char xbuf[10*1024*1024];
 	
-	xwd_grab(gcamdev->name, xbuf);
+	xwd_grab(gcamdev, xbuf);
 	
 	return xbuf;
 }
 
 static
 int
-xwd_grab(char *cmd, unsigned char *output)
+xwd_grab(struct grab_camdev *gcamdev, unsigned char *output)
 {
 	FILE *pp;
 	int ret;
@@ -123,9 +119,9 @@ xwd_grab(char *cmd, unsigned char *output)
 	unsigned char *abuf;
 	int readlen;
 
-	pp = popen(cmd, "r");
+	pp = popen(gcamdev->name, "r");
 	if (!pp) {
-		log_log(MODNAME, "failed to run cmd '%s' from pipe: %s\n", cmd, strerror(errno));
+		log_log(MODNAME, "failed to run cmd '%s' from pipe: %s\n", gcamdev->name, strerror(errno));
 		return -1;
 	}
 	
@@ -134,11 +130,11 @@ xwd_grab(char *cmd, unsigned char *output)
 	if (ret != 1) {
 readerr:
 		if (ret < 0)
-			log_log(MODNAME, "error while reading from %s pipe: %s\n", cmd, strerror(errno));
+			log_log(MODNAME, "error while reading from %s pipe: %s\n", gcamdev->name, strerror(errno));
 		else if (ret == 0)
-			log_log(MODNAME, "eof while reading from %s pipe\n", cmd);
+			log_log(MODNAME, "eof while reading from %s pipe\n", gcamdev->name);
 		else
-			log_log(MODNAME, "short read from %s pipe: %i items\n", cmd, ret);
+			log_log(MODNAME, "short read from %s pipe: %i items\n", gcamdev->name, ret);
 		
 killcloseout:
 		/* should forcefully kill the child here */
@@ -148,20 +144,20 @@ killcloseout:
 	
 	xwdh.file_version = ntohl(xwdh.file_version);
 	if (xwdh.file_version != 7) {
-		log_log(MODNAME, "%s output doesn't seem to be in proper xwd format\n", cmd);
+		log_log(MODNAME, "%s output doesn't seem to be in proper xwd format\n", gcamdev->name);
 		goto killcloseout;
 	}
 	
 	xwdh.header_size = ntohl(xwdh.header_size);
 	namelen = xwdh.header_size - sizeof(xwdh); 
 	if (namelen <= 0 || namelen >= sizeof(buf)) {
-		log_log(MODNAME, "%s output has an xwd headersize which doesnt make sense (%i)\n", cmd, xwdh.header_size);
+		log_log(MODNAME, "%s output has an xwd headersize which doesnt make sense (%i)\n", gcamdev->name, xwdh.header_size);
 		goto killcloseout;
 	}
 	
 	xwdh.pixmap_format = ntohl(xwdh.pixmap_format);
 	if (xwdh.pixmap_format != 1 && xwdh.pixmap_format != 2) {
-		log_log(MODNAME, "unsupported xwd format from %s\n", cmd);
+		log_log(MODNAME, "unsupported xwd format from %s\n", gcamdev->name);
 		goto killcloseout;
 	}
 	
@@ -170,7 +166,7 @@ killcloseout:
 	if (xwdh.pixmap_depth != 24
 		|| (xwdh.bits_per_pixel != 32 && xwdh.bits_per_pixel != 24))
 	{
-		log_log(MODNAME, "unsupported xwd format from %s\n", cmd);
+		log_log(MODNAME, "unsupported xwd format from %s\n", gcamdev->name);
 		goto killcloseout;
 	}
 	
@@ -192,31 +188,16 @@ freereaderr:
 	xwdh.bytes_per_line = ntohl(xwdh.bytes_per_line);
 	readlen = xwdh.bytes_per_line * (xwdh.pixmap_height - 1) + xwdh.pixmap_width * (xwdh.bits_per_pixel / 8);
 	
-	abuf = malloc(readlen);
-	if ((ret = fread(abuf, readlen, 1, pp)) != 1)
+	gcamdev->x = xwdh.pixmap_width;
+	gcamdev->y = xwdh.pixmap_height;
+	if (xwdh.bits_per_pixel == 24)
+		gcamdev->pal = palettes;
+	else
+		gcamdev->pal = palettes + 2;
+	
+	if ((ret = fread(output, readlen, 1, pp)) != 1)
 		goto freereaderr;
 	
-	{
-		unsigned char *readp, *writep;
-		int x, y;
-		int elsize;
-		
-		elsize = xwdh.bits_per_pixel / 8;
-		readp = abuf;
-		writep = output;
-		for (y = 0; y < xwdh.pixmap_height; y++) {
-			readp += xwdh.pixmap_width * elsize;
-			for (x = 0; x < xwdh.pixmap_width; x++) {
-				readp -= elsize;
-				*writep++ = readp[2];
-				*writep++ = readp[1];
-				*writep++ = readp[0];
-			}
-			readp += xwdh.bytes_per_line;
-		}
-	}
-	
-	free(abuf);
 	pclose(pp);
 	
 	return 0;

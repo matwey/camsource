@@ -87,6 +87,18 @@
 		-->
 		<!-- <cmd>~/bin/grabevent.sh</cmd>
 		<cmdtimeout>5</cmdtimeout> -->
+		
+		<!--
+			Filters specified here will be applied to every framed grabbed
+			by this device. More information about filters and filter
+			modules can be found below. There is also a section with filters
+			to apply to every frame, independent of device.
+		-->
+
+		<filter name="flip">
+			<horiz>yes</horiz>
+			<vert>no</vert>
+		</filter>
 	</camdev>
 	
 	<!--
@@ -273,21 +285,20 @@
 			<filter name="text"/>
 		</vpath>
 		
-		<vpath>
+		<!-- This example also shows how to deactivate
+		     one vpath -->
+		<vpath active="no">
 			<!-- You can use the <grabdev> tag here too -->
 			<grabdev>second</grabdev>
 			<path>/othercam</path>
-			<!-- This example also shows how to deactivate
-			     one vpath -->
-			<disable>yes</disable>
 		</vpath>
 		
-		<vpath>
+		<vpath active="yes">
 			<grabdev>xwd</grabdev>
 			<path>/test</path>
 		</vpath>
 		
-		<vpath>
+		<vpath active="yes">
 			<!--
 				You can make the http module serve raw
 				image data instead of jpegs with the
@@ -300,7 +311,6 @@
 			-->
 			<path>/raw</path>
 			<raw>yes</raw>
-			<disable>no</disable>
 		</vpath>
 	</module>
 	
@@ -578,11 +588,11 @@
 		Filters are always applied in order. You can
 		give the same filter multiple times to apply
 		it to the image several times.
+		
+		Global filters are applied first, then per-device
+		filters (given in the <camdev> sections), then any
+		possible per-module filters.
 	-->
-	<filter name="flip">
-		<horiz>yes</horiz>
-		<vert>no</vert>
-	</filter>
 	
 	<!-- Module not active by default -->
 	<filter name="rgbbgr"/>

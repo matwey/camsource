@@ -324,6 +324,11 @@ int
 http_path_ismatch(xmlNodePtr node, char *path)
 {
 	int ret = 0;
+	char *active;
+	
+	active = xml_attrval(node, "active");
+	if (active && strcmp(active, "yes"))
+		return 0;
 	
 	for (node = node->xml_children; node; node = node->next)
 	{
