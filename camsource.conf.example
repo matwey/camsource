@@ -140,7 +140,7 @@
 		as input to camsource. Currently this plugin only supports
 		xwd dumps with 24 or 32 bits per pixel.
 	-->
-	<camdev name="xwd" active="yes">
+	<camdev name="xwd" active="no">
 		<plugin>input_xwd</plugin>
 		<command>DISPLAY=:0 /usr/X11R6/bin/xwd -root -silent</command>
 	</camdev>
@@ -176,7 +176,7 @@
 	<module name="input_v4l" active="yes"/>
 	
 	<!-- This is the xwd input plugin referenced above. -->
-	<module name="input_xwd" active="yes"/>
+	<module name="input_xwd" active="no"/>
 	
 	
 	
@@ -336,7 +336,7 @@
 			<path>/othercam</path>
 		</vpath>
 		
-		<vpath active="yes">
+		<vpath active="no">
 			<grabdev>xwd</grabdev>
 			<path>/screenshot</path>
 			<jpegqual>40</jpegqual>
@@ -344,7 +344,7 @@
 			<auth>screen:shot</auth>
 		</vpath>
 
-		<vpath active="yes">
+		<vpath active="no">
 			<grabdev>xwd</grabdev>
 			<path>/smallshot</path>
 			<jpegqual>40</jpegqual>
