@@ -84,3 +84,12 @@
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
+
+/* libxml1/2 compatibility */
+#undef xml_attrnode
+
+/* libxml1/2 compatibility */
+#undef xml_children
+
+/* libxml1/2 compatibility */
+#undef xml_rootnode

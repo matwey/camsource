@@ -12,7 +12,7 @@
 #define MODNAME "rotate"
 
 char *name = MODNAME;
-char *version = PACKAGE_VERSION;
+char *version = VERSION;
 
 int
 filter(struct image *img, xmlNodePtr node)
@@ -25,7 +25,7 @@ filter(struct image *img, xmlNodePtr node)
 	
 	direct = -1;
 	
-	for (node = node->children; node; node = node->next)
+	for (node = node->xml_children; node; node = node->next)
 	{
 		if (xml_isnode(node, "direction"))
 		{

@@ -16,7 +16,7 @@ filter_apply(struct image *img, xmlNodePtr node)
 	char *filtername;
 	int (*filter)(struct image *, xmlNodePtr);
 	
-	for (node = node->children; node; node = node->next)
+	for (node = node->xml_children; node; node = node->next)
 	{
 		if (!xml_isnode(node, "filter"))
 			continue;

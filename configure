@@ -9651,13 +9651,53 @@ if test $? -eq 0; then
 echo "${ECHO_T}yes, $XMLVER" >&6
 	CFLAGS="$CFLAGS $(echo $(xml2-config --cflags))"
 	LDFLAGS="$LDFLAGS $(echo $(xml2-config --cflags --libs))"
+
+cat >>confdefs.h <<\_ACEOF
+#define xml_children children
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define xml_attrnode children
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define xml_rootnode children
+_ACEOF
+
 else
 	XMLVER=$(xml-config --version 2> /dev/null)
 	if test $? -eq 0; then
 		echo "$as_me:$LINENO: result: yes, $XMLVER" >&5
 echo "${ECHO_T}yes, $XMLVER" >&6
-		CFLAGS="$CFLAGS $(echo $(xml-config --cflags))"
+		XMLCFLAGS=$(echo $(xml-config --cflags))
+		CFLAGS="$CFLAGS $XMLCFLAGS"
 		LDFLAGS="$LDFLAGS $(echo $(xml-config --cflags --libs))"
+
+cat >>confdefs.h <<\_ACEOF
+#define xml_children childs
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define xml_attrnode val
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define xml_rootnode root
+_ACEOF
+
+		XMLIDIR=$(echo "$XMLCFLAGS" | sed -e 's/^.*-I *//' | cut -d' ' -f1)
+		if test -d "$XMLIDIR"; then
+			{ echo "$as_me:$LINENO: creating auxiliary libxml/ symlink for libxml1 compatibility" >&5
+echo "$as_me: creating auxiliary libxml/ symlink for libxml1 compatibility" >&6;}
+			if test -L libxml; then
+				rm -f libxml
+			fi
+			ln -s "$XMLIDIR" libxml
+		fi
 	else
 		echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6

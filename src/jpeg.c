@@ -26,7 +26,7 @@ struct jpeg_ctx
 };
 
 char *name = "jpeg_comp";
-char *version = PACKAGE_VERSION;
+char *version = VERSION;
 
 static int defqual;
 
@@ -41,7 +41,7 @@ init(struct module_ctx *ctx)
 	node = ctx->node;
 	if (node)
 	{
-		for (node = node->children; node; node = node->next)
+		for (node = node->xml_children; node; node = node->next)
 		{
 			if (xml_isnode(node, "quality"))
 				defqual = xml_atoi(node, defqual);
@@ -94,7 +94,7 @@ jpeg_compress(struct jpegbuf *dst, const struct image *src, xmlNodePtr node)
 	qual = defqual;
 	if (node)
 	{
-		for (node = node->children; node; node = node->next)
+		for (node = node->xml_children; node; node = node->next)
 		{
 			if (xml_isnode(node, "jpegqual")
 				|| xml_isnode(node, "jpgqual")

@@ -15,5 +15,8 @@ int xml_atoi(xmlNodePtr, int);
 /* Returns the value of the given attribute of the given node */
 char *xml_attrval(xmlNodePtr, char *);
 
+/* Returns the root node of a doc, provided for compatibility */
+xmlNodePtr xml_root(xmlDocPtr);
+
 #endif
 

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <dlfcn.h>
 #include <pthread.h>
 #include <string.h>
@@ -43,8 +44,8 @@ mod_load_all()
 	char *modname, *loadyn;
 	
 	modidx = 0;
-	node = xmlDocGetRootElement(configdoc);
-	for (node = node->children; node; node = node->next)
+	node = xml_root(configdoc);
+	for (node = node->xml_children; node; node = node->next)
 	{
 		if (!xml_isnode(node, "module"))
 			continue;
@@ -330,8 +331,8 @@ mod_find_config(char *mod)
 	xmlNodePtr node;
 	char *modname, *alias;
 	
-	node = xmlDocGetRootElement(configdoc);
-	for (node = node->children; node; node = node->next)
+	node = xml_root(configdoc);
+	for (node = node->xml_children; node; node = node->next)
 	{
 		if (!xml_isnode(node, "module"))
 			continue;

@@ -9,7 +9,7 @@
 #include "xmlhelp.h"
 
 char *name = "flip";
-char *version = PACKAGE_VERSION;
+char *version = VERSION;
 
 int
 filter(struct image *img, xmlNodePtr node)
@@ -22,7 +22,7 @@ filter(struct image *img, xmlNodePtr node)
 	
 	h = v = 0;
 	
-	for (node = node->children; node; node = node->next)
+	for (node = node->xml_children; node; node = node->next)
 	{
 		if (xml_isnode(node, "horiz"))
 		{

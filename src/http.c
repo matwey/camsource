@@ -27,7 +27,7 @@ static void http_err(struct peer *, char *);
 static int http_get_fps(xmlNodePtr);
 
 char *name = MODNAME;
-char *version = PACKAGE_VERSION;
+char *version = VERSION;
 char *deps[] =
 {
 	"jpeg_comp",
@@ -99,7 +99,7 @@ http_load_conf(struct http_ctx *ctx, xmlNodePtr node)
 	ctx->listen_fd = -1;
 	ctx->port = 9192;
 	
-	for (node = node->children; node; node = node->next)
+	for (node = node->xml_children; node; node = node->next)
 	{
 		if (xml_isnode(node, "port"))
 			ctx->port = xml_atoi(node, ctx->port);
@@ -195,7 +195,7 @@ readlineerr:
 	log_log(MODNAME, "Request for %s from %s:%i\n",
 		url, socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
 
-	for (subnode = http_peer.mod_ctx->node->children; subnode; subnode = subnode->next)
+	for (subnode = http_peer.mod_ctx->node->xml_children; subnode; subnode = subnode->next)
 	{
 		if (!xml_isnode(subnode, "vpath"))
 			continue;
@@ -285,7 +285,7 @@ static
 int
 http_path_ismatch(xmlNodePtr node, char *path)
 {
-	for (node = node->children; node; node = node->next)
+	for (node = node->xml_children; node; node = node->next)
 	{
 		if (!xml_isnode(node, "path"))
 			continue;
@@ -320,7 +320,7 @@ static
 int
 http_get_fps(xmlNodePtr node)
 {
-	for (node = node->children; node; node = node->next)
+	for (node = node->xml_children; node; node = node->next)
 	{
 		if (xml_isnode(node, "fps"))
 			return xml_atoi(node, 0);

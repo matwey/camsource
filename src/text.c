@@ -34,7 +34,7 @@ static struct text_ctx text_gctx;
 #define MODNAME "text"
 
 char *name = MODNAME;
-char *version = PACKAGE_VERSION;
+char *version = VERSION;
 
 int
 init(struct module_ctx *mctx)
@@ -137,7 +137,7 @@ text_conf(struct text_ctx *ctx, xmlNodePtr node)
 	if (!node)
 		return 0;
 	
-	for (node = node->children; node; node = node->next)
+	for (node = node->xml_children; node; node = node->next)
 	{
 		if (xml_isnode(node, "text"))
 			text_text(ctx, node, 0);

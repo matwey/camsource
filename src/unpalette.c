@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <sys/types.h>
 #include <linux/videodev.h>
 
 #include "config.h"

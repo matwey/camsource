@@ -26,7 +26,7 @@
 static int fw_load_conf(struct fw_ctx *, xmlNodePtr);
 
 char *name = MODNAME;
-char *version = PACKAGE_VERSION;
+char *version = VERSION;
 char *deps[] =
 {
 	"jpeg_comp",
@@ -161,7 +161,7 @@ fw_load_conf(struct fw_ctx *fctx, xmlNodePtr node)
 	memset(fctx, 0, sizeof(*fctx));
 	fctx->chmod = -1;
 	
-	for (node = node->children; node; node = node->next)
+	for (node = node->xml_children; node; node = node->next)
 	{
 		if (xml_isnode(node, "path"))
 			fctx->path = xml_getcontent(node);

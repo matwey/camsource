@@ -29,7 +29,7 @@ static int ftpup_create_data_conn(struct ftpup_ctx *);
 #define MODNAME "ftpup"
 
 char *name = MODNAME;
-char *version = PACKAGE_VERSION;
+char *version = VERSION;
 char *deps[] =
 {
 	"jpeg_comp",
@@ -188,7 +188,7 @@ ftpup_load_conf(struct ftpup_ctx *fctx, xmlNodePtr node)
 	fctx->user = "anonymous";
 	fctx->pass = "camsource@";
 	
-	for (node = node->children; node; node = node->next)
+	for (node = node->xml_children; node; node = node->next)
 	{
 		if (xml_isnode(node, "host"))
 			fctx->host = xml_getcontent(node);

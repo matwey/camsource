@@ -3,6 +3,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -28,7 +29,7 @@ static int wc_load_config(struct wc_ctx *, xmlNodePtr);
 static void *wc_handle_conn(void *);
 
 char *name = MODNAME;
-char *version = PACKAGE_VERSION;
+char *version = VERSION;
 char *deps[] =
 {
 	"jpeg_comp",
@@ -94,7 +95,7 @@ wc_load_config(struct wc_ctx *ctx, xmlNodePtr node)
 	if (!node)
 		return 0;
 	
-	for (node = node->children; node; node = node->next)
+	for (node = node->xml_children; node; node = node->next)
 	{
 		if (xml_isnode(node, "port"))
 			ctx->port = xml_atoi(node, ctx->port);

@@ -12,7 +12,7 @@ xml_isnode(xmlNodePtr node, const char *str)
 		return 0;
 	if (node->type != XML_ELEMENT_NODE)
 		return 0;
-	if (xmlStrEqual(node->name, str))
+	if (!strcmp(node->name, str))
 		return 1;
 	return 0;
 }
@@ -22,11 +22,11 @@ xml_getcontent(xmlNodePtr node)
 {
 	if (!node
 		|| node->type != XML_ELEMENT_NODE
-		|| !node->children
-		|| node->children->type != XML_TEXT_NODE
-		|| !node->children->content)
+		|| !node->xml_children
+		|| node->xml_children->type != XML_TEXT_NODE
+		|| !node->xml_children->content)
 		return NULL;
-	return node->children->content;
+	return node->xml_children->content;
 }
 
 char *
@@ -64,9 +64,32 @@ xml_attrval(xmlNodePtr node, char *attr)
 	
 	if (!node || node->type != XML_ELEMENT_NODE)
 		return NULL;
-	ap = xmlHasProp(node, attr);
-	if (!ap || !ap->children || !ap->children->content)
+	for (ap = node->properties; ap; ap = ap->next)
+	{
+		if (!strcmp(ap->name, attr))
+			goto found;
+	}
+	return NULL;
+found:
+	if (!ap->xml_attrnode || !ap->xml_attrnode->content)
 		return NULL;
-	return ap->children->content;
+	return ap->xml_attrnode->content;
+}
+
+xmlNodePtr
+xml_root(xmlDocPtr doc)
+{
+	xmlNodePtr node;
+	
+	if (!doc)
+		return NULL;
+	
+	for (node = doc->xml_rootnode; node; node = node->next)
+	{
+		if (node->type == XML_ELEMENT_NODE)
+			return node;
+	}
+	
+	return NULL;
 }
 

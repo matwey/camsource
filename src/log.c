@@ -20,11 +20,11 @@ log_open()
 	xmlNodePtr node;
 	char *file;
 	
-	node = xmlDocGetRootElement(configdoc);
+	node = xml_root(configdoc);
 	if (!node)
 		return -1;
 	
-	for (node = node->children; node; node = node->next)
+	for (node = node->xml_children; node; node = node->next)
 	{
 		if (xml_isnode(node, "logfile"))
 			goto found;	/* break */

@@ -34,12 +34,27 @@ if test $? -eq 0; then
 	AC_MSG_RESULT([yes, $XMLVER])
 	CFLAGS="$CFLAGS $(echo $(xml2-config --cflags))"
 	LDFLAGS="$LDFLAGS $(echo $(xml2-config --cflags --libs))"
+	AC_DEFINE(xml_children, children, [libxml1/2 compatibility])
+	AC_DEFINE(xml_attrnode, children, [libxml1/2 compatibility])
+	AC_DEFINE(xml_rootnode, children, [libxml1/2 compatibility])
 else
 	XMLVER=$(xml-config --version 2> /dev/null)
 	if test $? -eq 0; then
 		AC_MSG_RESULT([yes, $XMLVER])
-		CFLAGS="$CFLAGS $(echo $(xml-config --cflags))"
+		XMLCFLAGS=$(echo $(xml-config --cflags))
+		CFLAGS="$CFLAGS $XMLCFLAGS"
 		LDFLAGS="$LDFLAGS $(echo $(xml-config --cflags --libs))"
+		AC_DEFINE(xml_children, childs, [libxml1/2 compatibility])
+		AC_DEFINE(xml_attrnode, val, [libxml1/2 compatibility])
+		AC_DEFINE(xml_rootnode, root, [libxml1/2 compatibility])
+		XMLIDIR=$(echo "$XMLCFLAGS" | sed -e 's/^.*-I *//' | cut -d' ' -f1)
+		if test -d "$XMLIDIR"; then
+			AC_MSG_NOTICE([creating auxiliary libxml/ symlink for libxml1 compatibility])
+			if test -L libxml; then
+				rm -f libxml
+			fi
+			ln -s "$XMLIDIR" libxml
+		fi
 	else
 		AC_MSG_RESULT(no)
 		AC_MSG_ERROR([Could not find libxml])

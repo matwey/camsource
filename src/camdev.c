@@ -34,7 +34,7 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 	
 	if (node)
 	{
-		for (node = node->children; node; node = node->next)
+		for (node = node->xml_children; node; node = node->next)
 		{
 			if (xml_isnode(node, "path"))
 				path = xml_getcontent_def(node, path);

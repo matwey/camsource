@@ -68,8 +68,8 @@ config_load()
 	configdoc = xmlParseFile(ourconfig);
 	if (!configdoc)
 		return -1;
-		
-	node = xmlDocGetRootElement(configdoc);
+	
+	node = xml_root(configdoc);
 	if (!xml_isnode(node, "camsourceconfig"))
 	{
 		printf("Root node isn't 'camsourceconfig'\n");

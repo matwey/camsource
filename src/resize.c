@@ -14,7 +14,7 @@
 static int resize_get_dim(struct image *, xmlNodePtr);
 
 char *name = MODNAME;
-char *version = PACKAGE_VERSION;
+char *version = VERSION;
 
 int
 filter(struct image *img, xmlNodePtr node)
@@ -61,7 +61,7 @@ resize_get_dim(struct image *img, xmlNodePtr node)
 {
 	int scale;
 	
-	for (node = node->children; node; node = node->next)
+	for (node = node->xml_children; node; node = node->next)
 	{
 		if (xml_isnode(node, "width"))
 			img->x = xml_atoi(node, img->x);

@@ -1,6 +1,7 @@
 #ifndef _CAMDEV_H_
 #define _CAMDEV_H_
 
+#include <sys/types.h>
 #include <linux/videodev.h>
 #include <libxml/parser.h>
 

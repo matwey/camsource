@@ -1,5 +1,8 @@
 $Id$
 
+Sep 26 2002
+	- Fixed various compilation issues, including compatibility with libxml1.
+
 Sep 25 2002
 	- Added version information to modules
 

@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -73,8 +74,8 @@ grab_open()
 	
 	camdev = malloc(sizeof(*camdev));
 
-	node = xmlDocGetRootElement(configdoc);
-	for (node = node->children; node; node = node->next)
+	node = xml_root(configdoc);
+	for (node = node->xml_children; node; node = node->next)
 	{
 		if (xml_isnode(node, "camdev"))
 		{
@@ -141,7 +142,7 @@ grab_glob_filters(struct image *img)
 {
 	xmlNodePtr node;
 
-	node = xmlDocGetRootElement(configdoc);
+	node = xml_root(configdoc);
 	filter_apply(img, node);
 }
 
