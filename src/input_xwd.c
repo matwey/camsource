@@ -76,7 +76,14 @@ struct xwdheader {
 
 
 
-static int xwd_grab(struct grab_camdev *, unsigned char *);
+struct xwd_ctx {
+	unsigned char *buf;
+	unsigned int bufsize;
+};
+
+
+
+static int xwd_grab(struct grab_camdev *);
 
 
 
@@ -94,22 +101,23 @@ opendev(xmlNodePtr node, struct grab_camdev *gcamdev)
 		return -1;
 	}
 	
+	gcamdev->custom = malloc(sizeof(struct xwd_ctx));
+	memset(gcamdev->custom, 0, sizeof(struct xwd_ctx));
+	
 	return 0;
 }
 
 unsigned char *
 input(struct grab_camdev *gcamdev)
 {
-	static unsigned char xbuf[10*1024*1024];
+	xwd_grab(gcamdev);
 	
-	xwd_grab(gcamdev, xbuf);
-	
-	return xbuf;
+	return ((struct xwd_ctx *) gcamdev->custom)->buf;
 }
 
 static
 int
-xwd_grab(struct grab_camdev *gcamdev, unsigned char *output)
+xwd_grab(struct grab_camdev *gcamdev)
 {
 	FILE *pp;
 	int ret;
@@ -117,7 +125,8 @@ xwd_grab(struct grab_camdev *gcamdev, unsigned char *output)
 	struct xwdheader xwdh;
 	int namelen;
 	unsigned char *abuf;
-	int readlen;
+	int readlen, outputlen, linelen;
+	unsigned char *readp, *writep, *endp;
 
 	pp = popen(gcamdev->name, "r");
 	if (!pp) {
@@ -190,15 +199,39 @@ freereaderr:
 	
 	gcamdev->x = xwdh.pixmap_width;
 	gcamdev->y = xwdh.pixmap_height;
-	if (xwdh.bits_per_pixel == 24)
+	if (xwdh.bits_per_pixel == 24) {
 		gcamdev->pal = palettes;
-	else
+		linelen = xwdh.pixmap_width * 3;
+	}
+	else {
 		gcamdev->pal = palettes + 2;
+		linelen = xwdh.pixmap_width * 4;
+	}
+	outputlen = linelen * xwdh.pixmap_height;
 	
-	if ((ret = fread(output, readlen, 1, pp)) != 1)
+	if (((struct xwd_ctx *) gcamdev->custom)->bufsize != outputlen) {
+		free(((struct xwd_ctx *) gcamdev->custom)->buf);
+		((struct xwd_ctx *) gcamdev->custom)->buf = malloc(outputlen);
+		((struct xwd_ctx *) gcamdev->custom)->bufsize = outputlen;
+	}
+	
+	abuf = malloc(readlen);
+	
+	if ((ret = fread(abuf, readlen, 1, pp)) != 1)
 		goto freereaderr;
 	
 	pclose(pp);
+
+	readp = abuf;
+	writep = ((struct xwd_ctx *) gcamdev->custom)->buf;
+	endp = writep + outputlen;
+	while (writep < endp) {
+		memcpy(writep, readp, linelen);
+		writep += linelen;
+		readp += xwdh.bytes_per_line;
+	}
+	
+	free(abuf);
 	
 	return 0;
 }

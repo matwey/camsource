@@ -93,8 +93,11 @@
 			by this device. More information about filters and filter
 			modules can be found below. There is also a section with filters
 			to apply to every frame, independent of device.
+			
+			This flip filter is here because my webcam produces mirrored
+			images. If yours doesn't do this, you should probably remove this
+			filter.
 		-->
-
 		<filter name="flip">
 			<horiz>yes</horiz>
 			<vert>no</vert>
@@ -122,10 +125,22 @@
 		<height>max</height>
 	</camdev>
 	
+	<!--
+		This input plugin uses the "xwd" program to make screenshots
+		of a local or remote x11 desktop, and uses those images
+		as input to camsource. Currently this plugin only supports
+		xwd dumps with 24 or 32 bits per pixel.
+	-->
 	<camdev name="xwd" active="yes">
 		<plugin>input_xwd</plugin>
 		<command>/usr/X11R6/bin/xwd -root -silent</command>
 	</camdev>
+	
+	
+	
+	
+	
+	
 	
 	<!--
 		If no logfile is given (or tag is empty), camsource
@@ -140,12 +155,25 @@
 		it's a dependency of another module. In any case,
 		any module config given here is used.
 	-->
+	
+	
+	
+	
+	
+	
 
 	<!-- This is the default video4linux input plugin. It has no
 	     global config options. -->	
 	<module name="input_v4l" active="yes"/>
 	
+	<!-- This is the xwd input plugin referenced above. -->
 	<module name="input_xwd" active="yes"/>
+	
+	
+	
+	
+	
+	
 	
 	<module name="wc_serv" active="yes">
 		<port>8888</port>
@@ -295,7 +323,17 @@
 		
 		<vpath active="yes">
 			<grabdev>xwd</grabdev>
-			<path>/test</path>
+			<path>/screenshot</path>
+			<jpegqual>40</jpegqual>
+		</vpath>
+
+		<vpath active="yes">
+			<grabdev>xwd</grabdev>
+			<path>/smallshot</path>
+			<jpegqual>40</jpegqual>
+                        <filter name="resize">
+                                <scale>50</scale>
+                        </filter>
 		</vpath>
 		
 		<vpath active="yes">
@@ -491,6 +529,12 @@
 		
 		<filter name="text"/>
 	</module>
+	
+	
+	
+	
+	
+	
 
 	<module name="jpeg_comp" active="yes">
 		<!-- quality: default compression quality, 1-100.
@@ -504,6 +548,12 @@
 			main <module> config section.
 		-->
 	</module>
+	
+	
+	
+	
+	
+	
 	
 	<!--
 		The following two modules are filters which are described
@@ -579,6 +629,13 @@
 	
 	<!-- A simple invert filter -->
 	<module name="invert" active="no"/>
+	
+	
+	
+	
+	
+	
+	
 	
 	<!--
 		Global filters to use. Any filter given here

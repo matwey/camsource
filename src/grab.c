@@ -268,6 +268,11 @@ grab_thread(void *arg)
 		firecmd(thread, 1);
 		
 		rawimg = thread->input(&thread->gcamdev);
+		if (!rawimg) {
+			printf("Device '%s' returned no image\n", thread->name);
+			continue;
+		}
+		
 		image_new(&newimg, thread->gcamdev.x, thread->gcamdev.y);
 		thread->gcamdev.pal->routine(&newimg, rawimg);
 		
