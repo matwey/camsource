@@ -93,14 +93,20 @@ grab_glob_filters(struct image *img)
 void
 grab_get_image(struct image *img, unsigned int *idx)
 {
+	if (!img)
+		return;
+	
 	pthread_mutex_lock(&current_img.mutex);
-	if (*idx == 0 || *idx == current_img.idx)
+	if (!idx || *idx == 0 || *idx == current_img.idx)
 	{
 		current_img.request = 1;
 		pthread_cond_signal(&current_img.request_cond);
 		pthread_cond_wait(&current_img.ready_cond, &current_img.mutex);
 	}
-	*idx = current_img.idx;
+	
+	if (idx)
+		*idx = current_img.idx;
+	
 	image_copy(img, &current_img.img);
 	pthread_mutex_unlock(&current_img.mutex);
 }
