@@ -18,8 +18,7 @@ log_open()
 {
 	int fd;
 	xmlNodePtr node;
-	char *file, *env;
-	char fullfile[1024];
+	char *file;
 	
 	node = xmlDocGetRootElement(configdoc);
 	if (!node)
@@ -37,19 +36,10 @@ found:
 	if (!file || !*file)
 		return -1;
 	
-	if (file[0] == '~' && file[1] == '/')
-	{
-		env = getenv("HOME");
-		if (!env)
-		{
-			printf("Logfile pathname \"%s\" invalid, no HOME environment var set\n", file);
-			return -1;
-		}
-		snprintf(fullfile, sizeof(fullfile) - 1, "%s%s", env, file + 1);
-		file = fullfile;
-	}
-	
+	file = config_homedir(file);
 	fd = open(file, O_WRONLY | O_CREAT | O_APPEND, 0666);
+	free(file);
+	
 	if (fd < 0)
 		return -1;
 	return fd;
@@ -64,6 +54,7 @@ log_replace_bg(int fd)
 	
 	printf("Main init done and logfile opened.\n");
 	printf("Closing stdout and going into background...\n");
+	close(STDIN_FILENO);
 	dup2(fd, STDOUT_FILENO);
 	dup2(fd, STDERR_FILENO);
 	close(fd);

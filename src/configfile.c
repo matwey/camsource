@@ -8,6 +8,7 @@
 
 #include "configfile.h"
 #include "xmlhelp.h"
+#include "log.h"
 
 char *globalconfigs[] =
 {
@@ -38,7 +39,7 @@ config_init(char *customconfig)
 	if (s)
 		snprintf(localconfig, sizeof(localconfig) - 1, "%s/.camsource", s);
 	
-	if (!access(localconfig, R_OK))
+	if (*localconfig && !access(localconfig, R_OK))
 	{
 		ourconfig = localconfig;
 		goto found;
@@ -78,5 +79,29 @@ config_load()
 	}
 	
 	return 0;
+}
+
+char *
+config_homedir(char *dirspec)
+{
+	char *env, *temp;
+	
+	if (!dirspec)
+		return NULL;
+	
+	if (strncmp(dirspec, "~/", 2))
+		return strdup(dirspec);
+		
+	env = getenv("HOME");
+	if (!env)
+	{
+		log_log(NULL, "Invalid path spec: HOME not set. (Arg: \"%s\")\n", dirspec);
+		return strdup(dirspec);
+	}
+	
+	temp = malloc(strlen(env) + strlen(dirspec));
+	sprintf(temp, "%s%s", env, dirspec + 1);
+	
+	return temp;
 }
 

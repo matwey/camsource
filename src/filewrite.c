@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <sys/wait.h>
 
 #include "config.h"
 
@@ -18,6 +19,7 @@
 #include "jpeg.h"
 #include "filter.h"
 #include "log.h"
+#include "configfile.h"
 
 #define MODNAME "filewrite"
 
@@ -35,8 +37,6 @@ init(struct module_ctx *mctx)
 {
 	int ret;
 	struct fw_ctx fctx;
-	
-	memset(&fctx, 0, sizeof(fctx));
 	
 	ret = fw_load_conf(&fctx, mctx->node);
 	if (ret)
@@ -58,6 +58,7 @@ thread(void *arg)
 	struct grab_ctx idx;
 	struct jpegbuf jbuf;
 	int ret;
+	int cpid;
 	
 	fctx = ((struct module_ctx *) arg)->custom;
 	snprintf(buf, sizeof(buf) - 1, "%s~", fctx->path);
@@ -90,6 +91,33 @@ thread(void *arg)
 		}
 		
 		close(fd);
+		
+		if (fctx->cmd)
+		{
+			cpid = fork();
+			if (!cpid)
+			{
+				/* child */
+				close(STDIN_FILENO);
+				for (fd = 3; fd < 1024; fd++)
+					close(fd);
+				
+				execlp(fctx->cmd, fctx->cmd, buf, NULL);
+				
+				/* notreached unless error */
+				log_log(MODNAME, "exec(\"%s\") failed: %s\n", fctx->cmd, strerror(errno));
+				_exit(0);
+			}
+			
+			do
+				ret = waitpid(cpid, NULL, 0);
+			while (ret == -1 && errno == EINTR);
+
+			ret = access(buf, F_OK);
+			if (ret)
+				goto freesleeploop;
+		}
+		
 		ret = rename(buf, fctx->path);
 		if (ret != 0)
 		{
@@ -111,11 +139,12 @@ int
 fw_load_conf(struct fw_ctx *fctx, xmlNodePtr node)
 {
 	int mult, val;
-	char *s, *s2;
+	char *s;
 	
 	if (!node)
 		return -1;
 	
+	memset(fctx, 0, sizeof(*fctx));
 	fctx->chmod = -1;
 	fctx->interval = -1;
 	
@@ -123,6 +152,8 @@ fw_load_conf(struct fw_ctx *fctx, xmlNodePtr node)
 	{
 		if (xml_isnode(node, "path"))
 			fctx->path = xml_getcontent(node);
+		else if (xml_isnode(node, "cmd"))
+			fctx->cmd = xml_getcontent(node);
 		else if (xml_isnode(node, "interval"))
 		{
 			mult = 1;
@@ -163,20 +194,8 @@ fw_load_conf(struct fw_ctx *fctx, xmlNodePtr node)
 		return -1;
 	}
 	
-	if (!strncmp(fctx->path, "~/", 2))
-	{
-		s = getenv("HOME");
-		if (!s)
-		{
-			log_log(MODNAME, "Invalid path spec: HOME not set\n");
-			return -1;
-		}
-		s2 = malloc(strlen(s) + strlen(fctx->path));
-		sprintf(s2, "%s%s", s, fctx->path + 1);
-		fctx->path = s2;
-	}
-	else
-		fctx->path = strdup(fctx->path);
+	fctx->path = config_homedir(fctx->path);
+	fctx->cmd = config_homedir(fctx->cmd);
 	
 	return 0;
 }

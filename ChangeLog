@@ -1,4 +1,6 @@
 Sep 18 2002
+	- Added <cmd> tag to filewrite mod
+	- Added config_homedir() for "~/" expansion
 	- Added grabbed image aging and struct grab_ctx handling to prevent
 	  that an outdated image gets output accidently
    - Improved logging facilities

@@ -17,5 +17,8 @@ int config_init(char *);
 /* Opens "ourconfig" and builds the xml tree (configdoc) from it. Returns -1 on error */
 int config_load(void);
 
+/* Returns a newly allocated string with a leading "~/" replaced by the home dir */
+char *config_homedir(char *);
+
 #endif
 

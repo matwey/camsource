@@ -149,11 +149,25 @@
 			  octal numeric notation. Don't forget the leading
 			  zero. If not specified, no chmod will be done
 			  (meaning the file will have mode 0666 minus umask).
+			- cmd: Optional command to execute when the
+			  snapshot is created. The command will get the
+			  filename as its first argument. Note that
+			  the command will be run on the temporary
+			  file, before it is moved to the final location,
+			  but after the chmod is done.
+			  If the command (shell script) deletes the file,
+			  the moving step will be skipped. Note the
+			  the value of this tag is executed literally
+			  and not passed to a shell to interpret. The
+			  stdout and stderr fds will be redirected
+			  to the logfile. If you need to have anything
+			  fancy for a command, make a shell script.
 			- Of course you can add filters here too.
 		-->
 		<path>~/tmp/camera.jpg</path>
 		<interval unit="sec">30</interval>
 		<chmod>0644</chmod>
+		<cmd>~/bin/snapshot.sh</cmd>
 	</module>
 	
 	<module name="jpeg_comp" active="yes">
