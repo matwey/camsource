@@ -38,7 +38,10 @@
 		give the same filter multiple times to apply
 		it to the image several times.
 	-->
-	<filter name="flip"/>
+	<filter name="flip">
+		<horiz/>
+		<!-- <vert/> -->
+	</filter>
 	
 </camsourceconfig>
 

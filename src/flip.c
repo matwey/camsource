@@ -15,8 +15,22 @@ int
 filter(struct image *img, xmlNodePtr node)
 {
 	struct image work;
-	unsigned int x, y;
+	unsigned int x, y, vy;
 	unsigned char *r, *w;
+	int h, v;
+	
+	h = v = 0;
+	
+	for (node = node->children; node; node = node->next)
+	{
+		if (xmlStrEqual(node->name, "horiz"))
+			h = 1;
+		else if (xmlStrEqual(node->name, "vert"))
+			v = 1;
+	}
+	
+	if (!h && !v)
+		return 0;
 	
 	image_dup(&work, img);
 
@@ -28,13 +42,25 @@ filter(struct image *img, xmlNodePtr node)
 	r = img->buf;
 	for (y = 0; y < img->y; y++)
 	{
-		w = work.buf + (y + 1) * work.x * 3;
+		if (v)
+			vy = img->y - y - 1;
+		else
+			vy = y;
+			
+		if (h)
+			w = work.buf + (vy + 1) * work.x * 3 - 3;
+		else
+			w = work.buf + vy * work.x * 3;
+		
 		for (x = 0; x < img->x; x++)
 		{
-			w -= 3;
 			w[0] = *r++;
 			w[1] = *r++;
 			w[2] = *r++;
+			if (h)
+				w -= 3;
+			else
+				w += 3;
 		}
 	}
 	
