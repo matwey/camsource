@@ -127,6 +127,33 @@
 		</vpath>
 	</module>
 	
+	<!--
+		The "filewrite" module does what its name suggests: it
+		writes files. More specifically, it writes a snapshot
+		jpeg periodically to a certain file location. The write
+		happens in a "safe" fashion, meaning the image will
+		first be written to a temporary file, and then moved
+		over the real destination file.
+	-->
+	<module name="filewrite" active="yes">
+		<!--
+			Supported options:
+			
+			- path: Destination filename. The prefix "~/" has
+			  the usual meaning.
+			- interval: Delay between writing snapshot files.
+			  This tag can take an attribute "unit" which
+			  can be one of "sec", "min", "hour" or "day".
+			  Default is "sec". The meaning should be obvious.
+			- chmod: Unix file mode to give the new file, in
+			  octal numeric notation. Don't forget the leading
+			  zero.
+		-->
+		<path>~/tmp/camera.jpg</path>
+		<interval unit="sec">30</interval>
+		<chmod>0644</chmod>
+	</module>
+	
 	<module name="jpeg_comp" active="yes">
 		<!-- quality: default compression quality, 1-100 -->
 		<quality>40</quality>
