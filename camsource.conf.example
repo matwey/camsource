@@ -21,12 +21,32 @@
 			  or "min" for the minimum size.
 			- Fps and channel default to unchanged/not set.
 			  You can specify "default" for the same effect.
+			- Norm can be "ntsc", "pal", "secam", or "auto".
+			  If not specified, it is undefined which norm
+			  will be used. Note that the norm setting will
+			  only be used if a channel is specified as well.
+			- Brightness, hue, colour (note the spelling),
+			  contrast and whiteness are unsigned 16-bit
+			  integers (0-65535) which are passed verbatim to
+			  the video4linux layer if specified. The meaning
+			  of these fields is more or less driver-dependent,
+			  feel free to play around with them. If not
+			  specified or commented out, the default value
+			  will be left unchanged. Not all values are
+			  meaningful in all cases (for example 'whiteness'
+			  is normally only used for grayscale images).
 		-->
 		<path>/dev/video0</path>
 		<width>max</width>
 		<height>max</height>
 		<fps>15</fps>
 		<channel>0</channel>
+		<norm>auto</norm>
+		<!-- <brightness>32000</brightness> -->
+		<!-- <hue>32000</hue> -->
+		<!-- <colour>32000</colour> -->
+		<!-- <contrast>32000</contrast> -->
+		<!-- <whiteness>32000</whiteness> -->
 	</camdev>
 	
 	<!--

@@ -1,5 +1,11 @@
 $Id$
 
+Dec 13 2002
+	- Added norm and picture metric video device settings.
+
+Nov 21 2002
+	- Added support for the mmap v4l api. Fixes bttv support.
+
 --- 0.5.1 ---
 
 Nov 14 2002

@@ -26,11 +26,13 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 	char *path;
 	int x, y, fps;
 	int channel;
+	int norm;
 	struct video_channel vidchan;
+	int brightness, hue, colour, contrast, whiteness;
 	
 	path = "/dev/video0";
 	x = y = fps = 0;
-	channel = -1;
+	brightness = hue = colour = contrast = whiteness = channel = norm = -1;
 	
 	if (node)
 	{
@@ -46,6 +48,30 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 				fps = xml_atoi(node, 0);
 			else if (xml_isnode(node, "channel"))
 				channel = xml_atoi(node, -1);
+			else if (xml_isnode(node, "brightness"))
+				brightness = xml_atoi(node, -1);
+			else if (xml_isnode(node, "colour"))
+				colour = xml_atoi(node, -1);
+			else if (xml_isnode(node, "hue"))
+				hue = xml_atoi(node, -1);
+			else if (xml_isnode(node, "contrast"))
+				contrast = xml_atoi(node, -1);
+			else if (xml_isnode(node, "whiteness"))
+				whiteness = xml_atoi(node, -1);
+			else if (xml_isnode(node, "norm"))
+			{
+				char *s = xml_getcontent_def(node, "");
+				if (!strcasecmp(s, "pal"))
+					norm = VIDEO_MODE_PAL;
+				else if (!strcasecmp(s, "ntsc"))
+					norm = VIDEO_MODE_NTSC;
+				else if (!strcasecmp(s, "secam"))
+					norm = VIDEO_MODE_SECAM;
+				else if (!strcasecmp(s, "auto"))
+					norm = VIDEO_MODE_AUTO;
+				else
+					printf("Invalid video norm \"%s\" specified, ignoring\n", s);
+			}
 		}
 	}
 	
@@ -74,6 +100,8 @@ closenerr:
 	{
 		memset(&vidchan, 0, sizeof(vidchan));
 		vidchan.channel = channel;
+		if (norm >= 0)
+			vidchan.norm = norm;
 		ret = ioctl(newcamdev.fd, VIDIOCSCHAN, &vidchan);
 		if (ret)
 			printf("ioctl \"set input channel\" failed, continuing anyway: %s\n", strerror(errno));
@@ -117,6 +145,16 @@ closenerr:
 	{
 		newcamdev.vidpic.palette = newcamdev.pal->val;
 		newcamdev.vidpic.depth = newcamdev.pal->depth;
+		if (brightness >= 0)
+			newcamdev.vidpic.brightness = brightness;
+		if (hue >= 0)
+			newcamdev.vidpic.hue = hue;
+		if (colour >= 0)
+			newcamdev.vidpic.colour = colour;
+		if (contrast >= 0)
+			newcamdev.vidpic.contrast = contrast;
+		if (whiteness >= 0)
+			newcamdev.vidpic.whiteness = whiteness;
 		ioctl(newcamdev.fd, VIDIOCSPICT, &newcamdev.vidpic);
 		ioctl(newcamdev.fd, VIDIOCGPICT, &newcamdev.vidpic);
 		if (newcamdev.vidpic.palette == newcamdev.pal->val)
