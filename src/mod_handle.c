@@ -28,11 +28,6 @@ mod_load_all()
 	rwlock_rlock(&configdoc_lock);
 	doc = xmlCopyDoc(configdoc, 1);
 	rwlock_runlock(&configdoc_lock);
-	if (!doc)
-	{
-		printf("xmlCopyDoc failed\n");
-		return;
-	}
 	
 	modidx = 0;
 	node = xmlDocGetRootElement(doc);

@@ -93,11 +93,6 @@ load_config()
 	rwlock_rlock(&configdoc_lock);
 	doc = xmlCopyDoc(configdoc, 1);
 	rwlock_runlock(&configdoc_lock);
-	if (!doc)
-	{
-		printf("xmlCopyDoc failed\n");
-		return -1;
-	}
 	
 	node = config_find_mod_section(doc, name);
 	if (!node)
@@ -172,6 +167,7 @@ handle_conn(void *arg)
 	struct image curimg;
 	struct jpegbuf jpegimg;
 	int first;
+	xmlDocPtr doc;
 	xmlNodePtr node;
 	unsigned int last_idx;
 	
@@ -203,10 +199,13 @@ handle_conn(void *arg)
 		grab_get_image(&curimg, &last_idx);
 		
 		rwlock_rlock(&configdoc_lock);
-		node = config_find_mod_section(configdoc, name);
+		doc = xmlCopyDoc(configdoc, 1);
+		rwlock_runlock(&configdoc_lock);
+		
+		node = config_find_mod_section(doc, name);
 		if (node)
 			filter_apply(&curimg, node);
-		rwlock_runlock(&configdoc_lock);
+		xmlFreeDoc(doc);
 	
 		jpeg_compress(&jpegimg, &curimg);
 	

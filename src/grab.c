@@ -79,11 +79,6 @@ grab_glob_filters(struct image *img)
 	rwlock_rlock(&configdoc_lock);
 	doc = xmlCopyDoc(configdoc, 1);
 	rwlock_runlock(&configdoc_lock);
-	if (!doc)
-	{
-		printf("xmlCopyDoc failed\n");
-		return;
-	}
 	
 	node = xmlDocGetRootElement(doc);
 	filter_apply(img, node);

@@ -7,6 +7,7 @@
 #include "filter.h"
 #include "image.h"
 #include "mod_handle.h"
+#include "rwlock.h"
 
 void
 filter_apply(struct image *img, xmlNodePtr node)
