@@ -1,6 +1,8 @@
 #ifndef _UNPALETTE_H_
 #define _UNPALETTE_H_
 
+/* $Id$ */
+
 struct image;
 
 /* Converts an image from some palette into rgb24 format.
@@ -16,6 +18,8 @@ struct palette
 	unpalettizer *routine;
 	double bpp;	/* bytes per pixel, can be something like 1.5, in which case
 	             * the number of input bytes must be a multiple of 2. */
+	int depth;
+	char *name;
 };
 extern struct palette palettes[];
 

@@ -1,6 +1,8 @@
 $Id$
 
 Sep 28 2002
+	- Added more information to palette struct and added palette probing
+	  to -c switch output.
 	- Added experimental grayscale palette support
 	- Pumped version to 0.5.0a.
 

@@ -116,7 +116,7 @@ closenerr:
 	for (newcamdev.pal = palettes; newcamdev.pal->val >= 0; newcamdev.pal++)
 	{
 		newcamdev.vidpic.palette = newcamdev.pal->val;
-		newcamdev.vidpic.depth = 24; /* ? */
+		newcamdev.vidpic.depth = newcamdev.pal->depth;
 		ioctl(newcamdev.fd, VIDIOCSPICT, &newcamdev.vidpic);
 		ioctl(newcamdev.fd, VIDIOCGPICT, &newcamdev.vidpic);
 		if (newcamdev.vidpic.palette == newcamdev.pal->val)
@@ -136,6 +136,8 @@ camdev_capdump(char *dev)
 {
 	int fd, ret;
 	struct video_capability vidcap;
+	struct video_picture vidpic;
+	struct palette *pal;
 	
 	if (!dev)
 		dev = "/dev/video0";
@@ -151,7 +153,7 @@ camdev_capdump(char *dev)
 	if (ret < 0)
 	{
 		printf("ioctl(VIDIOCGCAP) (get video capabilites) failed: %s\n", strerror(errno));
-		return;
+		goto closenout;
 	}
 	
 	printf("Capability info for %s:\n", dev);
@@ -170,6 +172,42 @@ camdev_capdump(char *dev)
 	printf("  Grabbing frame size:\n");
 	printf("    Min: %ix%i\n", vidcap.minwidth, vidcap.minheight);
 	printf("    Max: %ix%i\n", vidcap.maxwidth, vidcap.maxheight);
+	
+	ret = ioctl(fd, VIDIOCGPICT, &vidpic);
+	if (ret != 0)
+	{
+		printf("ioctl(VIDIOCGPICT) (get picture properties) failed: %s\n", strerror(errno));
+		goto closenout;
+	}
+	
+	printf("\n");
+	printf("Palette information:\n");
+	for (pal = palettes; pal->val >= 0; pal++)
+	{
+		if (pal->val == vidpic.palette)
+		{
+			printf("  Currenctly active palette: %s\n", pal->name);
+			goto palfound;
+		}
+	}
+	printf("  Currenctly active palette: not found/supported? (value %u)\n", vidpic.palette);
+	
+palfound:
+	printf("  Probing for supported palettes:\n");
+	for (pal = palettes; pal->val >= 0; pal++)
+	{
+		vidpic.palette = pal->val;
+		vidpic.depth = pal->depth;
+		ioctl(fd, VIDIOCSPICT, &vidpic);
+		ioctl(fd, VIDIOCGPICT, &vidpic);
+		if (vidpic.palette == pal->val)
+			printf("    Palette \"%s\" supported: Yes\n", pal->name);
+		else
+			printf("    Palette \"%s\" supported: No\n", pal->name);
+	}	
+
+closenout:
+	close(fd);
 }
 
 static

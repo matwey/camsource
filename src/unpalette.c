@@ -19,15 +19,15 @@ static unpalettizer unpalette_grey;
 
 struct palette palettes[] =
 {
-	{ VIDEO_PALETTE_RGB24,			unpalette_bgr24,		3		},
-	{ VIDEO_PALETTE_RGB24 | 0x80,	unpalette_rgb24,		3		},
-	{ VIDEO_PALETTE_RGB32,			unpalette_bgr32,		4		},
-	{ VIDEO_PALETTE_RGB32 | 0x80,	unpalette_rgb32,		4		},
-	{ VIDEO_PALETTE_YUYV,			unpalette_stub,		2		},
-	{ VIDEO_PALETTE_YUV422,			unpalette_stub,		2		},
-	{ VIDEO_PALETTE_YUV420,			unpalette_stub,		1.5	},
-	{ VIDEO_PALETTE_YUV420P,		unpalette_yuv420p,	1.5	},
-	{ VIDEO_PALETTE_GREY,			unpalette_grey,		1		},
+	{ VIDEO_PALETTE_RGB24,			unpalette_bgr24,		3,		24,	"bgr24"							},
+	{ VIDEO_PALETTE_RGB24 | 0x80,	unpalette_rgb24,		3,		24,	"rgb24"							},
+	{ VIDEO_PALETTE_RGB32,			unpalette_bgr32,		4,		32,	"bgr32"							},
+	{ VIDEO_PALETTE_RGB32 | 0x80,	unpalette_rgb32,		4,		32,	"rgb32"							},
+	{ VIDEO_PALETTE_YUYV,			unpalette_stub,		2,		24,	"yuyv (16 bpp)"				},
+	{ VIDEO_PALETTE_YUV422,			unpalette_stub,		2,		24,	"yuv422 (16 bpp)"				},
+	{ VIDEO_PALETTE_YUV420,			unpalette_stub,		1.5,	24,	"yuv420 (12 bpp)"				},
+	{ VIDEO_PALETTE_YUV420P,		unpalette_yuv420p,	1.5,	24,	"yuv420 planar (12 bpp)"	},
+	{ VIDEO_PALETTE_GREY,			unpalette_grey,		1,		8,		"grayscale (8 bpp)"			},
 	{ -1 }
 };
 
