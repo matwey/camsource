@@ -19,11 +19,13 @@
 #include "jpeg.h"
 #include "filter.h"
 #include "xmlhelp.h"
+#include "socket.h"
 
 char *name = "wc_serv";
 char *deps[] =
 {
 	"jpeg_comp",
+	"socket",
 	NULL
 };
 
@@ -31,22 +33,23 @@ int
 init(struct module_ctx *ctx)
 {
 	int ret;
-	struct wc_ctx wc_ctx;
+	struct wc_ctx new_ctx, *wc_ctx;
 	
-	ret = load_config(&wc_ctx, ctx->node);
+	ret = load_config(&new_ctx, ctx->node);
 	if (ret)
 		return ret;
 	
-	ctx->custom = malloc(sizeof(wc_ctx));
-	memcpy(ctx->custom, &wc_ctx, sizeof(wc_ctx));
+	wc_ctx = ctx->custom = malloc(sizeof(*wc_ctx));
+	memcpy(wc_ctx, &new_ctx, sizeof(*wc_ctx));
 		
-	ret = open_socket((struct wc_ctx *) ctx->custom);
-	if (ret)
+	ret = socket_listen(wc_ctx->port, 0);
+	if (ret == -1)
 	{
 		printf("Failed to open listen socket: %s\n", strerror(errno));
-		return ret;
+		return -1;
 	}
-	
+	wc_ctx->listen_fd = ret;
+
 	return 0;
 }
 
@@ -54,18 +57,16 @@ void *
 thread(void *arg)
 {
 	struct wc_ctx *ctx;
-	struct peer *peer;
-	int i;
-	pthread_t tid;
-	pthread_attr_t attr;
+	struct peer_ctx *peer;
+	int ret;
 	
 	ctx = ((struct module_ctx *) arg)->custom;
 	for (;;)
 	{
 		peer = malloc(sizeof(*peer));
-		i = sizeof(peer->sin);
-		peer->fd = accept(ctx->listen_fd, (struct sockaddr *) &peer->sin, &i);
-		if (peer->fd < 0)
+		peer->ctx = arg;
+		ret = socket_accept_thread(ctx->listen_fd, &peer->peer, handle_conn, peer);
+		if (ret == -1)
 		{
 			printf("accept() error: %s\n", strerror(errno));
 			free(peer);
@@ -73,13 +74,6 @@ thread(void *arg)
 			continue;
 		}
 		/* TODO: keep a list of accepted connections? */
-		
-		peer->ctx = arg;
-		
-		pthread_attr_init(&attr);
-		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-		pthread_create(&tid, &attr, handle_conn, peer);
-		pthread_attr_destroy(&attr);
 	}
 }
 
@@ -111,32 +105,10 @@ int
 open_socket(struct wc_ctx *ctx)
 {
 	int fd;
-	struct sockaddr_in sin;
-	int ret;
 	
-	fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (fd < 0)
+	fd = socket_listen(ctx->port, 0);
+	if (fd == -1)
 		return -1;
-		
-	ret = 1;
-	setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &ret, sizeof(ret));
-	
-	memset(&sin, 0, sizeof(sin));
-	sin.sin_family = AF_INET;
-	sin.sin_port = htons(ctx->port);
-	ret = bind(fd, (struct sockaddr *) &sin, sizeof(sin));
-	if (ret)
-	{
-		close(fd);
-		return -1;
-	}
-	ret = listen(fd, 5);
-	if (ret)
-	{
-		close(fd);
-		return -1;
-	}
-	
 	ctx->listen_fd = fd;
 	return 0;
 }
@@ -144,7 +116,7 @@ open_socket(struct wc_ctx *ctx)
 void *
 handle_conn(void *arg)
 {
-	struct peer peer;
+	struct peer_ctx peer;
 	int ret;
 	char c;
 	char buf[1024];
@@ -163,10 +135,10 @@ handle_conn(void *arg)
 	{
 		do
 		{
-			ret = read(peer.fd, &c, 1);
+			ret = read(peer.peer.fd, &c, 1);
 			if (ret != 1)
 			{
-				close(peer.fd);
+				close(peer.peer.fd);
 				return NULL;
 			}
 		}
@@ -196,15 +168,15 @@ handle_conn(void *arg)
 			"Content-Length: %i\n"
 			"Connection: close\n\n",
 			jpegimg.bufsize);
-		ret = write(peer.fd, buf, strlen(buf));
-		ret = write(peer.fd, jpegimg.buf, jpegimg.bufsize);
+		ret = write(peer.peer.fd, buf, strlen(buf));
+		ret = write(peer.peer.fd, jpegimg.buf, jpegimg.bufsize);
 		
 		image_destroy(&curimg);
 		free(jpegimg.buf);
 		if (c != '\n')
 		{
 			sleep(1);
-			close(peer.fd);
+			close(peer.peer.fd);
 			return NULL;
 		}
 	}

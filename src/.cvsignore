@@ -10,4 +10,6 @@ libflip.la
 flip.lo
 libresize.la
 resize.lo
+libsocket.la
+socket.lo
 

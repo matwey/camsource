@@ -20,6 +20,10 @@ AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
 AC_FUNC_VPRINTF
 
+AC_CHECK_SIZEOF(short)
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(long)
+
 # Libs for main prog
 AC_CHECK_LIB(dl, dlopen,, [AC_MSG_ERROR([Could not find dynamic link lib])])
 AC_CHECK_LIB(pthread, pthread_create,, [AC_MSG_ERROR([Could not find posix thread lib])])

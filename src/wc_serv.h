@@ -5,16 +5,17 @@
 #include <netinet/in.h>
 #include <libxml/parser.h>
 
+#include "socket.h"
+
 struct wc_ctx
 {
 	int port;
 	int listen_fd;
 };
 
-struct peer
+struct peer_ctx
 {
-	int fd;
-	struct sockaddr_in sin;
+	struct peer peer;
 	struct module_ctx *ctx;
 };
 
