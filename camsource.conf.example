@@ -181,6 +181,11 @@
 			  This tag can take an attribute "unit" which
 			  can be one of "sec", "min", "hour" or "day".
 			  Default is "sec". The meaning should be obvious.
+			  If you put a negative value for interval (such
+			  as -1), the module will write a snapshot file
+			  once, then sleep a few seconds (allowing other
+			  threads to complete), and then force camsource
+			  to exit. Use this feature with care.
 			- chmod: Unix file mode to give the new file, in
 			  octal numeric notation. Don't forget the leading
 			  zero. If not specified, no chmod will be done
@@ -242,6 +247,8 @@
 			  to "no". The ftp server must support the
 			  renaming commands RNFR and RNTO.
 			- interval: Same as filewrite's interval.
+			  Specifying a negative interval works here
+			  too.
 		-->
 		<host>some.host.name</host>
 		<port>21</port>

@@ -159,7 +159,14 @@ closenstuff:
 freensleep:
 		image_destroy(&img);
 		free(jbuf.buf);
-		sleep(fctx->interval);
+		if (fctx->interval > 0)
+			sleep(fctx->interval);
+		else
+		{
+			sleep(5);
+			log_log(MODNAME, "Negative interval specified, exiting now.\n");
+			exit(0);
+		}
 	}
 	
 	return NULL;
@@ -232,7 +239,7 @@ ftpup_load_conf(struct ftpup_ctx *fctx, xmlNodePtr node)
 					return -1;
 				}
 			}
-			fctx->interval = xml_atoi(node, -1) * mult;
+			fctx->interval = xml_atoi(node, 0) * mult;
 		}
 	}
 	
@@ -251,7 +258,7 @@ ftpup_load_conf(struct ftpup_ctx *fctx, xmlNodePtr node)
 		log_log(MODNAME, "No dir or path specified\n");
 		return -1;
 	}
-	if (fctx->interval <= 0)
+	if (fctx->interval == 0)
 	{
 		log_log(MODNAME, "No or invalid interval specified\n");
 		return -1;

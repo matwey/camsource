@@ -127,7 +127,7 @@ thread(void *arg)
 		ret = rename(buf, fctx->path);
 		if (ret != 0)
 		{
-			log_log(MODNAME "Rename of %s to %s failed: %s\n",
+			log_log(MODNAME, "Rename of %s to %s failed: %s\n",
 				buf, fctx->path, strerror(errno));
 			unlink(buf);
 			goto freesleeploop;
@@ -136,7 +136,14 @@ thread(void *arg)
 freesleeploop:
 		free(jbuf.buf);
 		image_destroy(&curimg);
-		sleep(fctx->interval);
+		if (fctx->interval > 0)
+			sleep(fctx->interval);
+		else
+		{
+			sleep(5);
+			log_log(MODNAME, "Negative interval specified, exiting now.\n");
+			exit(0);
+		}
 	}
 }
 
@@ -152,7 +159,6 @@ fw_load_conf(struct fw_ctx *fctx, xmlNodePtr node)
 	
 	memset(fctx, 0, sizeof(*fctx));
 	fctx->chmod = -1;
-	fctx->interval = -1;
 	
 	for (node = node->children; node; node = node->next)
 	{
@@ -182,8 +188,8 @@ fw_load_conf(struct fw_ctx *fctx, xmlNodePtr node)
 					return -1;
 				}
 			}
-			val = xml_atoi(node, -1);
-			if (val <= 0)
+			val = xml_atoi(node, 0);
+			if (val == 0)
 			{
 				log_log(MODNAME, "Invalid interval (%s) specified\n", xml_getcontent(node));
 				return -1;
@@ -194,7 +200,7 @@ fw_load_conf(struct fw_ctx *fctx, xmlNodePtr node)
 			fctx->chmod = xml_atoi(node, fctx->chmod);
 	}
 	
-	if (!fctx->path || fctx->interval <= 0)
+	if (!fctx->path || fctx->interval == 0)
 	{
 		log_log(MODNAME, "Either path or interval not specified\n");
 		return -1;
