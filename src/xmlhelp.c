@@ -43,12 +43,18 @@ xml_getcontent_def(xmlNodePtr node, char *def)
 int
 xml_atoi(xmlNodePtr node, int def)
 {
+	int i;
 	char *ret;
+	char *end;
 	
 	ret = xml_getcontent(node);
-	if (ret)
-		return atoi(ret);
-	return def;
+	if (!ret)
+		return def;
+	
+	i = (int) strtol(ret, &end, 0);
+	if (!i && end == ret)
+		return def;
+	return i;
 }
 
 char *
