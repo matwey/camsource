@@ -17,7 +17,9 @@ struct text_ctx
 	unsigned char *text;
 	unsigned char color[3];
 	unsigned char bgcolor[3];
-	int trans:1;
+	int solid:1,
+	    top:1,
+	    right:1;
 };
 
 static int text_conf(struct text_ctx *, xmlNodePtr);
@@ -41,11 +43,28 @@ filter(struct image *img, xmlNodePtr node)
 	if (idx)
 		return -1;
 	
-	x = 0;
-	y = img->y - 11;
+	if (img->y < 11)
+		return 0;
+
+	if (ctx.right)
+	{
+		x = img->x - strlen(ctx.text) * 6 - 1;
+		if (x < 0)
+			x = 0;
+	}
+	else
+		x = 0;
+	
+	if (ctx.top)
+		y = 0;
+	else
+		y = img->y - 11;
 	
 	while (*ctx.text)
 	{
+		if (x + 6 > img->x)
+			break;
+		
 		idx = *ctx.text * 11;
 		for (suby = 0; suby < 11; suby++)
 		{
@@ -56,7 +75,7 @@ filter(struct image *img, xmlNodePtr node)
 					memcpy(imgptr, ctx.color, 3);
 				else
 				{
-					if (!ctx.trans)
+					if (ctx.solid)
 						memcpy(imgptr, ctx.bgcolor, 3);
 				}
 				imgptr += 3;
@@ -79,7 +98,6 @@ text_conf(struct text_ctx *ctx, xmlNodePtr node)
 	
 	memset(ctx, 0, sizeof(*ctx));
 	memset(ctx->color, 0xff, sizeof(ctx->color));
-	ctx->trans = 1;
 	
 	for (node = node->children; node; node = node->next)
 	{
@@ -104,13 +122,29 @@ invbg:
 				return -1;
 			}
 			if (!strcmp(text, "trans") || !strcmp(text, "transparent") || !strcmp(text, "none"))
-				ctx->trans = 1;
+				ctx->solid = 0;
 			else
 			{
-				ctx->trans = 0;
+				ctx->solid = 1;
 				ret = text_color(ctx->bgcolor, text);
 				if (ret)
 					goto invbg;
+			}
+		}
+		else if (xml_isnode(node, "pos") || xml_isnode(node, "position"))
+		{
+			text = xml_getcontent_def(node, "bl");
+			while (*text)
+			{
+				if (*text == 'b')
+					ctx->top = 0;
+				else if (*text == 't')
+					ctx->top = 1;
+				else if (*text == 'r')
+					ctx->right = 1;
+				else if (*text == 'l')
+					ctx->right = 0;
+				text++;
 			}
 		}
 	}

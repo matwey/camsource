@@ -115,6 +115,7 @@
 				<text>Test</text>
 				<color>ffffff</color>
 				<bgcolor>trans</bgcolor>
+				<pos>bl</pos>
 			</filter>
 		</vpath>
 
