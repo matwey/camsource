@@ -172,13 +172,14 @@ handle_conn(void *arg)
 	struct image curimg;
 	struct jpegbuf jpegimg;
 	int first;
-	xmlDocPtr doc;
 	xmlNodePtr node;
+	unsigned int last_idx;
 	
 	memcpy(&peer, arg, sizeof(peer));
 	free(arg);
 	
 	first = 1;
+	last_idx = 0;
 	/* TODO: timeout */
 	for (;;)
 	{
@@ -199,29 +200,13 @@ handle_conn(void *arg)
 			continue;
 		}
 	
-		rwlock_rlock(&current_img.lock);
-		image_copy(&curimg, &current_img.img);
-		rwlock_runlock(&current_img.lock);
-		
-		if (!curimg.buf)
-		{
-			if (c != '\n')
-				return NULL;
-			sleep(1);	/* TODO: make that better */
-			continue;
-		}
+		grab_get_image(&curimg, &last_idx);
 		
 		rwlock_rlock(&configdoc_lock);
-		doc = xmlCopyDoc(configdoc, 1);
+		node = config_find_mod_section(configdoc, name);
+		if (node)
+			filter_apply(&curimg, node);
 		rwlock_runlock(&configdoc_lock);
-		if (doc)
-		{
-			node = config_find_mod_section(doc, name);
-			if (node)
-				filter_apply(&curimg, node);
-			xmlFreeDoc(doc);
-		}
-		
 	
 		jpeg_compress(&jpegimg, &curimg);
 	
