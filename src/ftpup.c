@@ -290,10 +290,12 @@ ftpup_read_ftp_resp(struct ftpup_ctx *fctx, int expect)
 {
 	int ret;
 	char buf[1024];
+	int gotcode;
 	
 	if (!fctx || !fctx->peer)
 		return -1;
 	
+	gotcode = 0;
 	for (;;)
 	{
 		ret = socket_readline(fctx->peer, buf, sizeof(buf), 20000);
@@ -303,21 +305,29 @@ ftpup_read_ftp_resp(struct ftpup_ctx *fctx, int expect)
 				fctx->lastcmd);
 			return -1;
 		}
-		if (strlen(buf) < 3)
+		if (!gotcode && strlen(buf) < 3)
 		{
 			log_log(MODNAME, "Short ftp response line (\"%s\") in response to command \"%s\"\n",
 				buf, fctx->lastcmd);
 			return -1;
 		}
 		ret = atoi(buf);
-		if (!ret)
+		if (*buf < '0' || *buf > '9' || !ret)
 		{
+			if (gotcode)
+				continue;
+invalid:
 			log_log(MODNAME, "Invalid ftp response line (\"%s\") in response to command \"%s\"\n",
 				buf, fctx->lastcmd);
 			return -1;
 		}
-		if (buf[3] != '-')
+		
+		if (buf[3] == ' ')
 			break;
+		if (buf[3] != '-')
+			goto invalid;
+			
+		gotcode = 1;
 	}
 	
 	if (expect > 0)

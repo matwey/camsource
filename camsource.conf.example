@@ -133,7 +133,7 @@
 	-->
 	<camdev name="xwd" active="yes">
 		<plugin>input_xwd</plugin>
-		<command>/usr/X11R6/bin/xwd -root -silent</command>
+		<command>DISPLAY=:0 /usr/X11R6/bin/xwd -root -silent</command>
 	</camdev>
 	
 	
@@ -257,7 +257,13 @@
 		In the main section, there should be one or more <vpath>
 		sections. Each of these sections describes another
 		variation of the image, with different properties,
-		using different filters.
+		using different filters. When requesting a certain vpath
+		from the http server, you can append a query string
+		to the patch, which will be stripped and ignored when
+		looking for the matching vpath. For example, you can
+		put "http://somehost/pic?dummy=123" into your browser,
+		and it will display the image with the "/pic" vpath
+		setting.
 		If you want to specify a custom jpeg compression quality
 		with a <jpegqual> tag, you must specify it within
 		the <vpath> definitions. There is no global config
@@ -325,12 +331,15 @@
 			<grabdev>xwd</grabdev>
 			<path>/screenshot</path>
 			<jpegqual>40</jpegqual>
+			<!-- Can only be viewed if the correct login and password is given -->
+			<auth>screen:shot</auth>
 		</vpath>
 
 		<vpath active="yes">
 			<grabdev>xwd</grabdev>
 			<path>/smallshot</path>
 			<jpegqual>40</jpegqual>
+			<auth>screen:shot</auth>
                         <filter name="resize">
                                 <scale>50</scale>
                         </filter>

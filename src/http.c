@@ -23,14 +23,16 @@
 
 struct vpathcfg {
 	int fps;
+	char *auth;
 	int raw:1;
 };
 
 static int http_load_conf(struct http_ctx *, xmlNodePtr);
 static void *http_conn(void *);
 static int http_path_ismatch(xmlNodePtr, char *);
-static void http_err(struct peer *, char *);
+static void http_err(struct peer *, char *, char *);
 static void http_fill_vpathcfg(xmlNodePtr, struct vpathcfg *);
+static void unbase64(unsigned char *, unsigned char *);
 
 char *name = MODNAME;
 char *version = VERSION;
@@ -140,6 +142,7 @@ http_conn(void *peer_p)
 	struct vpathcfg vpathcfg;
 	char *contenttype;
 	char addheaders[256];
+	char authorization[256];
 	
 	memcpy(&http_peer, peer_p, sizeof(http_peer));
 	free(peer_p);
@@ -206,6 +209,10 @@ readlineerr:
 			goto closenout;
 		}
 		
+		p = strchr(url, '?');
+		if (p)
+			*p = '\0';
+		
 		log_log(MODNAME, "Request for %s from %s:%i\n",
 			url, socket_ip(&http_peer.peer), socket_port(&http_peer.peer));
 	
@@ -221,6 +228,7 @@ readlineerr:
 		error = "404 Not found";
 		
 match:
+		*authorization = '\0';
 		for (;;)
 		{
 			ret = socket_readline(&http_peer.peer, buf, sizeof(buf), 20000);
@@ -228,14 +236,36 @@ match:
 				goto readlineerr;
 			if (!*buf)
 				break;
+			if (!strncasecmp(buf, "authorization:", 14)) {
+				p = buf + 14;
+				while (*p == ' ')
+					p++;
+				if (strncasecmp(p, "basic ", 6))
+					continue;
+				p += 6;
+				while (*p == ' ')
+					p++;
+				if (strlen(p) >= sizeof(authorization)) {
+					log_log(MODNAME, "Warning: very long Authorization: header received\n");
+					continue;
+				}
+				unbase64(authorization, p);
+			}
 		}
 		
 		if (error) {
-			http_err(&http_peer.peer, error);
+			http_err(&http_peer.peer, error, NULL);
 			goto closenout;
 		}
 		
 		http_fill_vpathcfg(subnode, &vpathcfg);
+		if (vpathcfg.auth) {
+			if (strcmp(authorization, vpathcfg.auth)) {
+				http_err(&http_peer.peer, "401 Unauthorized", "WWW-Authenticate: Basic realm=\"camsource\"\r\n");
+				goto closenout;
+			}
+		}
+
 		if (vpathcfg.fps > 0)
 		{
 			snprintf(buf, sizeof(buf) - 1,
@@ -348,7 +378,7 @@ http_path_ismatch(xmlNodePtr node, char *path)
 
 static
 void
-http_err(struct peer *peer, char *err)
+http_err(struct peer *peer, char *err, char *addheaders)
 {
 	char buf[1024];
 	
@@ -360,9 +390,10 @@ http_err(struct peer *peer, char *err)
 		"Pragma: no-cache\r\n"
 		"Cache-Control: no-cache\r\n"
 		"Content-Type: text/html\r\n"
+		"%s"
 		"\r\n"
 		"<html><body>%s</body></html>\r\n",
-		err, strlen(err) + 28, err);
+		err, strlen(err) + 28, addheaders ? : "", err);
 	socket_write(peer, buf, strlen(buf), 20000);
 }
 
@@ -378,6 +409,47 @@ http_fill_vpathcfg(xmlNodePtr node, struct vpathcfg *cfg)
 			cfg->fps = xml_atoi(node, 0);
 		else if (xml_isnode(node, "raw") && !strcmp("yes", xml_getcontent_def(node, "")))
 			cfg->raw = 1;
+		else if (xml_isnode(node, "auth"))
+			cfg->auth = xml_getcontent(node);
 	}
+}
+
+static void
+unbase64(unsigned char *dst, unsigned char *src)
+{
+	/* yuck */
+	static unsigned char lookup[256] = {
+		/*   0 */ 255,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		/*  16 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		/*  32 */ 0,0,0,0,0,0,0,0,0,0,0,62,0,0,0,63,
+		/*  48 */ 52,53,54,55,56,57,58,59,60,61,0,0,0,255,0,0,
+		/*  64 */ 0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,
+		/*  80 */ 15,16,17,18,19,20,21,22,23,24,25,0,0,0,0,0,
+		/*  96 */ 0,26,27,28,30,30,31,32,33,34,35,36,37,38,39,40,
+		/* 128 */ 41,42,43,44,45,46,47,48,49,50,51,0,0,0,0,0,
+	};
+	
+	int extract[4];
+	
+	while (*src) {
+		if ((extract[0] = lookup[src[0]]) == 255 || (extract[1] = lookup[src[1]]) == 255)
+			break;
+		
+		*dst++ = (extract[0] << 2) | (extract[1] >> 4);
+		
+		if ((extract[2] = lookup[src[2]]) == 255)
+			break;
+			
+		*dst++ = (extract[1] << 4) | (extract[2] >> 2);
+
+		if ((extract[3] = lookup[src[3]]) == 255)
+			break;
+			
+		*dst++ = (extract[2] << 6) | extract[3];
+		
+		src += 4;
+	}
+	
+	*dst = '\0';
 }
 

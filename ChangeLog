@@ -1,5 +1,12 @@
 $Id$
 
+Mar 9 2003
+	- Http requests can now take a query string, which will
+	  be ignored when looking for a matching config vpath.
+	- Fixed ftp uploading for ftpds which give multi-line
+	  replies in a certain format.
+	- Support basic http authentication.
+
 Feb 15 2003
 	- Added experimental xwd (x11 screen shot) input plugin.
 
