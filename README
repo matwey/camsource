@@ -96,6 +96,10 @@ http
 filewrite
   Periodically saves a snapshot image to a local jpeg file. 'Nuff said.
 
+ftpup
+  Works similar to the filewrite module, only that it uploads the snapshot
+  to an ftp server instead of writing it out locally.
+
 jpeg_comp
   This plugin doesn't do anything by itself, but provides jpeg
   compression functionality for various other modules. It will be
