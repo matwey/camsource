@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<camsourceconfig>
+
+	<module name="wc_serv" load="yes">
+		<port>8888</port>
+	</module>
+	
+</camsourceconfig>
+
