@@ -2,8 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <dlfcn.h>
-#include <pthread.h>
 #include <libxml/parser.h>
 
 #include "config.h"
@@ -11,8 +9,8 @@
 #include "configfile.h"
 #include "rwlock.h"
 
-struct config config;
-struct rwlock config_lock;
+/*struct config config;
+struct rwlock config_lock;*/
 
 char *globalconfigs[] =
 {
@@ -34,7 +32,7 @@ config_init()
 	char *s, **ss;
 	
 	rwlock_init(&configdoc_lock);
-	rwlock_init(&config_lock);
+	/*rwlock_init(&config_lock);*/
 	
 	s = getenv("HOME");
 	if (s)
@@ -86,116 +84,14 @@ config_load()
 	return 0;
 }
 
-void
-config_load_modules()
-{
-	struct config newconfig;
-	xmlDocPtr doc;
-	xmlNodePtr node;
-	char *modname, *prop;
-	int modidx;
-	int ret;
-	
-	memset(&newconfig, 0, sizeof(newconfig));
-	
-	rwlock_rlock(&configdoc_lock);
-	doc = xmlCopyDoc(configdoc, 1);
-	rwlock_runlock(&configdoc_lock);
-	if (!doc)
-	{
-		printf("xmlCopyDoc failed\n");
-		return;
-	}
-	
-	modidx = 0;
-	node = xmlDocGetRootElement(doc);
-	for (node = node->children; node; node = node->next)
-	{
-		if (!xmlStrEqual(node->name, "module"))
-			continue;
-		modname = xmlGetProp(node, "name");
-		if (!modname)
-		{
-			printf("<module> tag without name property\n");
-			continue;
-		}
-		prop = xmlGetProp(node, "load");
-		if (!prop || (strcmp(prop, "yes") && strcmp(prop, "1") && strcmp(prop, "on")))
-		{
-			if (prop)
-				free(prop);
-			free(modname);
-			continue;
-		}
-		free(prop);
-		newconfig.modules[modidx] = config_load_module(modname);
-		if (!newconfig.modules[modidx])
-		{
-			printf("Failed to load module %s\n", modname);
-			free(modname);
-			continue;
-		}
-		
-		ret = config_activate_module(newconfig.modules[modidx]);
-		if (ret)
-		{
-			printf("Failed to activate module %s\n", modname);
-			free(modname);
-			newconfig.modules[modidx] = NULL;
-			continue;
-		}
-
-		free(modname);
-		
-		modidx++;
-		if (modidx >= NUM_MODULES)
-		{
-			printf("Max num of modules exceeded\n");
-			break;
-		}
-	}
-	
-	xmlFreeDoc(doc);
-	
-	rwlock_wlock(&config_lock);
-	memcpy(&config, &newconfig, sizeof(config));
-	rwlock_wunlock(&config_lock);
-}
-
-void *
-config_load_module(const char *mod)
-{
-	char modname[256];
-	void *dlh;
-	
-	snprintf(modname, sizeof(modname) - 1, "lib%s.so", mod);
-	dlh = dlopen(modname, RTLD_NOW);
-	if (dlh)
-		return dlh;
-
-	snprintf(modname, sizeof(modname) - 1, ".libs/lib%s.so", mod);
-	dlh = dlopen(modname, RTLD_NOW);
-	if (dlh)
-		return dlh;
-
-	snprintf(modname, sizeof(modname) - 1, "src/.libs/lib%s.so", mod);
-	dlh = dlopen(modname, RTLD_NOW);
-	if (dlh)
-		return dlh;
-	
-	printf("Last dlopen error: %s\n", dlerror());
-	
-	return NULL;
-}
-
-int
+/*int
 config_activate_module(void *h)
 {
 	int (*init)(void);
 	int ret;
 	
 	init = dlsym(h, "init");
-	if (!init || !dlsym(h, "thread") || !dlsym(h, "name") || !dlsym(h, "tid"))
+	if (!init || !dlsym(h, "thread") || !dlsym(h, "name") || !dlsym(h, "tid") || !dlsym(h, "deps"))
 	{
 		dlclose(h);
 		return -1;
@@ -217,6 +113,7 @@ config_start_threads()
 	int i;
 	void *(*thread)(void *);
 	pthread_t *tid;
+	pthread_attr_t attr;
 	
 	rwlock_rlock(&config_lock);
 	
@@ -226,11 +123,15 @@ config_start_threads()
 			continue;
 		thread = dlsym(config.modules[i], "thread");
 		tid = dlsym(config.modules[i], "tid");
-		pthread_create(tid, NULL, thread, NULL);
+		
+		pthread_attr_init(&attr);
+		pthread_attr_set_detachstate(&attr, PTHREAD_CREATE_DETACHED);
+		pthread_create(tid, &attr, thread, NULL);
+		pthread_attr_destroy(&attr);
 	}
 
 	rwlock_runlock(&config_lock);
-}
+}*/
 
 xmlNodePtr
 config_find_mod_section(xmlDocPtr doc, const char *mod)

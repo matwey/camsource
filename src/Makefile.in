@@ -79,17 +79,23 @@ am__quote = @am__quote@
 install_sh = @install_sh@
 
 bin_PROGRAMS = camsource
-lib_LTLIBRARIES = libwc_serv.la
+lib_LTLIBRARIES = libwc_serv.la libjpeg_comp.la
 
-camsource_SOURCES = rwlock.c main.c grab.c camdev.c unpalette.c configfile.c jpeg.c
+camsource_SOURCES = rwlock.c main.c grab.c camdev.c unpalette.c configfile.c mod_handle.c
 
 libwc_serv_la_SOURCES = wc_serv.c
+
+libjpeg_comp_la_SOURCES = jpeg.c
+libjpeg_comp_la_LDFLAGS = -ljpeg
 subdir = src
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(lib_LTLIBRARIES)
 
+libjpeg_comp_la_LIBADD =
+am_libjpeg_comp_la_OBJECTS = jpeg.lo
+libjpeg_comp_la_OBJECTS = $(am_libjpeg_comp_la_OBJECTS)
 libwc_serv_la_LDFLAGS =
 libwc_serv_la_LIBADD =
 am_libwc_serv_la_OBJECTS = wc_serv.lo
@@ -99,7 +105,7 @@ PROGRAMS = $(bin_PROGRAMS)
 
 am_camsource_OBJECTS = rwlock.$(OBJEXT) main.$(OBJEXT) grab.$(OBJEXT) \
 	camdev.$(OBJEXT) unpalette.$(OBJEXT) configfile.$(OBJEXT) \
-	jpeg.$(OBJEXT)
+	mod_handle.$(OBJEXT)
 camsource_OBJECTS = $(am_camsource_OBJECTS)
 camsource_LDADD = $(LDADD)
 camsource_DEPENDENCIES =
@@ -112,9 +118,10 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 @AMDEP_TRUE@DEP_FILES = $(DEPDIR)/camdev.Po $(DEPDIR)/configfile.Po \
-@AMDEP_TRUE@	$(DEPDIR)/grab.Po $(DEPDIR)/jpeg.Po \
-@AMDEP_TRUE@	$(DEPDIR)/main.Po $(DEPDIR)/rwlock.Po \
-@AMDEP_TRUE@	$(DEPDIR)/unpalette.Po $(DEPDIR)/wc_serv.Plo
+@AMDEP_TRUE@	$(DEPDIR)/grab.Po $(DEPDIR)/jpeg.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/main.Po $(DEPDIR)/mod_handle.Po \
+@AMDEP_TRUE@	$(DEPDIR)/rwlock.Po $(DEPDIR)/unpalette.Po \
+@AMDEP_TRUE@	$(DEPDIR)/wc_serv.Plo
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
@@ -123,9 +130,10 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
-DIST_SOURCES = $(libwc_serv_la_SOURCES) $(camsource_SOURCES)
+DIST_SOURCES = $(libjpeg_comp_la_SOURCES) $(libwc_serv_la_SOURCES) \
+	$(camsource_SOURCES)
 DIST_COMMON = Makefile.am Makefile.in
-SOURCES = $(libwc_serv_la_SOURCES) $(camsource_SOURCES)
+SOURCES = $(libjpeg_comp_la_SOURCES) $(libwc_serv_la_SOURCES) $(camsource_SOURCES)
 
 all: all-am
 
@@ -166,6 +174,8 @@ uninstall-libLTLIBRARIES:
 
 clean-libLTLIBRARIES:
 	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+libjpeg_comp.la: $(libjpeg_comp_la_OBJECTS) $(libjpeg_comp_la_DEPENDENCIES) 
+	$(LINK) -rpath $(libdir) $(libjpeg_comp_la_LDFLAGS) $(libjpeg_comp_la_OBJECTS) $(libjpeg_comp_la_LIBADD) $(LIBS)
 libwc_serv.la: $(libwc_serv_la_OBJECTS) $(libwc_serv_la_DEPENDENCIES) 
 	$(LINK) -rpath $(libdir) $(libwc_serv_la_LDFLAGS) $(libwc_serv_la_OBJECTS) $(libwc_serv_la_LIBADD) $(LIBS)
 install-binPROGRAMS: $(bin_PROGRAMS)
@@ -205,8 +215,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/camdev.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/configfile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/grab.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/jpeg.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/jpeg.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/mod_handle.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/rwlock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/unpalette.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/wc_serv.Plo@am__quote@

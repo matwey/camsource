@@ -3,14 +3,31 @@
 
 #include "config.h"
 
+#include "main.h"
 #include "grab.h"
 #include "configfile.h"
+#include "mod_handle.h"
 
 int
 main(int argc, char **argv)
 {
+	main_init();
+	
+	/* TODO: find something to do, or thread_exit */
+	for (;;)
+		pause();
+	
+	return 0;
+}
+
+void
+main_init()
+{
 	int ret;
 	pthread_t grab_tid;
+	pthread_attr_t attr;
+	
+	mod_init();
 	
 	ret = config_init();
 	if (ret)
@@ -28,16 +45,15 @@ main(int argc, char **argv)
 	
 	grab_thread_init();
 
-	config_load_modules();
+	mod_load_all();
 	
-	pthread_create(&grab_tid, NULL, grab_thread, NULL);
-
-	config_start_threads();
-
-	/* TODO: find something to do, or thread_exit */
-	for (;;)
-		pause();
+	exit(0);
 	
-	return 0;
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	pthread_create(&grab_tid, &attr, grab_thread, NULL);
+	pthread_attr_destroy(&attr);
+
+	/*config_start_threads();*/
 }
 

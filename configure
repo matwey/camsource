@@ -8439,6 +8439,31 @@ echo "$as_me: error: Could not find posix thread lib" >&2;}
 fi
 
 
+echo "$as_me:$LINENO: checking for libxml" >&5
+echo $ECHO_N "checking for libxml... $ECHO_C" >&6
+XMLVER=$(xml2-config --version 2> /dev/null)
+if test $? -eq 0; then
+	echo "$as_me:$LINENO: result: yes, $XMLVER" >&5
+echo "${ECHO_T}yes, $XMLVER" >&6
+	CFLAGS="$CFLAGS $(echo $(xml2-config --cflags))"
+	LDFLAGS="$LDFLAGS $(echo $(xml2-config --cflags --libs))"
+else
+	XMLVER=$(xml-config --version 2> /dev/null)
+	if test $? -eq 0; then
+		echo "$as_me:$LINENO: result: yes, $XMLVER" >&5
+echo "${ECHO_T}yes, $XMLVER" >&6
+		CFLAGS="$CFLAGS $(echo $(xml-config --cflags))"
+		LDFLAGS="$LDFLAGS $(echo $(xml-config --cflags --libs))"
+	else
+		echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+		{ { echo "$as_me:$LINENO: error: Could not find libxml" >&5
+echo "$as_me: error: Could not find libxml" >&2;}
+   { (exit 1); exit 1; }; }
+	fi
+fi
+
+# Libs for plugins
 echo "$as_me:$LINENO: checking for jpeg_start_compress in -ljpeg" >&5
 echo $ECHO_N "checking for jpeg_start_compress in -ljpeg... $ECHO_C" >&6
 if test "${ac_cv_lib_jpeg_jpeg_start_compress+set}" = set; then
@@ -8495,42 +8520,13 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_lib_jpeg_jpeg_start_compress" >&5
 echo "${ECHO_T}$ac_cv_lib_jpeg_jpeg_start_compress" >&6
 if test $ac_cv_lib_jpeg_jpeg_start_compress = yes; then
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBJPEG 1
-_ACEOF
-
-  LIBS="-ljpeg $LIBS"
-
+  :
 else
   { { echo "$as_me:$LINENO: error: Could not find libjpeg" >&5
 echo "$as_me: error: Could not find libjpeg" >&2;}
    { (exit 1); exit 1; }; }
 fi
 
-
-echo "$as_me:$LINENO: checking for libxml" >&5
-echo $ECHO_N "checking for libxml... $ECHO_C" >&6
-XMLVER=$(xml2-config --version 2> /dev/null)
-if test $? -eq 0; then
-	echo "$as_me:$LINENO: result: yes, $XMLVER" >&5
-echo "${ECHO_T}yes, $XMLVER" >&6
-	CFLAGS="$CFLAGS $(echo $(xml2-config --cflags))"
-	LDFLAGS="$LDFLAGS $(echo $(xml2-config --cflags --libs))"
-else
-	XMLVER=$(xml-config --version 2> /dev/null)
-	if test $? -eq 0; then
-		echo "$as_me:$LINENO: result: yes, $XMLVER" >&5
-echo "${ECHO_T}yes, $XMLVER" >&6
-		CFLAGS="$CFLAGS $(echo $(xml-config --cflags))"
-		LDFLAGS="$LDFLAGS $(echo $(xml-config --cflags --libs))"
-	else
-		echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-		{ { echo "$as_me:$LINENO: error: Could not find libxml" >&5
-echo "$as_me: error: Could not find libxml" >&2;}
-   { (exit 1); exit 1; }; }
-	fi
-fi
 
 CFLAGS="$CFLAGS -Wall -D_REENTRANT"
 LDFLAGS="$LDFLAGS -rdynamic"

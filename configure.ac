@@ -22,7 +22,6 @@ AC_FUNC_VPRINTF
 # Libs for main prog
 AC_CHECK_LIB(dl, dlopen,, [AC_MSG_ERROR([Could not find dynamic link lib])])
 AC_CHECK_LIB(pthread, pthread_create,, [AC_MSG_ERROR([Could not find posix thread lib])])
-AC_CHECK_LIB(jpeg, jpeg_start_compress,, [AC_MSG_ERROR([Could not find libjpeg])])
 
 AC_MSG_CHECKING([for libxml])
 XMLVER=$(xml2-config --version 2> /dev/null)
@@ -41,6 +40,9 @@ else
 		AC_MSG_ERROR([Could not find libxml])
 	fi
 fi
+
+# Libs for plugins
+AC_CHECK_LIB(jpeg, jpeg_start_compress, :, [AC_MSG_ERROR([Could not find libjpeg])])
 
 CFLAGS="$CFLAGS -Wall -D_REENTRANT"
 LDFLAGS="$LDFLAGS -rdynamic"

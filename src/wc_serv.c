@@ -17,7 +17,12 @@
 #include "rwlock.h"
 #include "jpeg.h"
 
-char name[] = "wc_serv";
+char *name = "wc_serv";
+char *deps[] =
+{
+	"jpeg_comp",
+	NULL
+};
 pthread_t tid;
 
 struct wc_config wc_config;
@@ -162,7 +167,6 @@ handle_conn(void *arg)
 	char buf[1024];
 	struct image curimg;
 	struct image jpegimg;
-	static int i;
 	
 	memcpy(&peer, arg, sizeof(peer));
 	free(arg);

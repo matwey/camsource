@@ -16,6 +16,22 @@ struct jpeg_ctx
 	int bufsize;
 };
 
+char *name = "jpeg_comp";
+char *deps[] = { NULL };
+pthread_t tid;
+
+int
+init()
+{
+	return 0;
+}
+
+void *
+thread(void *arg)
+{
+	return NULL;
+}
+
 void
 j_id(struct jpeg_compress_struct *cinfo)
 {

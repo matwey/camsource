@@ -3,7 +3,8 @@
 
 #include <pthread.h>
 
-extern char name[];		/* Module name */
+extern char *name;		/* Module name */
+extern char *deps[];		/* Dependencies */
 extern pthread_t tid;	/* Thread id/handle, filled in by camsource */
 
 int init(void);			/* Pre-thread init */
