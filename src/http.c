@@ -15,6 +15,7 @@
 #include "grab.h"
 #include "filter.h"
 #include "jpeg.h"
+#include "mod_handle.h"
 
 char *name = "http";
 char *deps[] =

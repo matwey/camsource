@@ -6,8 +6,6 @@
 #include <pthread.h>
 #include <libxml/parser.h>
 
-#include "mod_handle.h"
-
 /*
  * There are three kinds of modules:
  * .) MODULE_THREAD is a worker module which runs in its own thread.
@@ -52,6 +50,8 @@
  *    init() altogether. Note: do not create threads from init().
  */
 
+
+struct module_ctx;
 
 extern char *name;
 extern char *deps[];

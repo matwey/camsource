@@ -12,6 +12,7 @@
 #define MODULE_GENERIC
 #include "module.h"
 #include "xmlhelp.h"
+#include "mod_handle.h"
 
 struct jpeg_ctx
 {
