@@ -186,11 +186,11 @@ camdev_capdump(char *dev)
 	{
 		if (pal->val == vidpic.palette)
 		{
-			printf("  Currenctly active palette: %s\n", pal->name);
+			printf("  Currenctly active palette: %s with depth %u\n", pal->name, vidpic.depth);
 			goto palfound;
 		}
 	}
-	printf("  Currenctly active palette: not found/supported? (value %u)\n", vidpic.palette);
+	printf("  Currenctly active palette: not found/supported? (value %u, depth %u)\n", vidpic.palette, vidpic.depth);
 	
 palfound:
 	printf("  Probing for supported palettes:\n");
@@ -201,7 +201,7 @@ palfound:
 		ioctl(fd, VIDIOCSPICT, &vidpic);
 		ioctl(fd, VIDIOCGPICT, &vidpic);
 		if (vidpic.palette == pal->val)
-			printf("    Palette \"%s\" supported: Yes\n", pal->name);
+			printf("    Palette \"%s\" supported: Yes, with depth %u\n", pal->name, vidpic.depth);
 		else
 			printf("    Palette \"%s\" supported: No\n", pal->name);
 	}	

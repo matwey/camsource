@@ -1,6 +1,7 @@
 $Id$
 
 Sep 28 2002
+	- Supports more palettes. They're untested and probably broken
 	- Added more information to palette struct and added palette probing
 	  to -c switch output.
 	- Added experimental grayscale palette support

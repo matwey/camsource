@@ -9,7 +9,7 @@ struct image;
  * The image struct contains width and height of the image,
  * as well as a large enough output buffer.
  */
-typedef void unpalettizer(struct image *, const unsigned char *);
+typedef void unpalettizer(struct image *, unsigned char *);
 
 /* Array of all known palettes and their conversion routines */
 struct palette
