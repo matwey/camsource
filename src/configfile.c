@@ -28,6 +28,12 @@ config_init(char *customconfig)
 {
 	char *s, **ss;
 	
+	if (customconfig && !access(customconfig, R_OK))
+	{
+		ourconfig = customconfig;
+		goto found;
+	}
+	
 	s = getenv("HOME");
 	if (s)
 		snprintf(localconfig, sizeof(localconfig) - 1, "%s/.camsource", s);
