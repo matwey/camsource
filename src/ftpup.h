@@ -39,6 +39,7 @@ struct ftpup_ctx
 	int safemode:1;
 	int dosprintf:1;
 	int dontdostrftime:1;
+	int persistant:1;
 };
 
 #endif

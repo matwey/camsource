@@ -74,6 +74,19 @@ xml_atof(xmlNodePtr node, double def)
 	return i;
 }
 
+int xml_bool(xmlNodePtr node, int def) {
+	char *s;
+	int ret;
+
+	s = xml_getcontent_def(node, def ? "1" : "0");
+	if (!strcmp(s, "yes") || !strcmp(s, "on") || !strcmp(s, "1"))
+		ret = 1;
+	else
+		ret = 0;
+
+	return ret;
+}
+
 char *
 xml_attrval(xmlNodePtr node, char *attr)
 {

@@ -1,5 +1,8 @@
 $Id$
 
+Sep 1 2003
+	- Added "persistant" option to ftpup module.
+
 Aug 15 2003
 	- Eliminated mem leak in input_jpg plugin.
 

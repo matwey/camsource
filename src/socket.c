@@ -329,6 +329,9 @@ socket_read(struct peer *peer, char *buf, int size, int timeout)
 	int ret;
 	struct pollfd pfd;
 
+	if (peer->fd == -1)
+		return -1;
+
 	memset(&pfd, 0, sizeof(pfd));
 	pfd.fd = peer->fd;
 	pfd.events = POLLIN | POLLERR | POLLHUP;
@@ -349,6 +352,9 @@ socket_write(struct peer *peer, char *buf, int size, int timeout)
 	int ret;
 	struct pollfd pfd;
 	int written;
+
+	if (peer->fd == -1)
+		return -1;
 	
 	written = 0;
 	for (;;)

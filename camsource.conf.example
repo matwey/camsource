@@ -546,6 +546,15 @@
 			- interval: Same as filewrite's interval.
 			  Specifying a negative interval works here
 			  too.
+			- persistant: Whether to use a persistant ftp
+			  connection or not. With a persistant
+			  connection, the module will log into the ftp
+			  server once, upload an image, and then leave
+			  the connection open and re-use the connection
+			  for the next image to upload. As ftp servers
+			  generally have a idle-timeout, you should use
+			  this option only when you have set a low
+			  interval.
 		-->
 		<host>some.host.name</host>
 		<port>21</port>
@@ -556,6 +565,7 @@
 		<passive>no</passive>
 		<safemode>yes</safemode>
 		<interval unit="sec">30</interval>
+		<persistant>no</persistant>
 
 		<jpegqual>75</jpegqual>
 		

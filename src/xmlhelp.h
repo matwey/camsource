@@ -18,6 +18,8 @@ char *xml_getcontent_def(xmlNodePtr, char *);
 int xml_atoi(xmlNodePtr, int);
 /* Ditto for doubles */
 double xml_atof(xmlNodePtr, double);
+/* Returns 0 or 1 if given a yes/no value */
+int xml_bool(xmlNodePtr, int);
 
 /* Returns the value of the given attribute of the given node */
 char *xml_attrval(xmlNodePtr, char *);

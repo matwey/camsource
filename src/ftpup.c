@@ -71,54 +71,69 @@ thread(void *mctx)
 	char tsfnbuf[1024];
 	char genbuf[1024];
 	struct tm tm;
+	int savedsock;
 	
 	fctx = ((struct module_ctx *) mctx)->custom;
 	
 	memset(&idx, 0, sizeof(idx));
+	peer.fd = -1;
 	for (;;)
 	{
 		gettimeofday(&tstart, NULL);
+		memcpy(&tend, &tstart, sizeof(tend));
 		filter_get_image(&img, &idx, ((struct module_ctx *) mctx)->node, NULL);
 		jpeg_compress(&jbuf, &img, ((struct module_ctx *) mctx)->node);
 		
-		ret = socket_connect(&peer, fctx->host, fctx->port, 20000);
-		if (ret)
-		{
-			log_log(MODNAME, "Connect to %s:%i failed (code %i, errno: %s)\n",
-				fctx->host, fctx->port, ret, strerror(errno));
-			goto freensleep;
-		}
-		
-		fctx->peer = &peer;
-		
-		if (ftpup_read_ftp_resp(fctx, 220))
-			goto closenstuff;
-		
-		ftpup_cmd(fctx, "USER %s\r\n", fctx->user);
-		ret = ftpup_read_ftp_resp(fctx, 0);
-		
-		if (ret == 331)
-		{
-			ftpup_cmd(fctx, "PASS %s\r\n", fctx->pass);
-			if (ftpup_read_ftp_resp(fctx, 230))
+		if (peer.fd == -1) {
+login_now:
+			ret = socket_connect(&peer, fctx->host, fctx->port, 20000);
+			if (ret)
+			{
+				log_log(MODNAME, "Connect to %s:%i failed (code %i, errno: %s)\n",
+					fctx->host, fctx->port, ret, strerror(errno));
+				goto freensleep;
+			}
+			savedsock = 0;
+
+			fctx->peer = &peer;
+			
+			if (ftpup_read_ftp_resp(fctx, 220))
 				goto closenstuff;
-		}
-		else if (ret != 230)
-		{
-			log_log(MODNAME, "Ftp login failure? (got code %i after USER command)\n", ret);
-			goto closenstuff;
-		}
-		
-		if (fctx->dir)
-		{
-			ftpup_cmd(fctx, "CWD %s\r\n", fctx->dir);
-			if (ftpup_read_ftp_resp(fctx, 250))
+
+			ftpup_cmd(fctx, "USER %s\r\n", fctx->user);
+			ret = ftpup_read_ftp_resp(fctx, 0);
+			
+			if (ret == 331)
+			{
+				ftpup_cmd(fctx, "PASS %s\r\n", fctx->pass);
+				if (ftpup_read_ftp_resp(fctx, 230))
+					goto closenstuff;
+			}
+			else if (ret != 230)
+			{
+				log_log(MODNAME, "Ftp login failure? (got code %i after USER command)\n", ret);
 				goto closenstuff;
+			}
+			
+			if (fctx->dir)
+			{
+				ftpup_cmd(fctx, "CWD %s\r\n", fctx->dir);
+				if (ftpup_read_ftp_resp(fctx, 250))
+					goto closenstuff;
+			}
 		}
+		else
+			savedsock = 1;
+		
 		
 		ftpup_cmd(fctx, "TYPE I\r\n");
-		if (ftpup_read_ftp_resp(fctx, 200))
+		if (ftpup_read_ftp_resp(fctx, 200)) {
+			if (savedsock) {
+				log_log(MODNAME, "Lost persistant connection, starting re-login\n");
+				goto login_now;
+			}
 			goto closenstuff;
+		}
 
 		ret = ftpup_setup_data_conn(fctx);
 		if (ret)
@@ -170,13 +185,18 @@ thread(void *mctx)
 				goto closenstuff;
 		}
 		
-		socket_printf(&peer, "QUIT\r\n");
-		ftpup_read_ftp_resp(fctx, 0);
+		if (!fctx->persistant) {
+			socket_printf(&peer, "QUIT\r\n");
+			ftpup_read_ftp_resp(fctx, 0);
+		}
 		gettimeofday(&tend, NULL);
 		log_log(MODNAME, "Upload of '%s' completed in %2.2f seconds\n",
 			tsfnbuf, (tend.tv_sec - tstart.tv_sec) + (tend.tv_usec - tstart.tv_usec)/1000000.0f);
+
+		if (!fctx->persistant) {
 closenstuff:
-		socket_close(&peer);
+			socket_close(&peer);
+		}
 freensleep:
 		image_destroy(&img);
 		free(jbuf.buf);
@@ -235,21 +255,11 @@ ftpup_load_conf(struct ftpup_ctx *fctx, xmlNodePtr node)
 				fctx->dontdostrftime = 1;
 		}
 		else if (xml_isnode(node, "passive"))
-		{
-			s = xml_getcontent_def(node, "no");
-			if (!strcmp(s, "yes") || !strcmp(s, "on") || !strcmp(s, "1"))
-				fctx->passive = 1;
-			else
-				fctx->passive = 0;
-		}
+			fctx->passive = xml_bool(node, 0);
 		else if (xml_isnode(node, "safemode"))
-		{
-			s = xml_getcontent_def(node, "no");
-			if (!strcmp(s, "yes") || !strcmp(s, "on") || !strcmp(s, "1"))
-				fctx->safemode = 1;
-			else
-				fctx->safemode = 0;
-		}
+			fctx->safemode = xml_bool(node, 0);
+		else if (xml_isnode(node, "persistant"))
+			fctx->persistant = xml_bool(node, 0);
 		else if (xml_isnode(node, "interval"))
 		{
 			mult = 1;
