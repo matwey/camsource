@@ -145,6 +145,9 @@ rotate (filter)
   module, you should probably specify the final image size as a
   percentage (scale) instead of a fixed height/width pair.
 
+bw (filter)
+  Converts a color image into artistic grayscale / black & white.
+
 
 
 The config file should be pretty self explanatory. Every possible

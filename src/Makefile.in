@@ -81,7 +81,8 @@ install_sh = @install_sh@
 bin_PROGRAMS = camsource
 pkglib_LTLIBRARIES = libwc_serv.la libjpeg_comp.la libflip.la \
 	libresize.la libsocket.la libhttp.la libfilewrite.la \
-	libftpup.la libtext.la librgbbgr.la librotate.la
+	libftpup.la libtext.la librgbbgr.la librotate.la \
+	libbw.la
 
 
 pkginclude_HEADERS = camdev.h configfile.h filter.h grab.h \
@@ -107,12 +108,17 @@ libftpup_la_SOURCES = ftpup.c ftpup.h
 libtext_la_SOURCES = text.c text.h font_6x11.h
 librgbbgr_la_SOURCES = rgbbgr.c
 librotate_la_SOURCES = rotate.c
+libbw_la_SOURCES = bw.c
 subdir = src
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
 
+libbw_la_LDFLAGS =
+libbw_la_LIBADD =
+am_libbw_la_OBJECTS = bw.lo
+libbw_la_OBJECTS = $(am_libbw_la_OBJECTS)
 libfilewrite_la_LDFLAGS =
 libfilewrite_la_LIBADD =
 am_libfilewrite_la_OBJECTS = filewrite.lo
@@ -174,17 +180,17 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
-@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/camdev.Po $(DEPDIR)/configfile.Po \
-@AMDEP_TRUE@	$(DEPDIR)/filewrite.Plo $(DEPDIR)/filter.Po \
-@AMDEP_TRUE@	$(DEPDIR)/flip.Plo $(DEPDIR)/ftpup.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/grab.Po $(DEPDIR)/http.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/image.Po $(DEPDIR)/jpeg.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/log.Po $(DEPDIR)/main.Po \
-@AMDEP_TRUE@	$(DEPDIR)/mod_handle.Po $(DEPDIR)/resize.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/rgbbgr.Plo $(DEPDIR)/rotate.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/socket.Plo $(DEPDIR)/text.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/unpalette.Po $(DEPDIR)/wc_serv.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/xmlhelp.Po
+@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/bw.Plo $(DEPDIR)/camdev.Po \
+@AMDEP_TRUE@	$(DEPDIR)/configfile.Po $(DEPDIR)/filewrite.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/filter.Po $(DEPDIR)/flip.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/ftpup.Plo $(DEPDIR)/grab.Po \
+@AMDEP_TRUE@	$(DEPDIR)/http.Plo $(DEPDIR)/image.Po \
+@AMDEP_TRUE@	$(DEPDIR)/jpeg.Plo $(DEPDIR)/log.Po \
+@AMDEP_TRUE@	$(DEPDIR)/main.Po $(DEPDIR)/mod_handle.Po \
+@AMDEP_TRUE@	$(DEPDIR)/resize.Plo $(DEPDIR)/rgbbgr.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/rotate.Plo $(DEPDIR)/socket.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/text.Plo $(DEPDIR)/unpalette.Po \
+@AMDEP_TRUE@	$(DEPDIR)/wc_serv.Plo $(DEPDIR)/xmlhelp.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
@@ -193,16 +199,17 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
-DIST_SOURCES = $(libfilewrite_la_SOURCES) $(libflip_la_SOURCES) \
-	$(libftpup_la_SOURCES) $(libhttp_la_SOURCES) \
-	$(libjpeg_comp_la_SOURCES) $(libresize_la_SOURCES) \
-	$(librgbbgr_la_SOURCES) $(librotate_la_SOURCES) \
-	$(libsocket_la_SOURCES) $(libtext_la_SOURCES) \
-	$(libwc_serv_la_SOURCES) $(camsource_SOURCES)
+DIST_SOURCES = $(libbw_la_SOURCES) $(libfilewrite_la_SOURCES) \
+	$(libflip_la_SOURCES) $(libftpup_la_SOURCES) \
+	$(libhttp_la_SOURCES) $(libjpeg_comp_la_SOURCES) \
+	$(libresize_la_SOURCES) $(librgbbgr_la_SOURCES) \
+	$(librotate_la_SOURCES) $(libsocket_la_SOURCES) \
+	$(libtext_la_SOURCES) $(libwc_serv_la_SOURCES) \
+	$(camsource_SOURCES)
 HEADERS = $(pkginclude_HEADERS)
 
 DIST_COMMON = $(pkginclude_HEADERS) Makefile.am Makefile.in
-SOURCES = $(libfilewrite_la_SOURCES) $(libflip_la_SOURCES) $(libftpup_la_SOURCES) $(libhttp_la_SOURCES) $(libjpeg_comp_la_SOURCES) $(libresize_la_SOURCES) $(librgbbgr_la_SOURCES) $(librotate_la_SOURCES) $(libsocket_la_SOURCES) $(libtext_la_SOURCES) $(libwc_serv_la_SOURCES) $(camsource_SOURCES)
+SOURCES = $(libbw_la_SOURCES) $(libfilewrite_la_SOURCES) $(libflip_la_SOURCES) $(libftpup_la_SOURCES) $(libhttp_la_SOURCES) $(libjpeg_comp_la_SOURCES) $(libresize_la_SOURCES) $(librgbbgr_la_SOURCES) $(librotate_la_SOURCES) $(libsocket_la_SOURCES) $(libtext_la_SOURCES) $(libwc_serv_la_SOURCES) $(camsource_SOURCES)
 
 all: all-am
 
@@ -243,6 +250,8 @@ uninstall-pkglibLTLIBRARIES:
 
 clean-pkglibLTLIBRARIES:
 	-test -z "$(pkglib_LTLIBRARIES)" || rm -f $(pkglib_LTLIBRARIES)
+libbw.la: $(libbw_la_OBJECTS) $(libbw_la_DEPENDENCIES) 
+	$(LINK) -rpath $(pkglibdir) $(libbw_la_LDFLAGS) $(libbw_la_OBJECTS) $(libbw_la_LIBADD) $(LIBS)
 libfilewrite.la: $(libfilewrite_la_OBJECTS) $(libfilewrite_la_DEPENDENCIES) 
 	$(LINK) -rpath $(pkglibdir) $(libfilewrite_la_LDFLAGS) $(libfilewrite_la_OBJECTS) $(libfilewrite_la_LIBADD) $(LIBS)
 libflip.la: $(libflip_la_OBJECTS) $(libflip_la_DEPENDENCIES) 
@@ -299,6 +308,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/bw.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/camdev.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/configfile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/filewrite.Plo@am__quote@

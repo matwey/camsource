@@ -348,6 +348,9 @@
 	-->
 	<module name="rotate" active="no"/>
 	
+	<!-- This filter converts the image into bw (grayscale) -->
+	<module name="bw" active="no"/>
+	
 	<!--
 		Global filters to use. Any filter given here
 		will be applied to every grabbed frame. If
@@ -373,6 +376,9 @@
 	<filter name="rotate">
 		<direction>right</direction>
 	</filter>
+	
+	<!-- Also not active by default -->
+	<filter name="bw"/>
 	
 </camsourceconfig>
 
