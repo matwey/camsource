@@ -112,7 +112,7 @@
 			</filter>
 			
 			<filter name="text">
-				<text>Test</text>
+				<text>%b %d %Y %H:%M:%S</text>
 				<color>ffffff</color>
 				<bgcolor>trans</bgcolor>
 				<pos>bl</pos>

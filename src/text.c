@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <time.h>
 #include <libxml/parser.h>
 
 #include "config.h"
@@ -38,17 +39,25 @@ filter(struct image *img, xmlNodePtr node)
 	int subx, suby;
 	int idx;
 	unsigned char *imgptr;
+	unsigned char buf[1024], *text;
+	struct tm tm;
+	time_t now;
 	
 	idx = text_conf(&ctx, node);
 	if (idx)
 		return -1;
+
+	time(&now);
+	localtime_r(&now, &tm);
+	strftime(buf, sizeof(buf) - 1, ctx.text, &tm);
+	text = buf;
 	
 	if (img->y < 11)
 		return 0;
 
 	if (ctx.right)
 	{
-		x = img->x - strlen(ctx.text) * 6 - 1;
+		x = img->x - strlen(text) * 6 - 1;
 		if (x < 0)
 			x = 0;
 	}
@@ -60,12 +69,12 @@ filter(struct image *img, xmlNodePtr node)
 	else
 		y = img->y - 11;
 	
-	while (*ctx.text)
+	while (*text)
 	{
 		if (x + 6 > img->x)
 			break;
 		
-		idx = *ctx.text * 11;
+		idx = *text * 11;
 		for (suby = 0; suby < 11; suby++)
 		{
 			imgptr = img->buf + ((y + suby) * img->x + x) * 3;
@@ -82,7 +91,7 @@ filter(struct image *img, xmlNodePtr node)
 			}
 			idx++;
 		}
-		ctx.text++;
+		text++;
 		x += 6;
 	}
 	
