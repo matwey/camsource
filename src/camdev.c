@@ -21,7 +21,7 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 	int ret;
 	struct video_window vidwin;
 	char *path;
-	unsigned int x, y, fps;
+	int x, y, fps;
 	int channel;
 	struct video_channel vidchan;
 	
@@ -36,9 +36,9 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 			if (xml_isnode(node, "path"))
 				path = xml_getcontent_def(node, path);
 			else if (xml_isnode(node, "width"))
-				x = xml_atoi(node, 0);
+				x = camdev_size_def(node);
 			else if (xml_isnode(node, "height"))
-				y = xml_atoi(node, 0);
+				y = camdev_size_def(node);
 			else if (xml_isnode(node, "fps"))
 				fps = xml_atoi(node, 0);
 			else if (xml_isnode(node, "channel"))
@@ -77,29 +77,14 @@ closenerr:
 	}
 	
 	memset(&vidwin, 0, sizeof(vidwin));
-	if (!x)
-		vidwin.width = newcamdev.vidcap.maxwidth;
-	else
-	{
-		if (x < newcamdev.vidcap.minwidth || x > newcamdev.vidcap.maxwidth)
-		{
-			printf("Invalid grabbing width (%i) according to driver report\n", x);
-			goto closenerr;
-		}
-		vidwin.width = x;
-	}
-	if (!y)
-		vidwin.height = newcamdev.vidcap.maxheight;
-	else
-	{
-		if (y < newcamdev.vidcap.minheight || y > newcamdev.vidcap.maxheight)
-		{
-			printf("Invalid grabbing height (%i) according to driver report\n", y);
-			goto closenerr;
-		}
-		vidwin.height = y;
-	}
 	
+	x = camdev_size_set(x, newcamdev.vidcap.minwidth, newcamdev.vidcap.maxwidth, "width");
+	y = camdev_size_set(y, newcamdev.vidcap.minheight, newcamdev.vidcap.maxheight, "height");
+	if (x <= 0 || y <= 0)
+		goto closenerr;
+	vidwin.width = x;
+	vidwin.height = y;
+		
 	vidwin.flags |= (fps & 0x3f) << 16;
 	
 	ret = ioctl(newcamdev.fd, VIDIOCSWIN, &vidwin);
@@ -182,5 +167,39 @@ camdev_capdump(char *dev)
 	printf("  Grabbing frame size:\n");
 	printf("    Min: %ix%i\n", vidcap.minwidth, vidcap.minheight);
 	printf("    Max: %ix%i\n", vidcap.maxwidth, vidcap.maxheight);
+}
+
+int
+camdev_size_def(xmlNodePtr node)
+{
+	char *s;
+	
+	s = xml_getcontent_def(node, "max");
+	if (!strcmp(s, "max") || !strcmp(s, "maximum") || !strcmp(s, "default"))
+		return 0;
+	else if (!strcmp(s, "min") || !strcmp(s, "minimum"))
+		return -1;
+	else
+		return xml_atoi(node, 0);
+}
+
+int
+camdev_size_set(int val, int min, int max, char *s)
+{
+	if (val == 0)
+		return max;
+	if (val == -1)
+		return min;
+	if (val < min)
+	{
+		printf("Invalid grabbing %s according to driver (%i < %i)\n", s, val, min);
+		return 0;
+	}
+	if (val > max)
+	{
+		printf("Invalid grabbing %s according to driver (%i > %i)\n", s, val, max);
+		return 0;
+	}
+	return val;
 }
 

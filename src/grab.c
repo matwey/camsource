@@ -27,6 +27,32 @@ grab_thread_init()
 	pthread_cond_init(&current_img.ready_cond, NULL);
 }
 
+struct camdev *
+grab_open()
+{
+	int ret;
+	struct camdev *camdev;
+	xmlNodePtr node;
+	
+	camdev = malloc(sizeof(*camdev));
+
+	node = xmlDocGetRootElement(configdoc);
+	for (node = node->children; node; node = node->next)
+	{
+		if (xml_isnode(node, "camdev"))
+		{
+			ret = camdev_open(camdev, node);
+			goto camdevopened;
+		}
+	}
+	ret = camdev_open(camdev, NULL);
+camdevopened:
+	if (ret == -1)
+		return NULL;
+	
+	return camdev;
+}
+
 void *
 grab_thread(void *arg)
 {
@@ -35,21 +61,9 @@ grab_thread(void *arg)
 	unsigned int bpf;
 	unsigned char *imgbuf;
 	struct image newimg;
-	xmlNodePtr node;
 	
-	node = xmlDocGetRootElement(configdoc);
-	for (node = node->children; node; node = node->next)
-	{
-		if (xml_isnode(node, "camdev"))
-		{
-			ret = camdev_open(&camdev, node);
-			goto camdevopened;
-		}
-	}
-	ret = camdev_open(&camdev, NULL);
-camdevopened:
-	if (ret == -1)
-		exit(1);
+	memcpy(&camdev, arg, sizeof(camdev));
+	free(arg);
 	
 	bpf = (camdev.x * camdev.y) * camdev.pal->bpp;
 	imgbuf = malloc(bpf);

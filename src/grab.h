@@ -5,6 +5,8 @@
 
 #include "image.h"
 
+struct camdev;
+
 /* The grabimage struct and its only instance current_img.
  * This is where the grabbing thread stores the frames.
  * Every time a new frame is grabbed, the index is
@@ -41,6 +43,7 @@ struct grabimage
 extern struct grabimage current_img;
 
 void grab_thread_init(void);
+struct camdev *grab_open(void);
 void *grab_thread(void *);
 
 /* Applies global filters (as found in configdoc xml tree) to image in-place */

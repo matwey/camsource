@@ -1,6 +1,10 @@
 Sep 17 2002
 	- Created config option to select input channel
 	- Sanity check grabbing width/height values
+	- Can now specify "default", "max" etc in certain config options
+	- Video device is opened before going to background, so errors show up
+	  on console.
+	- Pumped development version number  to 0.1.1
 
 Sep 16 2002
 	- Released version 0.1.0

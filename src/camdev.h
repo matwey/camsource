@@ -21,6 +21,8 @@ struct camdev
 int camdev_open(struct camdev *, xmlNodePtr);
 
 void camdev_capdump(char *);
+int camdev_size_def(xmlNodePtr);
+int camdev_size_set(int, int, int, char *);
 
 #endif
 

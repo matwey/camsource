@@ -47,6 +47,7 @@ main_init(char *config)
 	pthread_t grab_tid;
 	pthread_attr_t attr;
 	int logfd;
+	struct camdev *camdev;
 	
 	signal(SIGPIPE, SIG_IGN);
 	
@@ -74,12 +75,16 @@ main_init(char *config)
 
 	mod_load_all();
 	
+	camdev = grab_open();
+	if (!camdev)
+		exit(1);
+	
 	if (logfd >= 0)
 		log_replace_bg(logfd);
 	
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-	pthread_create(&grab_tid, &attr, grab_thread, NULL);
+	pthread_create(&grab_tid, &attr, grab_thread, camdev);
 	pthread_attr_destroy(&attr);
 
 	mod_start_all();

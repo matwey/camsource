@@ -6,23 +6,24 @@
 		<!--
 			This section gives config options for the
 			camera device. It instructs the hardware to
-			grab the frames at a certain size and frame
-			rate. Note that not all hardware supports
+			grab the frames at a certain size, at a
+			certain frame rate and from a certain input
+			channel. Note that not all hardware supports
 			every frame size, and not all hardware supports
 			setting the frame rate (and if it does, not
 			all frame rates are supported either).
-			Path defaults to /dev/video0, frame size defaults
-			to max size as reported by the driver, fps
-			defaults to unchanged. You can put 0 for the fps
-			and width/height options to use the default values.
-			"Channel" is the input channel to use. If the
-			option is not present (or -1 is given), no
-			input channel will be selected (i.e. the default
-			will be left).
+			
+			- Path defaults to /dev/video0.
+			- Width and height default to the maximum size
+			  as reported by the driver. You can specify
+			  "max" or "default" for the same effect,
+			  or "min" for the minimum size.
+			- Fps and channel default to unchanged/not set.
+			  You can specify "default" for the same effect.
 		-->
 		<path>/dev/video0</path>
-		<width>640</width>
-		<height>480</height>
+		<width>max</width>
+		<height>max</height>
 		<fps>15</fps>
 		<channel>0</channel>
 	</camdev>
