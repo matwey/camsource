@@ -4,6 +4,7 @@
 int log_open(void);
 void log_replace_bg(int);
 void log_banner(void);
+void log_timebanner(char *);
 
 #endif
 

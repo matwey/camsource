@@ -80,3 +80,16 @@ log_replace_bg(int fd)
 	exit(0);
 }
 
+void
+log_timebanner(char *name)
+{
+	char buf[256];
+	struct tm tm;
+	time_t now;
+
+	time(&now);
+	localtime_r(&now, &tm);
+	strftime(buf, sizeof(buf) - 1, "%b %d %Y %T", &tm);
+	printf("[%s @ %s] ", name, buf);
+}
+

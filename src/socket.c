@@ -108,3 +108,20 @@ socket_readline(int fd, char *buf, unsigned int bufsize)
 	return 0;
 }
 
+void
+socket_print_ip(struct peer *peer)
+{
+	printf("%u.%u.%u.%u",
+		(peer->sin.sin_addr.s_addr >>  0) & 0xff,
+		(peer->sin.sin_addr.s_addr >>  8) & 0xff,
+		(peer->sin.sin_addr.s_addr >> 16) & 0xff,
+		(peer->sin.sin_addr.s_addr >> 24) & 0xff);
+}
+
+void
+socket_print_ipport(struct peer *peer)
+{
+	socket_print_ip(peer);
+	printf(":%u", ntohs(peer->sin.sin_port));
+}
+

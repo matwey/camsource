@@ -20,6 +20,7 @@
 #include "filter.h"
 #include "xmlhelp.h"
 #include "socket.h"
+#include "log.h"
 
 char *name = "wc_serv";
 char *deps[] =
@@ -124,12 +125,18 @@ handle_conn(void *arg)
 	struct jpegbuf jpegimg;
 	int first;
 	unsigned int last_idx;
+	int count;
 	
 	memcpy(&peer, arg, sizeof(peer));
 	free(arg);
 	
+	log_timebanner("wc_serv");
+	printf("New connection from ");
+	socket_print_ipport(&peer.peer);
+	printf("\n");
+	
 	first = 1;
-	last_idx = 0;
+	last_idx = count = 0;
 	/* TODO: timeout */
 	for (;;)
 	{
@@ -177,10 +184,18 @@ handle_conn(void *arg)
 		
 		if (ret <= 0)
 			break;
+		
+		count++;
 	}
 
 closenout:
 	close(peer.peer.fd);
+
+	log_timebanner("wc_serv");
+	printf("Connection from ");
+	socket_print_ipport(&peer.peer);
+	printf(" closed, %i frame(s) served\n", count);
+	
 	return NULL;
 }
 

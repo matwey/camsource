@@ -45,5 +45,10 @@ int socket_accept_thread(int, struct peer *, void *(*)(void *), void *);
 /* Reads one line from fd into buf of given size. Returns -1 on error (such as eof) */
 int socket_readline(int, char *, unsigned int);
 
+/* Prints the ip (1.2.3.4) from the peer struct to stdout */
+void socket_print_ip(struct peer *);
+/* Same as above, but includes port (1.2.3.4:1234) */
+void socket_print_ipport(struct peer *);
+
 #endif
 

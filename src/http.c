@@ -16,6 +16,7 @@
 #include "filter.h"
 #include "jpeg.h"
 #include "mod_handle.h"
+#include "log.h"
 
 char *name = "http";
 char *deps[] =
@@ -116,10 +117,17 @@ conn(void *peer_p)
 	struct image img;
 	unsigned int idx;
 	struct jpegbuf jpegbuf;
-	int fps;
+	int fps, count;
 	
 	memcpy(&http_peer, peer_p, sizeof(http_peer));
 	free(peer_p);
+	
+	log_timebanner("http");
+	printf("New connection from ");
+	socket_print_ipport(&http_peer.peer);
+	printf("\n");
+	
+	count = 0;
 	
 	ret = socket_readline(http_peer.peer.fd, buf, sizeof(buf));
 	if (ret)
@@ -149,6 +157,11 @@ conn(void *peer_p)
 	if (!*url || !httpver)
 		goto closenout;
 	
+	log_timebanner("http");
+	printf("Request for %s from ", url);
+	socket_print_ipport(&http_peer.peer);
+	printf("\n");
+
 	for (subnode = http_peer.mod_ctx->node->children; subnode; subnode = subnode->next)
 	{
 		if (!xml_isnode(subnode, "vpath"))
@@ -212,6 +225,9 @@ match:
 		ret = write(http_peer.peer.fd, buf, strlen(buf));
 		if (ret > 0)
 			ret = write(http_peer.peer.fd, jpegbuf.buf, jpegbuf.bufsize);
+
+		count++;
+
 		if (fps && ret > 0)
 		{
 			snprintf(buf, sizeof(buf) - 1,
@@ -226,6 +242,11 @@ match:
 	while (fps > 0 && ret > 0);
 
 closenout:
+	log_timebanner("http");
+	printf("Closing connection from ");
+	socket_print_ipport(&http_peer.peer);
+	printf(", %i frame(s) served\n", count);
+
 	sleep(1);
 	close(http_peer.peer.fd);
 	return NULL;
