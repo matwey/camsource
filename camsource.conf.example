@@ -107,6 +107,11 @@
 				<height>240</height>
 			</filter>
 		</vpath>
+
+		<vpath>
+			<path>/multipart-large</path>
+			<fps>1</fps>
+		</vpath>
 	</module>
 	
 	<module name="jpeg_comp" active="yes">
