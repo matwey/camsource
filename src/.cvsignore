@@ -24,4 +24,6 @@ librgbbgr.la
 rgbbgr.lo
 rotate.lo
 librotate.la
+bw.lo
+libbw.la
 
