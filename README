@@ -130,3 +130,10 @@ The command line switch "-c" has been created to dump the video4linux
 video capability information to console, then exit. Use this if you're
 unsure about which frame sizes your camera supports. Optionally you can
 specify another device file to open and query (defaults to /dev/video0).
+
+
+
+Links
+=====
+
+Homepage: http://camsource.sf.net/

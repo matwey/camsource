@@ -15,11 +15,16 @@
 			to max size as reported by the driver, fps
 			defaults to unchanged. You can put 0 for the fps
 			and width/height options to use the default values.
+			"Channel" is the input channel to use. If the
+			option is not present (or -1 is given), no
+			input channel will be selected (i.e. the default
+			will be left).
 		-->
 		<path>/dev/video0</path>
 		<width>640</width>
 		<height>480</height>
 		<fps>15</fps>
+		<channel>0</channel>
 	</camdev>
 	
 	<!--

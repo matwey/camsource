@@ -21,9 +21,12 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 	struct video_window vidwin;
 	char *path;
 	unsigned int x, y, fps;
+	int channel;
+	struct video_channel vidchan;
 	
 	path = "/dev/video0";
 	x = y = fps = 0;
+	channel = -1;
 	
 	if (node)
 	{
@@ -37,6 +40,8 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 				y = xml_atoi(node, 0);
 			else if (xml_isnode(node, "fps"))
 				fps = xml_atoi(node, 0);
+			else if (xml_isnode(node, "channel"))
+				channel = xml_atoi(node, -1);
 		}
 	}
 	
@@ -57,6 +62,15 @@ camdev_open(struct camdev *camdev, xmlNodePtr node)
 	{
 		printf("Video device doesn't support grabbing to memory\n");
 		return -1;
+	}
+	
+	if (channel >= 0)
+	{
+		memset(&vidchan, 0, sizeof(vidchan));
+		vidchan.channel = channel;
+		ret = ioctl(newcamdev.fd, VIDIOCSCHAN, &vidchan);
+		if (ret)
+			printf("ioctl \"set input channel\" failed, continuing anyway: %s\n", strerror(errno));
 	}
 	
 	memset(&vidwin, 0, sizeof(vidwin));
