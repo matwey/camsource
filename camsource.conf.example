@@ -75,6 +75,11 @@
 		Each vpath definition should contain one or more <path>
 		tags, each of which can be used to access this image
 		variant (those paths can be thought of as aliases).
+		If a vpath section include an <fps> tag, the image
+		will be served as multipart-jpeg stream, usable for
+		plugin- and applet-less streaming on netscape/mozilla
+		browsers. Without fps specification, only a single
+		image will be served.
 	-->
 	<module name="http" active="yes">
 		<port>9192</port>
@@ -92,6 +97,15 @@
 		<vpath>
 			<path>/big</path>
 			<path>/large</path>
+		</vpath>
+		
+		<vpath>
+			<path>/multipart</path>
+			<fps>2</fps>
+			<filter name="resize">
+				<width>320</width>
+				<height>240</height>
+			</filter>
 		</vpath>
 	</module>
 	

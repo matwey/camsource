@@ -115,6 +115,7 @@ conn(void *peer_p)
 	struct image img;
 	unsigned int idx;
 	struct jpegbuf jpegbuf;
+	int fps;
 	
 	memcpy(&http_peer, peer_p, sizeof(http_peer));
 	free(peer_p);
@@ -168,27 +169,59 @@ match:
 			break;
 	}
 	
+	fps = get_fps(subnode);
+	if (fps > 0)
+	{
+		snprintf(buf, sizeof(buf) - 1,
+			"HTTP/1.0 200 OK\r\n"
+			"Server: " PACKAGE_STRING "\r\n"
+			"Content-Type: multipart/x-mixed-replace;boundary=Juigt9G7bb7sfdgsdZGIDFsjhn\r\n"
+			"\r\n"
+			"--Juigt9G7bb7sfdgsdZGIDFsjhn\r\n");
+		write(http_peer.peer.fd, buf, strlen(buf));
+	}
+	
 	idx = 0;
-	grab_get_image(&img, &idx);
-	filter_apply(&img, http_peer.mod_ctx->node);
-	filter_apply(&img, subnode);
-	jpeg_compress(&jpegbuf, &img, 0);
-	
-	snprintf(buf, sizeof(buf) - 1,
-		"HTTP/1.0 200 OK\r\n"
-		"Server: " PACKAGE_STRING "\r\n"
-		"Content-Length: %i\r\n"
-		"Connection: close\r\n"
-		"Content-Type: image/jpeg\r\n"
-		"\r\n",
-		jpegbuf.bufsize);
-	write(http_peer.peer.fd, buf, strlen(buf));
-	write(http_peer.peer.fd, jpegbuf.buf, jpegbuf.bufsize);
-	
-	image_destroy(&img);
-	free(jpegbuf.buf);
+	do
+	{
+		grab_get_image(&img, &idx);
+		filter_apply(&img, http_peer.mod_ctx->node);
+		filter_apply(&img, subnode);
+		jpeg_compress(&jpegbuf, &img, 0);
+		
+		if (!fps)
+			snprintf(buf, sizeof(buf) - 1,
+				"HTTP/1.0 200 OK\r\n"
+				"Server: " PACKAGE_STRING "\r\n"
+				"Content-Length: %i\r\n"
+				"Connection: close\r\n"
+				"Content-Type: image/jpeg\r\n"
+				"\r\n",
+				jpegbuf.bufsize);
+		else
+			snprintf(buf, sizeof(buf) - 1,
+				"Content-Length: %i\r\n"
+				"Content-Type: image/jpeg\r\n"
+				"\r\n",
+				jpegbuf.bufsize);
+		ret = write(http_peer.peer.fd, buf, strlen(buf));
+		if (ret > 0)
+			ret = write(http_peer.peer.fd, jpegbuf.buf, jpegbuf.bufsize);
+		if (fps && ret > 0)
+		{
+			snprintf(buf, sizeof(buf) - 1,
+				"\r\n--Juigt9G7bb7sfdgsdZGIDFsjhn\r\n");
+			ret = write(http_peer.peer.fd, buf, strlen(buf));
+			usleep(1000000 / fps);
+		}
+		
+		image_destroy(&img);
+		free(jpegbuf.buf);
+	}
+	while (fps > 0 && ret > 0);
 
 closenout:
+	sleep(1);
 	close(http_peer.peer.fd);
 	return NULL;
 }
@@ -222,5 +255,16 @@ http_err(int fd, char *err)
 		"<html><body>%s</body></html>\r\n",
 		err, strlen(err) + 28, err);
 	write(fd, buf, strlen(buf));
+}
+
+int
+get_fps(xmlNodePtr node)
+{
+	for (node = node->children; node; node = node->next)
+	{
+		if (xml_isnode(node, "fps"))
+			return xml_atoi(node, 0);
+	}
+	return 0;
 }
 
