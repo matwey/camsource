@@ -42,11 +42,12 @@
 		<fps>15</fps>
 		<channel>0</channel>
 		<norm>auto</norm>
-		<!-- <brightness>32000</brightness> -->
-		<!-- <hue>32000</hue> -->
-		<!-- <colour>32000</colour> -->
-		<!-- <contrast>32000</contrast> -->
-		<!-- <whiteness>32000</whiteness> -->
+
+		<!-- <brightness>32767</brightness> -->
+		<!-- <hue>32767</hue> -->
+		<!-- <colour>32767</colour> -->
+		<!-- <contrast>32767</contrast> -->
+		<!-- <whiteness>32767</whiteness> -->
 	</camdev>
 	
 	<!--
