@@ -20,4 +20,6 @@ ftpup.lo
 libftpup.la
 libtext.la
 text.lo
+librgbbgr.la
+rgbbgr.lo
 

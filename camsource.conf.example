@@ -299,6 +299,9 @@
 		<pos>bl</pos>
 	</module>
 	
+	<!-- This filter swaps the read and blue channels -->
+	<module name="rgbbgr" active="no"/>
+	
 	<!--
 		Global filters to use. Any filter given here
 		will be applied to every grabbed frame. If
@@ -312,6 +315,9 @@
 		<horiz>yes</horiz>
 		<vert>no</vert>
 	</filter>
+	
+	<!-- Module not active by default -->
+	<filter name="rgbbgr"/>
 	
 </camsourceconfig>
 

@@ -1,5 +1,8 @@
 $Id$
 
+Sep 21 2002
+	- Added quick and dirty rgb <-> bgr module.
+
 Sep 20 2002
 	- With nonblocking sockets, the delay before closing a sending
 	  socket shouldn't be necessary any more.

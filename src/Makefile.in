@@ -81,13 +81,13 @@ install_sh = @install_sh@
 bin_PROGRAMS = camsource
 pkglib_LTLIBRARIES = libwc_serv.la libjpeg_comp.la libflip.la \
 	libresize.la libsocket.la libhttp.la libfilewrite.la \
-	libftpup.la libtext.la
+	libftpup.la libtext.la librgbbgr.la
 
 
 pkginclude_HEADERS = camdev.h configfile.h filter.h flip.h grab.h \
 	image.h jpeg.h main.h mod_handle.h module.h resize.h \
 	unpalette.h wc_serv.h xmlhelp.h socket.h http.h log.h \
-	filewrite.h ftpup.h text.h
+	filewrite.h ftpup.h text.h rgbbgr.h
 
 
 camsource_SOURCES = main.c grab.c camdev.c unpalette.c configfile.c \
@@ -106,6 +106,7 @@ libhttp_la_SOURCES = http.c
 libfilewrite_la_SOURCES = filewrite.c
 libftpup_la_SOURCES = ftpup.c
 libtext_la_SOURCES = text.c font_6x11.h
+librgbbgr_la_SOURCES = rgbbgr.c
 subdir = src
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
@@ -135,6 +136,10 @@ libresize_la_LDFLAGS =
 libresize_la_LIBADD =
 am_libresize_la_OBJECTS = resize.lo
 libresize_la_OBJECTS = $(am_libresize_la_OBJECTS)
+librgbbgr_la_LDFLAGS =
+librgbbgr_la_LIBADD =
+am_librgbbgr_la_OBJECTS = rgbbgr.lo
+librgbbgr_la_OBJECTS = $(am_librgbbgr_la_OBJECTS)
 libsocket_la_LDFLAGS =
 libsocket_la_LIBADD =
 am_libsocket_la_OBJECTS = socket.lo
@@ -172,9 +177,9 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/image.Po $(DEPDIR)/jpeg.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/log.Po $(DEPDIR)/main.Po \
 @AMDEP_TRUE@	$(DEPDIR)/mod_handle.Po $(DEPDIR)/resize.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/socket.Plo $(DEPDIR)/text.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/unpalette.Po $(DEPDIR)/wc_serv.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/xmlhelp.Po
+@AMDEP_TRUE@	$(DEPDIR)/rgbbgr.Plo $(DEPDIR)/socket.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/text.Plo $(DEPDIR)/unpalette.Po \
+@AMDEP_TRUE@	$(DEPDIR)/wc_serv.Plo $(DEPDIR)/xmlhelp.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
@@ -186,12 +191,13 @@ CFLAGS = @CFLAGS@
 DIST_SOURCES = $(libfilewrite_la_SOURCES) $(libflip_la_SOURCES) \
 	$(libftpup_la_SOURCES) $(libhttp_la_SOURCES) \
 	$(libjpeg_comp_la_SOURCES) $(libresize_la_SOURCES) \
-	$(libsocket_la_SOURCES) $(libtext_la_SOURCES) \
-	$(libwc_serv_la_SOURCES) $(camsource_SOURCES)
+	$(librgbbgr_la_SOURCES) $(libsocket_la_SOURCES) \
+	$(libtext_la_SOURCES) $(libwc_serv_la_SOURCES) \
+	$(camsource_SOURCES)
 HEADERS = $(pkginclude_HEADERS)
 
 DIST_COMMON = $(pkginclude_HEADERS) Makefile.am Makefile.in
-SOURCES = $(libfilewrite_la_SOURCES) $(libflip_la_SOURCES) $(libftpup_la_SOURCES) $(libhttp_la_SOURCES) $(libjpeg_comp_la_SOURCES) $(libresize_la_SOURCES) $(libsocket_la_SOURCES) $(libtext_la_SOURCES) $(libwc_serv_la_SOURCES) $(camsource_SOURCES)
+SOURCES = $(libfilewrite_la_SOURCES) $(libflip_la_SOURCES) $(libftpup_la_SOURCES) $(libhttp_la_SOURCES) $(libjpeg_comp_la_SOURCES) $(libresize_la_SOURCES) $(librgbbgr_la_SOURCES) $(libsocket_la_SOURCES) $(libtext_la_SOURCES) $(libwc_serv_la_SOURCES) $(camsource_SOURCES)
 
 all: all-am
 
@@ -244,6 +250,8 @@ libjpeg_comp.la: $(libjpeg_comp_la_OBJECTS) $(libjpeg_comp_la_DEPENDENCIES)
 	$(LINK) -rpath $(pkglibdir) $(libjpeg_comp_la_LDFLAGS) $(libjpeg_comp_la_OBJECTS) $(libjpeg_comp_la_LIBADD) $(LIBS)
 libresize.la: $(libresize_la_OBJECTS) $(libresize_la_DEPENDENCIES) 
 	$(LINK) -rpath $(pkglibdir) $(libresize_la_LDFLAGS) $(libresize_la_OBJECTS) $(libresize_la_LIBADD) $(LIBS)
+librgbbgr.la: $(librgbbgr_la_OBJECTS) $(librgbbgr_la_DEPENDENCIES) 
+	$(LINK) -rpath $(pkglibdir) $(librgbbgr_la_LDFLAGS) $(librgbbgr_la_OBJECTS) $(librgbbgr_la_LIBADD) $(LIBS)
 libsocket.la: $(libsocket_la_OBJECTS) $(libsocket_la_DEPENDENCIES) 
 	$(LINK) -rpath $(pkglibdir) $(libsocket_la_LDFLAGS) $(libsocket_la_OBJECTS) $(libsocket_la_LIBADD) $(LIBS)
 libtext.la: $(libtext_la_OBJECTS) $(libtext_la_DEPENDENCIES) 
@@ -298,6 +306,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/mod_handle.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/resize.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/rgbbgr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/socket.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/text.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/unpalette.Po@am__quote@

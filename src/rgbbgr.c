@@ -1,0 +1,30 @@
+#include <stdlib.h>
+#include <libxml/parser.h>
+
+#include "config.h"
+
+#define MODULE_FILTER
+#include "module.h"
+#include "rgbbgr.h"
+#include "image.h"
+
+char *name = "rgbbgr";
+
+int
+filter(struct image *img, xmlNodePtr node)
+{
+	unsigned char *p, *e;
+	unsigned t;
+	
+	e = img->buf + img->bufsize;
+	
+	for (p = img->buf; p < e; p += 3)
+	{
+		t = p[0];
+		p[0] = p[2];
+		p[2] = t;
+	}
+	
+	return 0;
+}
+
