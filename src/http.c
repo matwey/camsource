@@ -276,7 +276,6 @@ closenout:
 		socket_ip(&http_peer.peer), socket_port(&http_peer.peer),
 		count);
 
-	sleep(1);
 	socket_close(&http_peer.peer);
 	return NULL;
 }

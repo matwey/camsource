@@ -137,7 +137,6 @@ thread(void *mctx)
 			goto closenstuff;
 		}
 		
-		sleep(1);
 		socket_close(&fctx->datapeer);
 		if (ftpup_read_ftp_resp(fctx, 226))
 			goto closenstuff;

@@ -1,6 +1,8 @@
 $Id$
 
 Sep 20 2002
+	- With nonblocking sockets, the delay before closing a sending
+	  socket shouldn't be necessary any more.
 	- Added text module to all worker modules in conf file, plus docs
 	- Finished work on libtext with lots of fancy stuff for now
 	- Started work in text overlay module
