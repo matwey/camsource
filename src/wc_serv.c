@@ -182,7 +182,7 @@ wc_handle_conn(void *arg)
 	}
 
 closenout:
-	close(peer.peer.fd);
+	socket_close(&peer.peer);
 
 	log_log(MODNAME, "Connection from %s:%i closed, %i frame(s) served\n",
 		socket_ip(&peer.peer), socket_port(&peer.peer),

@@ -137,7 +137,7 @@ http_conn(void *peer_p)
 	
 	count = 0;
 	
-	ret = socket_readline(http_peer.peer.fd, buf, sizeof(buf));
+	ret = socket_readline(&http_peer.peer, buf, sizeof(buf));
 	if (ret)
 		goto closenout;
 	
@@ -182,7 +182,7 @@ http_conn(void *peer_p)
 match:
 	for (;;)
 	{
-		ret = socket_readline(http_peer.peer.fd, buf, sizeof(buf));
+		ret = socket_readline(&http_peer.peer, buf, sizeof(buf));
 		if (ret)
 			goto closenout;
 		if (!*buf)
@@ -253,7 +253,7 @@ closenout:
 		count);
 
 	sleep(1);
-	close(http_peer.peer.fd);
+	socket_close(&http_peer.peer);
 	return NULL;
 }
 

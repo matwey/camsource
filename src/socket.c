@@ -3,7 +3,12 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <pthread.h>
+#include <netdb.h>
+#include <errno.h>
+#include <stdarg.h>
 
 #include "config.h"
 
@@ -83,23 +88,30 @@ socket_accept_thread(int fd, struct peer *peer, void *(*func)(void *), void *arg
 }
 
 int
-socket_readline(int fd, char *buf, unsigned int bufsize)
+socket_readline(struct peer *peer, char *buf, unsigned int bufsize)
 {
 	int ret;
 	unsigned int count;
 	
+	if (peer->fd < 0)
+		return -1;
+	
 	count = 0;
 	for (;;)
 	{
-		ret = read(fd, buf, 1);
+		ret = read(peer->fd, buf, 1);
 		if (ret != 1)
+		{
+closeerr:
+			socket_close(peer);
 			return -1;
+		}
 		if (*buf == '\n')
 			break;
 		buf++;
 		count++;
 		if (count >= bufsize)
-			return -1;
+			goto closeerr;
 	}
 	
 	*buf-- = '\0';
@@ -125,5 +137,111 @@ unsigned int
 socket_port(struct peer *peer)
 {
 	return (unsigned int) ntohs(peer->sin.sin_port);
+}
+
+int
+socket_connect(struct peer *peer, char *host, int port)
+{
+	struct peer p;
+	int ret;
+	struct hostent hent, *hentp;
+	int herrno;
+	int bufsize;
+	char *buf;
+	
+	if (!peer || !host || !*host)
+		return -1;
+	if (port <= 0 || port > 0xffff)
+		return -1;
+	
+	memset(&p, 0, sizeof(p));
+	
+	ret = inet_aton(host, &p.sin.sin_addr);
+	if (!ret)
+	{
+		bufsize = 512;
+		for (;;)
+		{
+			buf = malloc(bufsize);
+			errno = 0;
+			herrno = 0;
+			ret = gethostbyname_r(host, &hent, buf, bufsize, &hentp, &herrno);
+			/* the man page isn't clear about where ERANGE is returned, so... */
+			if (ret && (ret == ERANGE || errno == ERANGE || herrno == ERANGE))
+			{
+				free(buf);
+				bufsize *= 2;
+				continue;
+			}
+			break;
+		}
+		if (ret || !hentp)
+			return -2;
+		if (hent.h_addrtype != AF_INET || hent.h_length != 4 || !hent.h_addr_list[0])
+			return -3;
+		memcpy(&p.sin.sin_addr.s_addr, hent.h_addr_list[0], 4);
+	}
+	
+	p.sin.sin_family = AF_INET;
+	p.sin.sin_port = htons(port);
+
+	p.fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (p.fd < 0)
+		return -4;
+		
+	ret = connect(p.fd, (struct sockaddr *) &p.sin, sizeof(p.sin));
+	if (ret)
+	{
+		close(p.fd);
+		return -5;
+	}
+		
+	memcpy(peer, &p, sizeof(*peer));
+	return 0;
+}
+
+void
+socket_close(struct peer *peer)
+{
+	if (peer->fd < 0)
+		return;
+	close(peer->fd);
+	peer->fd = -1;
+}
+
+int
+socket_printf(struct peer *peer, char *format, ...)
+{
+	char buf[1024];
+	va_list vl;
+	int ret, len;
+
+	if (peer->fd < 0)
+		return -1;
+	
+	va_start(vl, format);
+	vsnprintf(buf, sizeof(buf) - 1, format, vl);
+	va_end(vl);
+	
+	len = strlen(buf);
+	ret = write(peer->fd, buf, len);
+	if (ret != len)
+	{
+		socket_close(peer);
+		return -1;
+	}
+	
+	return 0;
+}
+
+void
+socket_fill(int fd, struct peer *peer)
+{
+	int socklen;
+	
+	memset(peer, 0, sizeof(*peer));
+	peer->fd = fd;
+	socklen = sizeof(peer->sin);
+	getsockname(fd, (struct sockaddr *) &peer->sin, &socklen);
 }
 

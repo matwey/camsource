@@ -21,6 +21,23 @@ int socket_listen(unsigned short, unsigned long);
  * struct with info. Returns -1 on error. */
 int socket_accept(int, struct peer *);
 
+/* Creates a new socket and connects it to the specified host/port. The
+ * peer struct will be filled with info. On error, a negative value is
+ * returned: -1 == invalid values passed; -2 == resolve of host failed;
+ * -3 == other resolver error; -4 == socket creation failed; -5 ==
+ * connect failed. errno may not be meaningful in all cases. */
+int socket_connect(struct peer *, char *, int);
+
+/* Printf's to a socket. Auto-closes it on error and returns -1. */
+int socket_printf(struct peer *, char *, ...)
+	__attribute__ ((format (printf, 2, 3)));
+
+/* Self descriptive */
+void socket_close(struct peer *);
+
+/* Fills the peer struct with info for local socket fd (getsockname) */
+void socket_fill(int, struct peer *);
+
 /* Same as above, but creates a new thread when a new connection is accepted.
  * The pointer that gets passed to the thread func should points to a
  * dynamically allocated context structure, which should contain the peer
@@ -44,7 +61,7 @@ int socket_accept(int, struct peer *);
 int socket_accept_thread(int, struct peer *, void *(*)(void *), void *);
 
 /* Reads one line from fd into buf of given size. Returns -1 on error (such as eof) */
-int socket_readline(int, char *, unsigned int);
+int socket_readline(struct peer *, char *, unsigned int);
 
 /* Returns the ip (1.2.3.4) from the peer struct. It is stored in peer->tbuf */
 char *socket_ip(struct peer *);

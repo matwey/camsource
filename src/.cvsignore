@@ -16,4 +16,6 @@ libhttp.la
 http.lo
 filewrite.lo
 libfilewrite.la
+ftpup.lo
+libftpup.la
 

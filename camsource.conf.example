@@ -170,6 +170,46 @@
 		<cmd>~/bin/snapshot.sh</cmd>
 	</module>
 	
+	<module name="ftpup" active="no">
+		<!--
+			Ftpup works like the filewrite module, only that
+			it doesn't save a file locally, but uploads it
+			to a site via ftp. Supported options are:
+			- host: Host to connect to. Can be either in
+			  dotted ip notation or a hostname.
+			- port: optional, defaults to 21.
+			- username & password: Login information. If
+			  not specified, anonymous login will be done.
+			  Alternate spellings are "user" and "pass".
+			- dir: Path for the destination file,
+			  excluding the actual filename. The module
+			  will do the inital chdir to this dir. This
+			  can be an absolute or relative pathname. If
+			  not specified, the file will be put into
+			  whatever dir is the current dir after login.
+			- file: Destination filename
+			- passive: A yes/no option, whether to use
+			  passive or active mode. Defaults to active
+			  mode ("no").
+			- safemode: Another yes/no option. If set to
+			  yes, a "safe" file write will be done,
+			  meaning the snapshot will first be uploaded
+			  to a temporary file, which will then be
+			  renamed to final destination file. Defaults
+			  to "no".
+			- interval: Same as filewrite's interval.
+		-->
+		<host>malloc.heap</host>
+		<port>21212</port>
+		<user>pics</user>
+		<pass>pics</pass>
+		<dir>incoming</dir>
+		<file>snapshot.jpg</file>
+		<passive>no</passive>
+		<safemode>yes</safemode>
+		<interval unit="sec">30</interval>
+	</module>
+
 	<module name="jpeg_comp" active="yes">
 		<!-- quality: default compression quality, 1-100 -->
 		<quality>40</quality>
