@@ -119,7 +119,7 @@ thread(void *mctx)
 		if (!fctx->safemode)
 			ftpup_cmd(fctx, "STOR %s\r\n", fctx->file);
 		else
-			ftpup_cmd(fctx, "STOR %s~\r\n", fctx->file);
+			ftpup_cmd(fctx, "STOR %s.tmp\r\n", fctx->file);
 		
 		ret = ftpup_create_data_conn(fctx);
 
@@ -143,7 +143,7 @@ thread(void *mctx)
 		
 		if (fctx->safemode)
 		{
-			ftpup_cmd(fctx, "RNFR %s~\r\n", fctx->file);
+			ftpup_cmd(fctx, "RNFR %s.tmp\r\n", fctx->file);
 			if (ftpup_read_ftp_resp(fctx, 350))
 				goto closenstuff;
 			ftpup_cmd(fctx, "RNTO %s\r\n", fctx->file);

@@ -68,9 +68,6 @@ unpalette_yuv420p(struct image *dst, unsigned char *src)
 		
 		for (dx = 0; dx < dst->x; dx++)
 		{
-			/**dstbuf++ = citb((int) *src + 1.4075 * ((int) *v - 128));
-			*dstbuf++ = citb((int) *src - 0.3455 * ((int) *u - 128) - 0.7169 * ((int) *v - 128));
-			*dstbuf++ = citb((int) *src++ + 1.7790 * ((int) *u - 128));*/
 			*dstbuf++ = citb((int) *src + 1.140 * ((int) *v - 128));
 			*dstbuf++ = citb((int) *src - 0.396 * ((int) *u - 128) - 0.581 * ((int) *v - 128));
 			*dstbuf++ = citb((int) *src++ + 2.029 * ((int) *u - 128));

@@ -1,5 +1,8 @@
 $Id$
 
+Jan 20 2003
+	- Changed the '~' filename postfix to '.tmp' in libfilewrite.
+
 Jan 18 2003
 	- Added scripts/camsource2bmp.pl example script.
 	- Added the smallest filter ever: color inverting.
