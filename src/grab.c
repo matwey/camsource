@@ -34,13 +34,27 @@ grab_thread(void *arg)
 	unsigned int bpf;
 	unsigned char *imgbuf;
 	struct image newimg;
+	xmlDocPtr doc;
+	xmlNodePtr node;
 	
-	ret = camdev_open(&camdev, "/dev/video0");
-	if (ret == -1)
+	rwlock_rlock(&configdoc_lock);
+	doc = xmlCopyDoc(configdoc, 1);
+	rwlock_runlock(&configdoc_lock);
+	
+	node = xmlDocGetRootElement(doc);
+	for (node = node->children; node; node = node->next)
 	{
-		printf("Error opening video device: %s\n", strerror(errno));
-		return NULL;
+		if (xmlStrEqual(node->name, "camdev"))
+		{
+			ret = camdev_open(&camdev, node);
+			goto camdevopened;
+		}
 	}
+	ret = camdev_open(&camdev, NULL);
+camdevopened:
+	xmlFreeDoc(doc);
+	if (ret == -1)
+		exit(1);
 	
 	bpf = (camdev.x * camdev.y) * camdev.pal->bpp;
 	imgbuf = malloc(bpf);

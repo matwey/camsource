@@ -2,7 +2,24 @@
 <camsourceconfig>
 
 	<!-- Global config options -->
-	<!-- <logfile>~/.camsource.log</logfile> -->
+	<camdev>
+		<!--
+			This section gives config options for the
+			camera device. It instructs the hardware to
+			grab the frames at a certain size and frame
+			rate. Note that not all hardware supports
+			every frame size, and not all hardware supports
+			setting the frame rate (and if it does, not
+			all frame rates are supported either).
+			Path defaults to /dev/video0, frame size defaults
+			to max size as reported by the driver, fps
+			defaults to unchanged.
+		-->
+		<path>/dev/video0</path>
+		<width>640</width>
+		<height>480</height>
+		<fps>15</fps>
+	</camdev>
 
 	<!--
 		Available modules. A module will only be loaded

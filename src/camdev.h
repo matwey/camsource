@@ -2,6 +2,7 @@
 #define _CAMDEV_H_
 
 #include <linux/videodev.h>
+#include <libxml/parser.h>
 
 struct palette;
 
@@ -14,8 +15,8 @@ struct camdev
 	unsigned int x, y;
 };
 
-/* Opens v4l device and fills struct with context info. Returns -1 and errno on error */
-int camdev_open(struct camdev *, const char *);
+/* Opens v4l device and fills struct with context info. Returns -1 on error */
+int camdev_open(struct camdev *, xmlNodePtr);
 
 #endif
 
