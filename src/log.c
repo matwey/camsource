@@ -89,7 +89,7 @@ log_log(char *modname, char *format, ...)
 		fprintf(stderr, "[%s] ", buf);
 	
 	va_start(vl, format);
-	vprintf(format, vl);
+	vfprintf(stderr, format, vl);
 	va_end(vl);
 }
 
