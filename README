@@ -114,7 +114,8 @@ flip (filter)
 resize (filter)
   Lets you scale an image to a specific size. Actually it doesn't
   "scale" much, it just does nearest-neighbor matching (read: bad
-  quality).
+  quality). The filter lets you specify the target image size as a fixed
+  width/height value pair, or as a percentage of the original image.
 
 text (filter)
   This filter can add a text overlay containing a timestamp to an
@@ -128,6 +129,16 @@ text (filter)
 rgbbgr (filter)
   Swaps the red and blue information. Activate it in case your camera
   produces images with this reversed.
+
+rotate (filter)
+  This filter can rotate the image left or right by 90 degrees (or in
+  other words, by 90 or 270 degrees). Rotating by 180 degrees is not
+  supported, as the same result can be achieved by "flip"ping the image
+  both horizontally and vertically. Keep in mind that after rotating,
+  the image's width and height values will be swapped, so when you
+  intend to use the rotate filter frequently together with the resize
+  module, you should probably specify the final image size as a
+  percentage (scale) instead of a fixed height/width pair.
 
 
 
