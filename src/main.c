@@ -47,13 +47,11 @@ main_init()
 
 	mod_load_all();
 	
-	exit(0);
-	
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 	pthread_create(&grab_tid, &attr, grab_thread, NULL);
 	pthread_attr_destroy(&attr);
 
-	/*config_start_threads();*/
+	mod_start_all();
 }
 

@@ -84,55 +84,6 @@ config_load()
 	return 0;
 }
 
-/*int
-config_activate_module(void *h)
-{
-	int (*init)(void);
-	int ret;
-	
-	init = dlsym(h, "init");
-	if (!init || !dlsym(h, "thread") || !dlsym(h, "name") || !dlsym(h, "tid") || !dlsym(h, "deps"))
-	{
-		dlclose(h);
-		return -1;
-	}
-	
-	ret = init();
-	if (ret)
-	{
-		dlclose(h);
-		return -1;
-	}
-	
-	return 0;
-}
-
-void
-config_start_threads()
-{
-	int i;
-	void *(*thread)(void *);
-	pthread_t *tid;
-	pthread_attr_t attr;
-	
-	rwlock_rlock(&config_lock);
-	
-	for (i = 0; i < NUM_MODULES; i++)
-	{
-		if (!config.modules[i])
-			continue;
-		thread = dlsym(config.modules[i], "thread");
-		tid = dlsym(config.modules[i], "tid");
-		
-		pthread_attr_init(&attr);
-		pthread_attr_set_detachstate(&attr, PTHREAD_CREATE_DETACHED);
-		pthread_create(tid, &attr, thread, NULL);
-		pthread_attr_destroy(&attr);
-	}
-
-	rwlock_runlock(&config_lock);
-}*/
-
 xmlNodePtr
 config_find_mod_section(xmlDocPtr doc, const char *mod)
 {
