@@ -1,7 +1,7 @@
 bin_PROGRAMS = camsource
-lib_LTLIBRARIES = libwc_serv.la libjpeg_comp.la libflip.la libresize.la
+pkglib_LTLIBRARIES = libwc_serv.la libjpeg_comp.la libflip.la libresize.la
 
-include_HEADERS = camdev.h configfile.h filter.h flip.h grab.h \
+pkginclude_HEADERS = camdev.h configfile.h filter.h flip.h grab.h \
 	image.h jpeg.h main.h mod_handle.h module.h resize.h \
 	unpalette.h wc_serv.h xmlhelp.h
 
