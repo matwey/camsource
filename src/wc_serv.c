@@ -56,6 +56,7 @@ thread(void *arg)
 	struct peer *peer;
 	int i;
 	pthread_t tid;
+	pthread_attr_t attr;
 	
 	for (;;)
 	{
@@ -70,7 +71,10 @@ thread(void *arg)
 			continue;
 		}
 		/* TODO: keep a list of accepted connections? */
-		pthread_create(&tid, NULL, handle_conn, peer);
+		pthread_attr_init(&attr);
+		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+		pthread_create(&tid, &attr, handle_conn, peer);
+		pthread_attr_destroy(&attr);
 	}
 }
 
