@@ -99,13 +99,21 @@
 		which device to grab images from. See the http module and
 		one of the wc_serv module definitions below for examples.
 		
-		<camdev name="second">
-			<plugin>input_v4l</plugin>
-			<path>/dev/video1</path>
-			<width>max</width>
-			<height>max</height>
-		</camdev>
+		This example makes use of the "active" attribute of the
+		<camdev> tag. If not specified, it defaults to "yes", for
+		backwards compatibility.
 	-->
+	<camdev name="second" active="no">
+		<plugin>input_v4l</plugin>
+		<path>/dev/video1</path>
+		<width>max</width>
+		<height>max</height>
+	</camdev>
+	
+	<camdev name="xwd" active="yes">
+		<plugin>input_xwd</plugin>
+		<command>/usr/X11R6/bin/xwd -root -silent</command>
+	</camdev>
 	
 	<!--
 		If no logfile is given (or tag is empty), camsource
@@ -124,6 +132,8 @@
 	<!-- This is the default video4linux input plugin. It has no
 	     global config options. -->	
 	<module name="input_v4l" active="yes"/>
+	
+	<module name="input_xwd" active="yes"/>
 	
 	<module name="wc_serv" active="yes">
 		<port>8888</port>
@@ -270,6 +280,11 @@
 			<!-- This example also shows how to deactivate
 			     one vpath -->
 			<disable>yes</disable>
+		</vpath>
+		
+		<vpath>
+			<grabdev>xwd</grabdev>
+			<path>/test</path>
 		</vpath>
 		
 		<vpath>

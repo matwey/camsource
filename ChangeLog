@@ -1,5 +1,8 @@
 $Id$
 
+Feb 15 2003
+	- Added experimental xwd (x11 screen shot) input plugin.
+
 Jan 26 2003
 	- Modularized the video input code, removed camdev.* files.
 	  Their functionality was moved to libinput_v4l. The

@@ -80,7 +80,7 @@ int
 grab_threads_init()
 {
 	xmlNodePtr node;
-	char *name;
+	char *name, *active;
 	struct grabthread *newthread;
 	int ret = 0;
 	struct module *mod;
@@ -93,6 +93,11 @@ grab_threads_init()
 	for (node = node->xml_children; node; node = node->next) {
 		if (!xml_isnode(node, "camdev"))
 			continue;
+			
+		active = xml_attrval(node, "active");
+		if (active && strcmp(active, "yes"))
+			continue;
+		
 		name = xml_attrval(node, "name");
 		if (!name)
 			name = "default";

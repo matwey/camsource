@@ -3,7 +3,7 @@ pkglib_LTLIBRARIES = libwc_serv.la libjpeg_comp.la libflip.la \
 	libresize.la libsocket.la libhttp.la libfilewrite.la \
 	libftpup.la libtext.la librgbbgr.la librotate.la \
 	libbw.la libvloopback.la libmotiondetect.la libregrab.la \
-	libinvert.la libinput_v4l.la
+	libinvert.la libinput_v4l.la libinput_xwd.la
 
 pkginclude_HEADERS = configfile.h filter.h grab.h \
 	image.h jpeg.h mod_handle.h module.h unpalette.h xmlhelp.h \
@@ -13,6 +13,7 @@ camsource_SOURCES = main.c grab.c unpalette.c configfile.c \
 	mod_handle.c image.c filter.c xmlhelp.c log.c main.h
 
 libinput_v4l_la_SOURCES = input_v4l.c
+libinput_xwd_la_SOURCES = input_xwd.c
 
 libwc_serv_la_SOURCES = wc_serv.c wc_serv.h
 
